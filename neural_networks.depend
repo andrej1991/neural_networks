@@ -1,0 +1,77 @@
+# depslib dependency file v1.0
+1476640493 source:/home/andrej/hdd/dokumentumok/neural_networks/main.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+	"network.h"
+	"matrice.h"
+
+1476641500 source:/home/andrej/hdd/dokumentumok/neural_networks/network.cpp
+	"network.h"
+	<fstream>
+	<iostream>
+
+1476650539 /home/andrej/hdd/dokumentumok/neural_networks/network.h
+	"neuron.h"
+	"MNIST_data.h"
+	"matrice.h"
+
+1476031979 /home/andrej/hdd/dokumentumok/neural_networks/neuron.h
+
+1476306377 source:/home/andrej/hdd/dokumentumok/neural_networks/neuron.cpp
+	"neuron.h"
+	<math.h>
+
+1476218632 /home/andrej/hdd/dokumentumok/neural_networks/MNIST_data.h
+	<fstream>
+
+1476528833 source:/home/andrej/hdd/dokumentumok/neural_networks/MNIST_data.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+
+1476634927 source:/home/andrej/hdd/dokumentumok/neural_networks/matrice.cpp
+	"matrice.h"
+
+1476565475 /home/andrej/hdd/dokumentumok/neural_networks/matrice.h
+	<iostream>
+	<stdio.h>
+
+1476640493 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+	"network.h"
+	"matrice.h"
+
+1476218632 /home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.h
+	<fstream>
+
+1476650539 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
+	"neuron.h"
+	"MNIST_data.h"
+	"matrice.h"
+
+1476031979 /home/andrej/hdd/dokumentumok/neural_networks/src/neuron.h
+
+1476651100 /home/andrej/hdd/dokumentumok/neural_networks/src/matrice.h
+	<iostream>
+	<stdio.h>
+
+1476634927 source:/home/andrej/hdd/dokumentumok/neural_networks/src/matrice.cpp
+	"matrice.h"
+
+1476528833 source:/home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+
+1476650612 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+	"network.h"
+	<fstream>
+	<iostream>
+
+1476306377 source:/home/andrej/hdd/dokumentumok/neural_networks/src/neuron.cpp
+	"neuron.h"
+	<math.h>
+
