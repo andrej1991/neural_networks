@@ -47,7 +47,7 @@
 1476218632 /home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.h
 	<fstream>
 
-1476650539 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
+1476738844 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
 	"neuron.h"
 	"MNIST_data.h"
 	"matrice.h"
@@ -66,7 +66,7 @@
 	<fstream>
 	"MNIST_data.h"
 
-1476650612 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+1476738945 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>
