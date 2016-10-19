@@ -37,7 +37,7 @@
 	<iostream>
 	<stdio.h>
 
-1476640493 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
+1476912550 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
 	<iostream>
 	<fstream>
 	"MNIST_data.h"
@@ -47,12 +47,12 @@
 1476218632 /home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.h
 	<fstream>
 
-1476738844 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
+1476910337 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
 	"neuron.h"
 	"MNIST_data.h"
 	"matrice.h"
 
-1476031979 /home/andrej/hdd/dokumentumok/neural_networks/src/neuron.h
+1476912003 /home/andrej/hdd/dokumentumok/neural_networks/src/neuron.h
 
 1476651100 /home/andrej/hdd/dokumentumok/neural_networks/src/matrice.h
 	<iostream>
@@ -66,12 +66,14 @@
 	<fstream>
 	"MNIST_data.h"
 
-1476738945 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+1476912650 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>
+	<stdlib.h>
 
-1476306377 source:/home/andrej/hdd/dokumentumok/neural_networks/src/neuron.cpp
+1476912292 source:/home/andrej/hdd/dokumentumok/neural_networks/src/neuron.cpp
 	"neuron.h"
 	<math.h>
+	<iostream>
 

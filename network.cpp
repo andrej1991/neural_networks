@@ -1,14 +1,17 @@
 #include "network.h"
 #include <fstream>
 #include <iostream>
+#include <stdlib.h>
 
 using namespace std;
 
-Network::Network(int layers_num, int *layers)
+Network::Network(int layers_num, int *layers, int costfunction_type, int neuron_type): biases(NULL), outputs(NULL), weights(NULL), neuron(neuron_type)
 {
     try
     {
+        this->costfunction_type = costfunction_type;
         this->total_layers_num = layers_num;
+        this->neuron_type = neuron_type;
         this->layers_num = layers_num - 1;
         this->layers = new int [layers_num];
         for(int i = 0; i < layers_num; i++)
@@ -91,7 +94,7 @@ inline void Network::layers_output(double **input, int layer)
 {
     for(int i = 0; i < this->layers[layer]; i++)
         {
-            this->outputs[layer]->data[i][0] = this->neuron.sigmoid(this->weights[layer]->data[i], input, this->biases[layer]->data[i][0], this->layers[layer - 1]);
+            this->outputs[layer]->data[i][0] = this->neuron.neuron(this->weights[layer]->data[i], input, this->biases[layer]->data[i][0], this->layers[layer - 1]);
         }
 }
 
@@ -109,11 +112,9 @@ inline void Network::feedforward(double **input)
 
 inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
 {
-    Matrice multiplied;
+    Matrice multiplied, output_derivate;
     this->feedforward(trainig_data->input);
-    Matrice cf_derivate = this->cost_derivate(this->outputs[this->layers_num - 1]->data, trainig_data->required_output);
-    Matrice output_derivate = this->derivate_layers_output(this->layers_num - 1, this->outputs[this->layers_num - 2]->data);
-    Matrice delta = hadamart_product(cf_derivate, output_derivate);
+    Matrice delta = this->get_delta(this->outputs[this->layers_num - 1]->data, trainig_data->required_output);
     *(nabla_b[this->layers_num - 1]) = delta;
     *(nabla_w[this->layers_num - 1]) = delta * this->outputs[this->layers_num - 2]->transpose();
     /*passing backwards the error*/
@@ -127,14 +128,43 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, 
         }
 }
 
-inline Matrice Network::cost_derivate(double **output, double **required_output)
+inline Matrice Network::get_delta(double **output, double **required_output)
 {
     Matrice mtx(this->layers[this->layers_num - 1], 1);
-    for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+    Matrice delta(this->layers[this->layers_num - 1], 1);
+    Matrice output_derivate(this->layers[this->layers_num - 1], 1);
+    switch(this->costfunction_type)
         {
-            mtx.data[i][0] = output[i][0] - required_output[i][0];
+        case QUADRATIC_CF:
+            for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                {
+                    mtx.data[i][0] = output[i][0] - required_output[i][0];
+                }
+            output_derivate = this->derivate_layers_output(this->layers_num - 1, this->outputs[this->layers_num - 2]->data);
+            delta = hadamart_product(mtx, output_derivate);
+            return delta;
+        case CROSS_ENTROPY_CF:
+            switch(this->neuron_type)
+                {
+                case SIGMOID:
+                    for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                        {
+                            mtx.data[i][0] = output[i][0] - required_output[i][0];
+                        }
+                    return mtx;
+                default:
+                    output_derivate = this->derivate_layers_output(this->layers_num - 1, this->outputs[this->layers_num - 2]->data);
+                    for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                        {
+                            delta.data[i][0] = (output_derivate.data[i][0] * (this->outputs[this->layers_num - 1]->data[i][0] - required_output[i][0])) /
+                                                    (this->outputs[this->layers_num - 1]->data[i][0] * (1 - this->outputs[this->layers_num - 1]->data[i][0]));
+                        }
+                    return delta;
+                }
+        default:
+            cerr << "Unknown cost function\n";
+            throw exception();
         }
-    return mtx;
 }
 
 inline Matrice Network::derivate_layers_output(int layer, double **input)
@@ -142,7 +172,7 @@ inline Matrice Network::derivate_layers_output(int layer, double **input)
     Matrice mtx(this->layers[layer], 1);
     for(int i = 0; i < this->layers[layer]; i++)
         {
-            mtx.data[i][0] = this->neuron.sigmoid_derivate(this->weights[layer]->data[i], input, this->biases[layer]->data[i][0], this->layers[layer - 1]);
+            mtx.data[i][0] = this->neuron.neuron_derivate(this->weights[layer]->data[i], input, this->biases[layer]->data[i][0], this->layers[layer - 1]);
         }
     return mtx;
 }
@@ -252,23 +282,38 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     random.close();
 }
 
-
+int getmax(double **d)
+{
+    double Max = d[0][0];
+    int index = 0;
+    for(int i = 0; i < 10; i++)
+        {
+            if(Max < d[i][0])
+                {
+                    Max = d[i][0];
+                    index = i;
+                }
+        }
+    return index;
+}
 void Network::test(MNIST_data **d)
 {
-    this->feedforward(d[8]->input);
-    for(int i = 0; i < 10; i++)
-        cout << this->outputs[this->layers_num - 1]->data[i][0] << "   ";
-    cout << endl;
-
-    this->stochastic_gradient_descent(d,30,10,3);
-
-    this->feedforward(d[8]->input);
-    for(int i = 0; i < 10; i++)
-        cout << this->outputs[this->layers_num - 1]->data[i][0] << "   ";
-    cout << '\n';
-    for(int i = 0; i < 10; i++)
-        cout << d[8]->required_output[i][0] << "   ";
-    cout << '\n';
+    Matrice output;
+    int counter;
+    for(int i = 0; i < 30; i++)
+        {
+            this->stochastic_gradient_descent(d,1,100,3);
+            counter = 0;
+            for(int j = 0; j < 10000; j++)
+                {
+                    output = this->get_output(d[j]->input);
+                    if(getmax(output.data) == getmax(d[j]->required_output))
+                        {
+                            counter++;
+                        }
+                }
+            cout << "set " << i << ": " << counter << endl;
+        }
 }
 
 Matrice Network::get_output(double **input)
