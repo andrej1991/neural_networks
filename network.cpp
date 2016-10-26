@@ -178,12 +178,15 @@ inline Matrice Network::derivate_layers_output(int layer, double **input)
 }
 
 
-void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, double learning_rate)
+void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
 {
     Matrice **w;
     Matrice **b;
     Matrice **dnb;
     Matrice **dnw;
+    Matrice **b_bck, **w_bck;
+    int *layer_bck, **ind;
+    this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -227,6 +230,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                 }
         }
     double lr = learning_rate / training_data_len;
+    double reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
     for(int i = 0; i < this->layers_num; i++)
         {
             for(int j = 0; j < this->layers[i]; j++)
@@ -234,10 +238,11 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                     this->biases[i]->data[j][0] -= lr * b[i]->data[j][0];
                     for(int k = 0; k < this->layers[i - 1]; k++)
                         {
-                            this->weights[i]->data[j][k] -= lr * w[i]->data[j][k];
+                            this->weights[i]->data[j][k] = reg * this->weights[i]->data[j][k] - lr * w[i]->data[j][k];
                         }
                 }
         }
+    this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
     for(int i = 0; i < this->layers_num; i++)
         {
             delete w[i];
@@ -251,7 +256,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     delete[] dnb;
 }
 
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, int trainingdata_len)
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, double regularization_rate, int trainingdata_len)
 {
     MNIST_data **minibatch = new MNIST_data* [epoch_len];
     int index;
@@ -277,7 +282,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                         }
                     minibatch[j] = training_data[index];
                 }
-            this->update_weights_and_biasses(minibatch, epoch_len, learning_rate);
+            this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
         }
     random.close();
 }
@@ -300,9 +305,9 @@ void Network::test(MNIST_data **d)
 {
     Matrice output;
     int counter;
-    for(int i = 0; i < 30; i++)
+    for(int i = 0; i < 300; i++)
         {
-            this->stochastic_gradient_descent(d,1,100,3);
+            this->stochastic_gradient_descent(d,1,100,3,5);
             counter = 0;
             for(int j = 0; j < 10000; j++)
                 {
@@ -321,4 +326,79 @@ Matrice Network::get_output(double **input)
     this->feedforward(input);
     Matrice ret = this->outputs[this->layers_num - 1][0];
     return ret;
+}
+
+inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+{
+    if(this->total_layers_num <= 2)
+        return;
+    layers_bckup[0] = new int [this->total_layers_num];
+    this->layers -= 1;
+    for(int i = 0; i < this->total_layers_num; i++)
+        layers_bckup[0][i] = this->layers[i];
+    for(int i = 1; i < this->layers_num; i++)
+        this->layers[i] >>= 1;
+    this->layers += 1;
+    w_bckup[0] = new Matrice* [this->total_layers_num - 2];
+    b_bckup[0] = new Matrice* [this->total_layers_num - 2];
+    for(int i = 1; i < this->layers_num - 1; i++)
+        {
+            w_bckup[0][i - 1] = this->weights[i];
+            b_bckup[0][i - 1] = this->biases[i];
+            this->biases[i] = new Matrice(this->layers[i], 1);
+            this->weights[i] = new Matrice(this->layers[i], this->layers[i - 1]);
+        }
+    //TODO define the indexes randomly
+    indexes[0] = new int* [this->total_layers_num - 2];
+    for(int i = 0; i < this->total_layers_num - 2; i++)
+        {
+            indexes[0][i] = new int [this->layers[i + 1]];
+            for(int j = 0; j < this->layers[i + 1]; j++)
+                {
+                    indexes[0][i][j] = j << 1;
+                }
+        }
+    for(int i = 1; i < this->layers_num - 1; i++)
+        {
+            for(int j = 0; j < this->layers[i]; j++)
+                {
+                    this->biases[i]->data[j][0] = b_bckup[0][i - 1]->data[indexes[0][i - 1][j]][0];
+                    for(int k = 0; k < this->layers[i - 1]; k++)
+                        {
+                            this->weights[i]->data[j][k] = w_bckup[0][i - 1]->data[indexes[0][i - 1][j]][k];
+                        }
+                }
+        }
+}
+
+inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+{
+    if(this->total_layers_num <= 2)
+        return;
+    int idx = 0;
+    for(int i = 1; i < this->layers_num - 1; i++)
+        {
+            for(int j = 0; j < layers_bckup[i]; j++)
+                {
+                    if( j == indexes[i - 1][idx])
+                        {
+                            b_bckup[i - 1]->data[indexes[i - 1][idx]][0] = this->biases[i]->data[idx][0];
+                            for(int k = 0; k < layers_bckup[i - 1]; k++)
+                                {
+                                    w_bckup[i - 1]->data[indexes[i - 1][idx]][k] = this->weights[i]->data[idx][k];
+                                }
+                            idx++;
+                        }
+                }
+            delete this->weights[i];
+            delete this->biases[i];
+            this->weights[i] = w_bckup[i - 1];
+            this->biases[i] = b_bckup[i - 1];
+        }
+    //TODO more precise delete
+    delete[] indexes;
+    for(int i = 0; i < this->total_layers_num; i++)
+        this->layers[i] = layers_bckup[i];
+    delete[] layers_bckup;
+
 }

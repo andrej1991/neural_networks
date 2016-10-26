@@ -17,11 +17,13 @@ class Network{
     inline void backpropagate(MNIST_data *training_data, Matrice **nabla_b, Matrice **nabla_w);
     inline Matrice get_delta(double **output, double **required_output);
     inline Matrice derivate_layers_output(int layer, double **input);
-    void update_weights_and_biasses(MNIST_data **training_data, int training_data_len, double learning_rate);
+    void update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate);
+    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     inline void feedforward(double **input);
     Neuron neuron;
     public:
-    void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, int trainingdata_len = 50000);
+    void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, double regularization_rate = 0, int trainingdata_len = 50000);
     Network(int layers_num, int *layers, int costfunction_type = CROSS_ENTROPY_CF, int neuron_type = SIGMOID);
     ~Network();
     void test(MNIST_data **d);

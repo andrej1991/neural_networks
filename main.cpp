@@ -19,8 +19,8 @@ int main()
             m[i]->load_data(input, required_output);
         }
     cout << "Hello world!" << endl;
-    int layers[3] = {784, 40, 10};
-    Network n(3, layers, QUADRATIC_CF);
+    int layers[3] = {784, 30, 10};
+    Network n(3, layers);
     n.test(m);
     input.close();
     required_output.close();
