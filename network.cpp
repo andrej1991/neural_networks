@@ -62,9 +62,9 @@ void Network::initialize_biases()
         {
             for(int j = 0; j < this->layers[i]; j++)
                 {
-                    random.read((char*)(&val), 2);
-                    this->biases[i]->data[j][0] = val;
-                    this->biases[i]->data[j][0] /= 63000;
+                    //random.read((char*)(&val), 2);
+                    this->biases[i]->data[j][0] = j;//val;
+                    //this->biases[i]->data[j][0] /= 63000;
                 }
         }
     random.close();
@@ -81,9 +81,9 @@ void Network::initialize_weights()
                 {
                     for(int k = 0; k < this->layers[i - 1]; k++)
                         {
-                            random.read((char*)(&val), 2);
-                            this->weights[i]->data[j][k] = val;
-                            this->weights[i]->data[j][k] /= 63000;
+                            //random.read((char*)(&val), 2);
+                            this->weights[i]->data[j][k] = j * this->layers[i] + k;//val;
+                            //this->weights[i]->data[j][k] /= 63000;
                         }
                 }
         }
@@ -186,7 +186,10 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     Matrice **dnw;
     Matrice **b_bck, **w_bck;
     int *layer_bck, **ind;
+    print_mtx_list(this->weights, 3);
     this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
+    print_mtx_list(this->weights, 3);
+    exit(0);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -339,12 +342,12 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
     for(int i = 1; i < this->layers_num; i++)
         this->layers[i] >>= 1;
     this->layers += 1;
-    w_bckup[0] = new Matrice* [this->total_layers_num - 2];
-    b_bckup[0] = new Matrice* [this->total_layers_num - 2];
-    for(int i = 1; i < this->layers_num - 1; i++)
+    w_bckup[0] = new Matrice* [this->total_layers_num - 1];
+    b_bckup[0] = new Matrice* [this->total_layers_num - 1];
+    for(int i = 0; i < this->layers_num; i++)
         {
-            w_bckup[0][i - 1] = this->weights[i];
-            b_bckup[0][i - 1] = this->biases[i];
+            w_bckup[0][i] = this->weights[i];
+            b_bckup[0][i] = this->biases[i];
             this->biases[i] = new Matrice(this->layers[i], 1);
             this->weights[i] = new Matrice(this->layers[i], this->layers[i - 1]);
         }
@@ -352,21 +355,37 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
     indexes[0] = new int* [this->total_layers_num - 2];
     for(int i = 0; i < this->total_layers_num - 2; i++)
         {
-            indexes[0][i] = new int [this->layers[i + 1]];
-            for(int j = 0; j < this->layers[i + 1]; j++)
+            indexes[0][i] = new int [this->layers[i]];
+            for(int j = 0; j < this->layers[i]; j++)
                 {
                     indexes[0][i][j] = j << 1;
+                }
+        }
+    for(int j = 0; j < this->layers[0]; j++)
+        {
+            this->biases[0]->data[j][0] = b_bckup[0][0]->data[indexes[0][0][j]][0];
+            for(int k = 0; k < this->layers[-1]; k++)
+                {
+                    this->weights[0]->data[j][k] = w_bckup[0][0]->data[indexes[0][0][j]][k];
                 }
         }
     for(int i = 1; i < this->layers_num - 1; i++)
         {
             for(int j = 0; j < this->layers[i]; j++)
                 {
-                    this->biases[i]->data[j][0] = b_bckup[0][i - 1]->data[indexes[0][i - 1][j]][0];
+                    this->biases[i]->data[j][0] = b_bckup[0][i]->data[indexes[0][i][j]][0];
                     for(int k = 0; k < this->layers[i - 1]; k++)
                         {
-                            this->weights[i]->data[j][k] = w_bckup[0][i - 1]->data[indexes[0][i - 1][j]][k];
+                            this->weights[i]->data[j][k] = w_bckup[0][i]->data[indexes[0][i][j]][indexes[0][i - 1][k]];
                         }
+                }
+        }
+    for(int j = 0; j < this->layers[this->layers_num - 1]; j++)
+        {
+            this->biases[this->layers_num - 1]->data[j][0] = b_bckup[0][this->layers_num - 1]->data[j][0];
+            for(int k = 0; k < this->layers[this->layers_num - 2]; k++)
+                {
+                    this->weights[this->layers_num - 1]->data[j][k] = w_bckup[0][this->layers_num - 1]->data[j][indexes[0][this->layers_num - 2][k]];
                 }
         }
 }

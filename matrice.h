@@ -11,6 +11,7 @@ using namespace std;
 
 class Matrice
 {
+    //public:
     int row,col;
     inline void destruct();
     inline void equality(const Matrice &mtx);
@@ -25,5 +26,6 @@ class Matrice
     Matrice transpose();
     friend void print_mtx_list(Matrice **mtx, int list_len);
 };
+
 
 #endif // Matrice_H_INCLUDED

@@ -37,7 +37,7 @@
 	<iostream>
 	<stdio.h>
 
-1477508893 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
+1477605229 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
 	<iostream>
 	<fstream>
 	"MNIST_data.h"
@@ -54,7 +54,7 @@
 
 1476912003 /home/andrej/hdd/dokumentumok/neural_networks/src/neuron.h
 
-1476651100 /home/andrej/hdd/dokumentumok/neural_networks/src/matrice.h
+1477604648 /home/andrej/hdd/dokumentumok/neural_networks/src/matrice.h
 	<iostream>
 	<stdio.h>
 
@@ -66,7 +66,7 @@
 	<fstream>
 	"MNIST_data.h"
 
-1477517148 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+1477605024 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>
