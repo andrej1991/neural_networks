@@ -187,9 +187,9 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     Matrice **b_bck, **w_bck;
     int *layer_bck, **ind;
     print_mtx_list(this->weights, 3);
+    cout << "---------------------------\n";
     this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     print_mtx_list(this->weights, 3);
-    exit(0);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -257,6 +257,9 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     delete[] dnw;
     delete[] b;
     delete[] dnb;
+    cout << "---------------------\n";
+    print_mtx_list(this->weights, 3);
+    exit(0);
 }
 
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, double regularization_rate, int trainingdata_len)
@@ -394,27 +397,41 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
 {
     if(this->total_layers_num <= 2)
         return;
-    int idx = 0;
+    for(int j = 0; j < this->layers[0]; j++)
+        {
+            b_bckup[0]->data[indexes[0][j]][0] = this->biases[0]->data[j][0];
+            for(int k = 0; k < this->layers[-1]; k++)
+                {
+                    w_bckup[0]->data[indexes[0][j]][k] = this->weights[0]->data[j][k];
+                }
+        }
     for(int i = 1; i < this->layers_num - 1; i++)
         {
-            for(int j = 0; j < layers_bckup[i]; j++)
+            for(int j = 0; j < this->layers[i]; j++)
                 {
-                    if( j == indexes[i - 1][idx])
+                    b_bckup[i]->data[indexes[i][j]][0] = this->biases[i]->data[j][0];
+                    for(int k = 0; k < this->layers[i - 1]; k++)
                         {
-                            b_bckup[i - 1]->data[indexes[i - 1][idx]][0] = this->biases[i]->data[idx][0];
-                            for(int k = 0; k < layers_bckup[i - 1]; k++)
-                                {
-                                    w_bckup[i - 1]->data[indexes[i - 1][idx]][k] = this->weights[i]->data[idx][k];
-                                }
-                            idx++;
+                            w_bckup[i]->data[indexes[i][j]][indexes[i][k]] = this->weights[i]->data[j][k];
                         }
                 }
-            delete this->weights[i];
-            delete this->biases[i];
-            this->weights[i] = w_bckup[i - 1];
-            this->biases[i] = b_bckup[i - 1];
         }
-    //TODO more precise delete
+    for(int j = 0; j < this->layers[this->layers_num - 1]; j++)
+        {
+            b_bckup[this->layers_num - 1]->data[j][0] = this->biases[this->layers_num - 1]->data[j][0];
+            for(int k = 0; k < this->layers[this->layers_num - 2]; k++)
+                {
+                    w_bckup[this->layers_num - 1]->data[j][indexes[this->layers_num - 2][k]] = this->weights[this->layers_num - 1]->data[j][k];
+                }
+        }
+    for(int i = 0; i < this->layers_num; i++)
+        {
+            delete this->biases[i];
+            this->biases[i] = b_bckup[i];
+            delete this->weights[i];
+            this->weights[i] = w_bckup[i];
+            delete[] indexes[i];
+        }
     delete[] indexes;
     for(int i = 0; i < this->total_layers_num; i++)
         this->layers[i] = layers_bckup[i];
