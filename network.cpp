@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
+#include "random.h"
 
 using namespace std;
 
@@ -190,6 +191,10 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     cout << "---------------------------\n";
     this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     print_mtx_list(this->weights, 3);
+    this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
+    cout << "---------------------\n";
+    print_mtx_list(this->weights, 3);
+    exit(0);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -265,32 +270,17 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, double regularization_rate, int trainingdata_len)
 {
     MNIST_data **minibatch = new MNIST_data* [epoch_len];
-    int index;
-    ifstream random;
-    int bytes_to_read;
-    if(trainingdata_len < 256)
-        bytes_to_read = 1;
-    else if(trainingdata_len < 65536)
-        bytes_to_read = 2;
-    else if(trainingdata_len < 0x1000000)
-        bytes_to_read = 3;
-    else
-        bytes_to_read = 4;
-    random.open("/dev/urandom", ios::in);
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
     for(int i = 0; i < epochs; i++)
         {
             for(int j = 0; j < epoch_len; j++)
                 {
-                    index = trainingdata_len + 1;
-                    while(index > trainingdata_len)
-                        {
-                            random.read((char*)(&index), bytes_to_read);
-                        }
-                    minibatch[j] = training_data[index];
+                    minibatch[j] = training_data[random(0, trainingdata_len, rand)];
                 }
             this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
         }
-    random.close();
+    rand.close();
 }
 
 int getmax(double **d)
@@ -333,9 +323,40 @@ Matrice Network::get_output(double **input)
     Matrice ret = this->outputs[this->layers_num - 1][0];
     return ret;
 }
+int partition( int *a, int l, int r) {
+   int pivot, i, j, t;
+   pivot = a[l];
+   i = l; j = r+1;
+
+   while( 1)
+   {
+   	do ++i; while( a[i] <= pivot && i <= r );
+   	do --j; while( a[j] > pivot );
+   	if( i >= j ) break;
+   	t = a[i]; a[i] = a[j]; a[j] = t;
+   }
+   t = a[l]; a[l] = a[j]; a[j] = t;
+   return j;
+}
+
+void quickSort( int *a, int l, int r)
+{
+   int j;
+
+   if( l < r )
+   {
+   	// divide and conquer
+        j = partition( a, l, r);
+       quickSort( a, l, j-1);
+       quickSort( a, j+1, r);
+   }
+
+}
 
 inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
 {
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
     if(this->total_layers_num <= 2)
         return;
     layers_bckup[0] = new int [this->total_layers_num];
@@ -345,6 +366,7 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
     for(int i = 1; i < this->layers_num; i++)
         this->layers[i] >>= 1;
     this->layers += 1;
+    layers_bckup[0] += 1;
     w_bckup[0] = new Matrice* [this->total_layers_num - 1];
     b_bckup[0] = new Matrice* [this->total_layers_num - 1];
     for(int i = 0; i < this->layers_num; i++)
@@ -354,15 +376,29 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
             this->biases[i] = new Matrice(this->layers[i], 1);
             this->weights[i] = new Matrice(this->layers[i], this->layers[i - 1]);
         }
-    //TODO define the indexes randomly
     indexes[0] = new int* [this->total_layers_num - 2];
+    int *tmp;
     for(int i = 0; i < this->total_layers_num - 2; i++)
         {
             indexes[0][i] = new int [this->layers[i]];
+            tmp = new int[layers_bckup[0][i]];
+            //cout <<layers_bckup[0][i] << '\n';
+            for(int j = 0; j < layers_bckup[0][i]; j++)
+                tmp[j] = j;
+            shuffle(tmp, layers_bckup[0][i], rand);
+            for(int j = 0; j < layers_bckup[0][i]; j++)//
+                cout << tmp[j] << ' ';//
+                cout << '\n';
+            //cout << i << this->layers[i] << '\n';
             for(int j = 0; j < this->layers[i]; j++)
                 {
-                    indexes[0][i][j] = j << 1;
+                    indexes[0][i][j] = tmp[j];
                 }
+            quickSort(indexes[0][i], 0, this->layers[i] - 1);
+            /*for(int j = 0; j < this->layers[i]; j++)//
+                cout << indexes[0][i][j] << ' ';//
+            cout << '\n';//*/
+            delete[] tmp;
         }
     for(int j = 0; j < this->layers[0]; j++)
         {
@@ -391,6 +427,7 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
                     this->weights[this->layers_num - 1]->data[j][k] = w_bckup[0][this->layers_num - 1]->data[j][indexes[0][this->layers_num - 2][k]];
                 }
         }
+    rand.close();
 }
 
 inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
@@ -433,6 +470,8 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
             delete[] indexes[i];
         }
     delete[] indexes;
+    this->layers -= 1;
+    layers_bckup -= 1;
     for(int i = 0; i < this->total_layers_num; i++)
         this->layers[i] = layers_bckup[i];
     delete[] layers_bckup;

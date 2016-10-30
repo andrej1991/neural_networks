@@ -3,6 +3,8 @@
 #include "MNIST_data.h"
 #include "network.h"
 #include "matrice.h"
+#include "random.h"
+#include <iosfwd>
 
 using namespace std;
 
@@ -24,5 +26,8 @@ int main()
     n.test(m);
     input.close();
     required_output.close();
+    /*input.open("/dev/urandom", ios::in);
+    int i = random(0, 20, input);
+    cout << i;*/
     return 0;
 }

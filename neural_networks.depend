@@ -77,3 +77,53 @@
 	<math.h>
 	<iostream>
 
+1477846850 source:/home/andrej/myfiles/dokumentumok/neural_networks/main.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+	"network.h"
+	"matrice.h"
+	"random.h"
+	<iosfwd>
+
+1477818321 /home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.h
+	<fstream>
+
+1477818668 /home/andrej/myfiles/dokumentumok/neural_networks/network.h
+	"neuron.h"
+	"MNIST_data.h"
+	"matrice.h"
+
+1477818668 /home/andrej/myfiles/dokumentumok/neural_networks/neuron.h
+
+1477818668 /home/andrej/myfiles/dokumentumok/neural_networks/matrice.h
+	<iostream>
+	<stdio.h>
+
+1477818321 source:/home/andrej/myfiles/dokumentumok/neural_networks/matrice.cpp
+	"matrice.h"
+
+1477818321 source:/home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+
+1477849131 source:/home/andrej/myfiles/dokumentumok/neural_networks/network.cpp
+	"network.h"
+	<fstream>
+	<iostream>
+	<stdlib.h>
+	"random.h"
+
+1477818668 source:/home/andrej/myfiles/dokumentumok/neural_networks/neuron.cpp
+	"neuron.h"
+	<math.h>
+	<iostream>
+
+1477849248 source:/home/andrej/myfiles/dokumentumok/neural_networks/random.cpp
+	"random.h"
+	<fstream>
+
+1477846850 /home/andrej/myfiles/dokumentumok/neural_networks/random.h
+	<fstream>
+
