@@ -6,7 +6,10 @@
 
 using namespace std;
 
-Network::Network(int layers_num, int *layers, int costfunction_type, int neuron_type): biases(NULL), outputs(NULL), weights(NULL), neuron(neuron_type)
+int getmax(double **d);
+
+Network::Network(int layers_num, int *layers, int costfunction_type,  bool dropout, int neuron_type):
+                biases(NULL), outputs(NULL), weights(NULL), neuron(neuron_type), dropout(dropout)
 {
     try
     {
@@ -63,9 +66,9 @@ void Network::initialize_biases()
         {
             for(int j = 0; j < this->layers[i]; j++)
                 {
-                    //random.read((char*)(&val), 2);
-                    this->biases[i]->data[j][0] = j;//val;
-                    //this->biases[i]->data[j][0] /= 63000;
+                    random.read((char*)(&val), 2);
+                    this->biases[i]->data[j][0] = val;
+                    this->biases[i]->data[j][0] /= 63000;
                 }
         }
     random.close();
@@ -82,9 +85,9 @@ void Network::initialize_weights()
                 {
                     for(int k = 0; k < this->layers[i - 1]; k++)
                         {
-                            //random.read((char*)(&val), 2);
-                            this->weights[i]->data[j][k] = j * this->layers[i] + k;//val;
-                            //this->weights[i]->data[j][k] /= 63000;
+                            random.read((char*)(&val), 2);
+                            this->weights[i]->data[j][k] = val;
+                            this->weights[i]->data[j][k] /= 63000;
                         }
                 }
         }
@@ -108,24 +111,6 @@ inline void Network::feedforward(double **input)
     for(int i = 0; i < this->layers_num; i++)
         {
             this->layers_output(this->outputs[i - 1]->data, i);
-        }
-}
-
-inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
-{
-    Matrice multiplied, output_derivate;
-    this->feedforward(trainig_data->input);
-    Matrice delta = this->get_delta(this->outputs[this->layers_num - 1]->data, trainig_data->required_output);
-    *(nabla_b[this->layers_num - 1]) = delta;
-    *(nabla_w[this->layers_num - 1]) = delta * this->outputs[this->layers_num - 2]->transpose();
-    /*passing backwards the error*/
-    for(int i = this->layers_num - 2; i >= 0; i--)
-        {
-            output_derivate = this->derivate_layers_output(i, this->outputs[i - 1]->data);
-            multiplied = this->weights[i + 1]->transpose() * delta;
-            delta = hadamart_product(multiplied, output_derivate);
-            *(nabla_b[i]) = delta;
-            *(nabla_w[i]) = delta * outputs[i -1]->transpose();
         }
 }
 
@@ -168,6 +153,24 @@ inline Matrice Network::get_delta(double **output, double **required_output)
         }
 }
 
+inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
+{
+    Matrice multiplied, output_derivate;
+    this->feedforward(trainig_data->input);
+    Matrice delta = this->get_delta(this->outputs[this->layers_num - 1]->data, trainig_data->required_output);
+    *(nabla_b[this->layers_num - 1]) = delta;
+    *(nabla_w[this->layers_num - 1]) = delta * this->outputs[this->layers_num - 2]->transpose();
+    /*passing backwards the error*/
+    for(int i = this->layers_num - 2; i >= 0; i--)
+        {
+            output_derivate = this->derivate_layers_output(i, this->outputs[i - 1]->data);
+            multiplied = this->weights[i + 1]->transpose() * delta;
+            delta = hadamart_product(multiplied, output_derivate);
+            *(nabla_b[i]) = delta;
+            *(nabla_w[i]) = delta * outputs[i -1]->transpose();
+        }
+}
+
 inline Matrice Network::derivate_layers_output(int layer, double **input)
 {
     Matrice mtx(this->layers[layer], 1);
@@ -187,14 +190,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     Matrice **dnw;
     Matrice **b_bck, **w_bck;
     int *layer_bck, **ind;
-    print_mtx_list(this->weights, 3);
-    cout << "---------------------------\n";
     this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
-    print_mtx_list(this->weights, 3);
-    this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
-    cout << "---------------------\n";
-    print_mtx_list(this->weights, 3);
-    exit(0);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -262,16 +258,16 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     delete[] dnw;
     delete[] b;
     delete[] dnb;
-    cout << "---------------------\n";
-    print_mtx_list(this->weights, 3);
-    exit(0);
 }
 
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, double regularization_rate, int trainingdata_len)
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
+                                            double regularization_rate, MNIST_data **test_data, int test_data_len, int trainingdata_len)
 {
     MNIST_data **minibatch = new MNIST_data* [epoch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
+    int learning_accuracy;
+    Matrice output;
     for(int i = 0; i < epochs; i++)
         {
             for(int j = 0; j < epoch_len; j++)
@@ -279,6 +275,19 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                     minibatch[j] = training_data[random(0, trainingdata_len, rand)];
                 }
             this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
+            if(test_data != NULL)
+                {
+                    learning_accuracy = 0;
+                    for(int j = 0; j < 10000; j++)
+                        {
+                            output = this->get_output(test_data[j]->input);
+                            if(getmax(output.data) == getmax(test_data[j]->required_output))
+                                {
+                                    learning_accuracy++;
+                                }
+                        }
+                    cout << "set " << i << ": " << learning_accuracy << endl;
+                }
         }
     rand.close();
 }
@@ -299,22 +308,7 @@ int getmax(double **d)
 }
 void Network::test(MNIST_data **d)
 {
-    Matrice output;
-    int counter;
-    for(int i = 0; i < 300; i++)
-        {
-            this->stochastic_gradient_descent(d,1,100,3,5);
-            counter = 0;
-            for(int j = 0; j < 10000; j++)
-                {
-                    output = this->get_output(d[j]->input);
-                    if(getmax(output.data) == getmax(d[j]->required_output))
-                        {
-                            counter++;
-                        }
-                }
-            cout << "set " << i << ": " << counter << endl;
-        }
+    this->stochastic_gradient_descent(d, 30, 100, 3, 5, d);
 }
 
 Matrice Network::get_output(double **input)
@@ -355,10 +349,11 @@ void quickSort( int *a, int l, int r)
 
 inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
 {
+    ///TAKE CARE!!! if this->dropout == false the function must return immediatelly!!!
+    if((this->total_layers_num <= 2) || (this->dropout == false))
+        return;
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
-    if(this->total_layers_num <= 2)
-        return;
     layers_bckup[0] = new int [this->total_layers_num];
     this->layers -= 1;
     for(int i = 0; i < this->total_layers_num; i++)
@@ -382,22 +377,14 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
         {
             indexes[0][i] = new int [this->layers[i]];
             tmp = new int[layers_bckup[0][i]];
-            //cout <<layers_bckup[0][i] << '\n';
             for(int j = 0; j < layers_bckup[0][i]; j++)
                 tmp[j] = j;
             shuffle(tmp, layers_bckup[0][i], rand);
-            for(int j = 0; j < layers_bckup[0][i]; j++)//
-                cout << tmp[j] << ' ';//
-                cout << '\n';
-            //cout << i << this->layers[i] << '\n';
             for(int j = 0; j < this->layers[i]; j++)
                 {
                     indexes[0][i][j] = tmp[j];
                 }
             quickSort(indexes[0][i], 0, this->layers[i] - 1);
-            /*for(int j = 0; j < this->layers[i]; j++)//
-                cout << indexes[0][i][j] << ' ';//
-            cout << '\n';//*/
             delete[] tmp;
         }
     for(int j = 0; j < this->layers[0]; j++)
@@ -432,7 +419,8 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
 
 inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
 {
-    if(this->total_layers_num <= 2)
+    ///TAKE CARE!!! if this->dropout == false the function must return immediatelly!!!
+    if((this->total_layers_num <= 2) || (this->dropout == false))
         return;
     for(int j = 0; j < this->layers[0]; j++)
         {
@@ -467,13 +455,15 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
             this->biases[i] = b_bckup[i];
             delete this->weights[i];
             this->weights[i] = w_bckup[i];
-            delete[] indexes[i];
+            if(i < (this->layers_num - 1))
+                delete[] indexes[i];
         }
     delete[] indexes;
     this->layers -= 1;
     layers_bckup -= 1;
     for(int i = 0; i < this->total_layers_num; i++)
         this->layers[i] = layers_bckup[i];
+    this->layers += 1;
     delete[] layers_bckup;
 
 }

@@ -49,6 +49,10 @@
 		<Unit filename="neuron.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="random.cpp" />
+		<Unit filename="random.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<debugger />

@@ -41,4 +41,6 @@ void MNIST_data::load_data(std::ifstream &input, std::ifstream &required_output)
                 this->required_output[i] = new double [1];
                 this->required_output[i][0] = req[i];
             }
+        delete[] inp;
+        delete[] req;
     }

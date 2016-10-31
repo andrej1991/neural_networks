@@ -10,6 +10,7 @@
 class Network{
     int total_layers_num, layers_num, costfunction_type, neuron_type;
     int *layers;
+    bool dropout;
     Matrice **biases, **outputs, **weights;
     void initialize_biases();
     void initialize_weights();
@@ -23,8 +24,9 @@ class Network{
     inline void feedforward(double **input);
     Neuron neuron;
     public:
-    void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, double regularization_rate = 0, int trainingdata_len = 50000);
-    Network(int layers_num, int *layers, int costfunction_type = CROSS_ENTROPY_CF, int neuron_type = SIGMOID);
+    void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
+                                    double regularization_rate = 0, MNIST_data **test_data = NULL, int test_data_len = 10000,  int trainingdata_len = 50000);
+    Network(int layers_num, int *layers, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false, int neuron_type = SIGMOID);
     ~Network();
     void test(MNIST_data **d);
     Matrice get_output(double **input);

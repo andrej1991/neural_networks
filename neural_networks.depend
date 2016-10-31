@@ -77,7 +77,7 @@
 	<math.h>
 	<iostream>
 
-1477846850 source:/home/andrej/myfiles/dokumentumok/neural_networks/main.cpp
+1477927507 source:/home/andrej/myfiles/dokumentumok/neural_networks/main.cpp
 	<iostream>
 	<fstream>
 	"MNIST_data.h"
@@ -89,7 +89,7 @@
 1477818321 /home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.h
 	<fstream>
 
-1477818668 /home/andrej/myfiles/dokumentumok/neural_networks/network.h
+1477944032 /home/andrej/myfiles/dokumentumok/neural_networks/network.h
 	"neuron.h"
 	"MNIST_data.h"
 	"matrice.h"
@@ -103,12 +103,12 @@
 1477818321 source:/home/andrej/myfiles/dokumentumok/neural_networks/matrice.cpp
 	"matrice.h"
 
-1477818321 source:/home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.cpp
+1477917323 source:/home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.cpp
 	<iostream>
 	<fstream>
 	"MNIST_data.h"
 
-1477849131 source:/home/andrej/myfiles/dokumentumok/neural_networks/network.cpp
+1477943782 source:/home/andrej/myfiles/dokumentumok/neural_networks/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>
@@ -126,4 +126,12 @@
 
 1477846850 /home/andrej/myfiles/dokumentumok/neural_networks/random.h
 	<fstream>
+
+1477942338 /home/andrej/myfiles/dokumentumok/neural_networks/cost_function.h
+	"matrice.h"
+	"network.h"
+
+1477943650 source:/home/andrej/myfiles/dokumentumok/neural_networks/cost_function.cpp
+	"network.h"
+	"matrice.h"
 
