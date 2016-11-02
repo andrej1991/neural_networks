@@ -21,8 +21,8 @@ int main()
             m[i]->load_data(input, required_output);
         }
     cout << "Hello world!" << endl;
-    int layers[4] = {5, 10, 10, 5};
-    Network n(4, layers);
+    int layers[3] = {784, 30, 10};
+    Network n(3, layers, CROSS_ENTROPY_CF, true);
     n.test(m);
     input.close();
     required_output.close();

@@ -22,8 +22,11 @@ class Network{
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     inline void feedforward(double **input);
+    double cost(double **required_output);
     Neuron neuron;
     public:
+    void load(char *filename);
+    void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int test_data_len = 10000,  int trainingdata_len = 50000);
     Network(int layers_num, int *layers, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false, int neuron_type = SIGMOID);

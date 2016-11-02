@@ -3,10 +3,10 @@
 #include <iostream>
 #include <stdlib.h>
 #include "random.h"
+#include "additional.h"
+#include <math.h>
 
 using namespace std;
-
-int getmax(double **d);
 
 Network::Network(int layers_num, int *layers, int costfunction_type,  bool dropout, int neuron_type):
                 biases(NULL), outputs(NULL), weights(NULL), neuron(neuron_type), dropout(dropout)
@@ -111,6 +111,33 @@ inline void Network::feedforward(double **input)
     for(int i = 0; i < this->layers_num; i++)
         {
             this->layers_output(this->outputs[i - 1]->data, i);
+        }
+}
+
+double Network::cost(double **required_output)
+{
+    double helper = 0, result = 0;
+    switch(this->costfunction_type)
+        {
+        case QUADRATIC_CF:
+            /// 1/2 * ||y(x) - a||^2
+            for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                {
+                    helper = required_output[i][0] - this->outputs[this->layers[this->layers_num - 1]]->data[i][0];
+                    result += helper * helper;
+                }
+            return (1/2) * result;
+        case CROSS_ENTROPY_CF:
+            ///y(x)ln a + (1 - y(x))ln(1 - a)
+            for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                {
+                    helper += required_output[i][0] * log(this->outputs[this->layers[this->layers_num - 1]]->data[i][0]) + (1 - required_output[i][0]) *
+                                    log(1 - this->outputs[this->layers[this->layers_num - 1]]->data[i][0]);
+                }
+            return helper;
+        default:
+            cerr << "Unknown cost function\n";
+            throw exception();
         }
 }
 
@@ -260,91 +287,11 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     delete[] dnb;
 }
 
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
-                                            double regularization_rate, MNIST_data **test_data, int test_data_len, int trainingdata_len)
-{
-    MNIST_data **minibatch = new MNIST_data* [epoch_len];
-    ifstream rand;
-    rand.open("/dev/urandom", ios::in);
-    int learning_accuracy;
-    Matrice output;
-    for(int i = 0; i < epochs; i++)
-        {
-            for(int j = 0; j < epoch_len; j++)
-                {
-                    minibatch[j] = training_data[random(0, trainingdata_len, rand)];
-                }
-            this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
-            if(test_data != NULL)
-                {
-                    learning_accuracy = 0;
-                    for(int j = 0; j < 10000; j++)
-                        {
-                            output = this->get_output(test_data[j]->input);
-                            if(getmax(output.data) == getmax(test_data[j]->required_output))
-                                {
-                                    learning_accuracy++;
-                                }
-                        }
-                    cout << "set " << i << ": " << learning_accuracy << endl;
-                }
-        }
-    rand.close();
-}
-
-int getmax(double **d)
-{
-    double Max = d[0][0];
-    int index = 0;
-    for(int i = 0; i < 10; i++)
-        {
-            if(Max < d[i][0])
-                {
-                    Max = d[i][0];
-                    index = i;
-                }
-        }
-    return index;
-}
-void Network::test(MNIST_data **d)
-{
-    this->stochastic_gradient_descent(d, 30, 100, 3, 5, d);
-}
-
 Matrice Network::get_output(double **input)
 {
     this->feedforward(input);
     Matrice ret = this->outputs[this->layers_num - 1][0];
     return ret;
-}
-int partition( int *a, int l, int r) {
-   int pivot, i, j, t;
-   pivot = a[l];
-   i = l; j = r+1;
-
-   while( 1)
-   {
-   	do ++i; while( a[i] <= pivot && i <= r );
-   	do --j; while( a[j] > pivot );
-   	if( i >= j ) break;
-   	t = a[i]; a[i] = a[j]; a[j] = t;
-   }
-   t = a[l]; a[l] = a[j]; a[j] = t;
-   return j;
-}
-
-void quickSort( int *a, int l, int r)
-{
-   int j;
-
-   if( l < r )
-   {
-   	// divide and conquer
-        j = partition( a, l, r);
-       quickSort( a, l, j-1);
-       quickSort( a, j+1, r);
-   }
-
 }
 
 inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
@@ -466,4 +413,51 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
     this->layers += 1;
     delete[] layers_bckup;
 
+}
+
+void Network::load(char *filename)
+{
+    ;
+}
+
+void Network::store(char *filename)
+{
+    ;
+}
+
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
+                                            double regularization_rate, MNIST_data **test_data, int test_data_len, int trainingdata_len)
+{
+    MNIST_data **minibatch = new MNIST_data* [epoch_len];
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
+    int learning_accuracy;
+    Matrice output;
+    for(int i = 0; i < epochs; i++)
+        {
+            for(int j = 0; j < epoch_len; j++)
+                {
+                    minibatch[j] = training_data[random(0, trainingdata_len, rand)];
+                }
+            this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
+            if(test_data != NULL)
+                {
+                    learning_accuracy = 0;
+                    for(int j = 0; j < 10000; j++)
+                        {
+                            output = this->get_output(test_data[j]->input);
+                            if(getmax(output.data) == getmax(test_data[j]->required_output))
+                                {
+                                    learning_accuracy++;
+                                }
+                        }
+                    cout << "set " << i << ": " << learning_accuracy << endl;
+                }
+        }
+    rand.close();
+}
+
+void Network::test(MNIST_data **d)
+{
+    this->stochastic_gradient_descent(d, 30, 100, 3, 5, d);
 }
