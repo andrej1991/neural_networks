@@ -123,7 +123,7 @@ double Network::cost(double **required_output)
             /// 1/2 * ||y(x) - a||^2
             for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
                 {
-                    helper = required_output[i][0] - this->outputs[this->layers[this->layers_num - 1]]->data[i][0];
+                    helper = required_output[i][0] - this->outputs[this->layers_num - 1]->data[i][0];
                     result += helper * helper;
                 }
             return (1/2) * result;
@@ -131,8 +131,8 @@ double Network::cost(double **required_output)
             ///y(x)ln a + (1 - y(x))ln(1 - a)
             for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
                 {
-                    helper += required_output[i][0] * log(this->outputs[this->layers[this->layers_num - 1]]->data[i][0]) + (1 - required_output[i][0]) *
-                                    log(1 - this->outputs[this->layers[this->layers_num - 1]]->data[i][0]);
+                    helper += required_output[i][0] * log(this->outputs[this->layers_num - 1]->data[i][0]) + (1 - required_output[i][0]) *
+                                    log(1 - this->outputs[this->layers_num - 1]->data[i][0]);
                 }
             return helper;
         default:
@@ -425,13 +425,21 @@ void Network::store(char *filename)
     ;
 }
 
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, bool monitor_learning_cost,
                                             double regularization_rate, MNIST_data **test_data, int test_data_len, int trainingdata_len)
 {
     MNIST_data **minibatch = new MNIST_data* [epoch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
-    int learning_accuracy;
+    int break_counter = 0;
+    int learning_accuracy, learnig_cost_counter = 0;
+    double learning_cost, previoius_learning_cost = 0;
+    double **helper = new double* [this->layers[this->layers_num - 1]];
+    for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+        {
+            helper[i] = new double [1];
+            helper[i][0] == 0;
+        }
     Matrice output;
     for(int i = 0; i < epochs; i++)
         {
@@ -442,22 +450,47 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
             if(test_data != NULL)
                 {
-                    learning_accuracy = 0;
-                    for(int j = 0; j < 10000; j++)
+                    learning_accuracy = learning_cost = 0;
+                    for(int j = 0; j < test_data_len; j++)
                         {
                             output = this->get_output(test_data[j]->input);
-                            if(getmax(output.data) == getmax(test_data[j]->required_output))
+                            if(getmax(output.data) == test_data[j]->required_output[0][0])
                                 {
                                     learning_accuracy++;
                                 }
+                            if(monitor_learning_cost)
+                                {
+                                    if(j > 0)
+                                        helper[(int)test_data[j - 1]->required_output[0][0]][0] = 0;
+                                    helper[(int)test_data[j]->required_output[0][0]][0] = 1;
+                                    learning_cost += this->cost(helper);
+                                }
                         }
-                    cout << "set " << i << ": " << learning_accuracy << endl;
+                    cout << "set " << i << ": " << learning_accuracy << " out of: " << test_data_len << endl;
+                    if(monitor_learning_cost)
+                        {
+                            cout << "total cost: " << learning_cost << endl;
+                            if(abs(learning_cost) > abs(previoius_learning_cost))
+                                learnig_cost_counter++;
+                            if(learnig_cost_counter == 10)
+                                {
+                                    learnig_cost_counter = 0;
+                                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
+                                    cout << "changing leatning rate to: " << learning_rate << endl;
+                                    if((break_counter++) == 50)
+                                        {
+                                            cout << "the learning rate is too small\n";
+                                            break;
+                                        }
+                                }
+                            previoius_learning_cost = learning_cost;
+                        }
                 }
         }
     rand.close();
 }
 
-void Network::test(MNIST_data **d)
+void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 30, 100, 3, 5, d);
+    this->stochastic_gradient_descent(d, 1000, 100, 5, true, 1, v);
 }

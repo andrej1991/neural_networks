@@ -36,12 +36,18 @@
 		<Unit filename="MNIST_data.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="additional.cpp" />
+		<Unit filename="additional.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="main.cpp" />
 		<Unit filename="matrice.cpp" />
 		<Unit filename="matrice.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="network.cpp" />
+		<Unit filename="network.cpp">
+			<Option weight="100" />
+		</Unit>
 		<Unit filename="network.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>

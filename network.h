@@ -27,11 +27,11 @@ class Network{
     public:
     void load(char *filename);
     void store(char *filename);
-    void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate,
+    void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int test_data_len = 10000,  int trainingdata_len = 50000);
     Network(int layers_num, int *layers, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false, int neuron_type = SIGMOID);
     ~Network();
-    void test(MNIST_data **d);
+    void test(MNIST_data **d, MNIST_data **v);
     Matrice get_output(double **input);
 };
 
