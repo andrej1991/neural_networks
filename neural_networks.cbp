@@ -40,6 +40,13 @@
 		<Unit filename="additional.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="layers/FullyConnected.cpp" />
+		<Unit filename="layers/layers.cpp">
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="layers/layers.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="main.cpp" />
 		<Unit filename="matrice.cpp" />
 		<Unit filename="matrice.h">

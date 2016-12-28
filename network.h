@@ -3,17 +3,15 @@
 #include "neuron.h"
 #include "MNIST_data.h"
 #include "matrice.h"
-
-#define QUADRATIC_CF 0
-#define CROSS_ENTROPY_CF 1
+#include "layers/layers.h"
 
 class Network{
-    int total_layers_num, layers_num, costfunction_type, neuron_type;
+    int total_layers_num, layers_num, costfunction_type, neuron_type;///
     int *layers;
     bool dropout;
-    Matrice **biases, **outputs, **weights;
-    void initialize_biases();
-    void initialize_weights();
+    Matrice **biases, **outputs, **weights;///
+    void initialize_biases();///
+    void initialize_weights();///
     inline void layers_output(double **input, int layer);
     inline void backpropagate(MNIST_data *training_data, Matrice **nabla_b, Matrice **nabla_w);
     inline Matrice get_delta(double **output, double **required_output);
