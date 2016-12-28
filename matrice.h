@@ -25,6 +25,8 @@ class Matrice
     friend Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2);
     Matrice transpose();
     friend void print_mtx_list(Matrice **mtx, int list_len);
+    inline int get_row();
+    inline int get_col();
 };
 
 

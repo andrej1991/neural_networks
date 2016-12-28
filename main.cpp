@@ -30,8 +30,10 @@ int main()
             //cout << validation[i]->required_output[0][0];
         }
     cout << "Hello world!" << endl;
-    int layers[3] = {784, 30, 10};
-    Network n(3, layers, CROSS_ENTROPY_CF);
+    LayerDescriptor *layers[2];
+    layers[0] = new LayerDescriptor(FULLY_CONNECTED, 30, SIGMOID);
+    layers[1] = new LayerDescriptor(FULLY_CONNECTED, 10, SIGMOID);
+    Network n(3, layers, 784, CROSS_ENTROPY_CF);
     n.test(m, validation);
     input.close();
     required_output.close();

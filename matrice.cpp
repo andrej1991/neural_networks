@@ -149,3 +149,13 @@ void print_mtx_list(Matrice **mtx, int list_len)
     }
 
 }
+
+inline int Matrice::get_row()
+{
+    return this->row;
+}
+
+inline int Matrice::get_col()
+{
+    return this->col;
+}

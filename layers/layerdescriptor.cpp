@@ -3,7 +3,7 @@
 LayerDescriptor::LayerDescriptor(int layer_type, int neuron_count, int neuron_type, int stride):
             layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), stride(stride) {}
 
-inline int LayerDescriptor::get_layet_type()
+inline int LayerDescriptor::get_layer_type()
 {
     return this->layer_type;
 }

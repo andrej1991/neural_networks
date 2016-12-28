@@ -41,6 +41,10 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="layers/FullyConnected.cpp" />
+		<Unit filename="layers/inputlayer.cpp" />
+		<Unit filename="layers/layerdescriptor.cpp">
+			<Option weight="40" />
+		</Unit>
 		<Unit filename="layers/layers.cpp">
 			<Option weight="0" />
 		</Unit>
