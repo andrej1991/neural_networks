@@ -102,7 +102,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, 
     ///TODO change this part
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
-            output_derivate = this->layers[i]->derivate_layers_output(this->layers[i - 1]->output.data);
+            output_derivate = this->layers[i]->derivate_layers_output(this->layers[i - 1]->output.data, this->layers[i - 1]->outputlen);
             multiplied = this->layers[i + 1]->weights.transpose() * delta;
             delta = hadamart_product(multiplied, output_derivate);
             *(nabla_b[i]) = delta;

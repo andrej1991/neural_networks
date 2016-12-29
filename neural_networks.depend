@@ -214,10 +214,10 @@
 	<math.h>
 	"layers/layers.h"
 
-1482952753 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
+1483007748 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
 	"layers.h"
 
-1482954455 /home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.h
+1483007748 /home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.h
 	"../neuron.h"
 	"../MNIST_data.h"
 	"../matrice.h"
@@ -231,6 +231,6 @@
 1482947048 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layerdescriptor.cpp
 	"layers.h"
 
-1482953126 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/inputlayer.cpp
+1483007862 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/inputlayer.cpp
 	"layers.h"
 

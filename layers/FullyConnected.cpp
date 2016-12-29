@@ -18,36 +18,36 @@ inline void FullyConnected::layers_output(double **input, int layer)
         }
 }
 
-inline Matrice FullyConnected::get_output_error(double **output, double **required_output, int costfunction_type)
+inline Matrice FullyConnected::get_output_error(double **input, double **required_output, int inputlen, int costfunction_type)
 {
-    Matrice mtx(this->layers[this->layers_num - 1], 1);
-    Matrice delta(this->layers[this->layers_num - 1], 1);
-    Matrice output_derivate(this->layers[this->layers_num - 1], 1);
+    Matrice mtx(this->outputlen, 1);
+    Matrice delta(this->outputlen, 1);
+    Matrice output_derivate(this->outputlen, 1);
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
-            for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+            for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = output[i][0] - required_output[i][0];
+                    mtx.data[i][0] = this->output.data[i][0] - required_output[i][0];
                 }
-            output_derivate = this->derivate_layers_output(this->layers_num - 1, this->outputs[this->layers_num - 2]->data);
+            output_derivate = this->derivate_layers_output(input, inputlen);
             delta = hadamart_product(mtx, output_derivate);
             return delta;
         case CROSS_ENTROPY_CF:
             switch(this->neuron_type)
                 {
                 case SIGMOID:
-                    for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                    for(int i = 0; i < this->outputlen; i++)
                         {
-                            mtx.data[i][0] = output[i][0] - required_output[i][0];
+                            mtx.data[i][0] = this->output.data[i][0] - required_output[i][0];
                         }
                     return mtx;
                 default:
-                    output_derivate = this->derivate_layers_output(this->layers_num - 1, this->outputs[this->layers_num - 2]->data);
-                    for(int i = 0; i < this->layers[this->layers_num - 1]; i++)
+                    output_derivate = this->derivate_layers_output(input, inputlen);
+                    for(int i = 0; i < this->outputlen; i++)
                         {
-                            delta.data[i][0] = (output_derivate.data[i][0] * (this->outputs[this->layers_num - 1]->data[i][0] - required_output[i][0])) /
-                                                    (this->outputs[this->layers_num - 1]->data[i][0] * (1 - this->outputs[this->layers_num - 1]->data[i][0]));
+                            delta.data[i][0] = (output_derivate.data[i][0] * (this->output.data[i][0] - required_output[i][0])) /
+                                                    (this->output.data[i][0] * (1 - this->output.data[i][0]));
                         }
                     return delta;
                 }
@@ -57,12 +57,12 @@ inline Matrice FullyConnected::get_output_error(double **output, double **requir
         };
 }
 
-inline Matrice FullyConnected::derivate_layers_output(double **input)
+inline Matrice FullyConnected::derivate_layers_output(double **input, int inputlen)
 {
-    Matrice mtx(this->layers[layer], 1);
-    for(int i = 0; i < this->layers[layer]; i++)
+    Matrice mtx(this->outputlen, 1);
+    for(int i = 0; i < this->outputlen; i++)
         {
-            mtx.data[i][0] = this->neuron.neuron_derivate(this->weights[layer]->data[i], input, this->biases[layer]->data[i][0], this->layers[layer - 1]);
+            mtx.data[i][0] = this->neuron.neuron_derivate(this->weights.data[i], input, this->biases.data[i][0], inputlen);
         }
     return mtx;
 }

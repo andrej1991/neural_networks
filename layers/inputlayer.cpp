@@ -15,12 +15,12 @@ inline void InputLayer::layers_output(double **input, int layer)
     ;
 }
 
-inline Matrice InputLayer::get_delta(double **output, double **required_output)
+inline Matrice InputLayer::get_output_error(double **output, double **required_output, int inputlen, int costfunction_type)
 {
     ;
 }
 
-inline Matrice InputLayer::derivate_layers_output(double **input)
+inline Matrice InputLayer::derivate_layers_output(double **input, int inputlen)
 {
     ;
 }
