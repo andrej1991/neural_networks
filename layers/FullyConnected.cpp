@@ -16,8 +16,6 @@ FullyConnected::~FullyConnected()
 
 inline void FullyConnected::layers_output(Matrice &input)
 {
-    //for(int i = 0; i < inputlen; i++)
-        //cout<<input[i][0];
     for(int i = 0; i < this->outputlen; i++)
         {
             this->output.data[i][0] = this->neuron.neuron(this->weights.data[i], input.data, this->biases.data[i][0], input.get_row());

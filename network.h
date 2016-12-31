@@ -9,11 +9,7 @@ class Network{
     int total_layers_num, layers_num, costfunction_type, inputpixel_count;
     Layer **layers;
     bool dropout;
-    //inline void layers_output(double **input, int layer);
     inline void backpropagate(MNIST_data *training_data, Matrice **nabla_b, Matrice **nabla_w);
-    inline Matrice get_output_error(double **required_output);
-    //inline Matrice get_delta(double **output, double **required_output);
-    //inline Matrice derivate_layers_output(int layer, double **input);
     void update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);

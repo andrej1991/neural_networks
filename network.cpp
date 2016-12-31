@@ -15,9 +15,9 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
     try
     {
         this->costfunction_type = costfunction_type;
-        this->total_layers_num = layers_num;
-        this->layers_num = layers_num - 1;
-        this->layers = new Layer* [layers_num + 1];
+        this->total_layers_num = layers_num + 1;
+        this->layers_num = layers_num;
+        this->layers = new Layer* [this->total_layers_num];
         this->layers[0] = new InputLayer(inputpixel_count, 1, SIGMOID);
         this->layers += 1;
         for(int i = 0; i < layers_num; i++)
@@ -86,22 +86,23 @@ double Network::cost(double **required_output)
         }
 }
 
-inline Matrice Network::get_output_error(double **required_output)
+/*inline Matrice Network::get_output_error(double **required_output)
 {
     ;
-}
+}*/
 
 inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
 {
     this->feedforward(trainig_data->input);
-    Matrice delta = this->get_output_error(trainig_data->required_output);
+    Matrice delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 1]->get_output(),
+                                                                   trainig_data->required_output, this->costfunction_type);
     *(nabla_b[this->layers_num - 1]) = delta;
     *(nabla_w[this->layers_num - 1]) = delta * this->layers[this->layers_num - 2]->get_output().transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
             this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
-                                          this->layers[i + 1]->get_weights(), nabla_b[i], nabla_w[i], delta);
+                                           this->layers[i + 1]->get_weights(), nabla_b[i], nabla_w[i], delta);
         }
 }
 
