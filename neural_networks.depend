@@ -1,166 +1,36 @@
 # depslib dependency file v1.0
-1476640493 source:/home/andrej/hdd/dokumentumok/neural_networks/main.cpp
-	<iostream>
-	<fstream>
-	"MNIST_data.h"
-	"network.h"
-	"matrice.h"
+1482920863 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.cpp
+	"layers.h"
 
-1476641500 source:/home/andrej/hdd/dokumentumok/neural_networks/network.cpp
-	"network.h"
-	<fstream>
-	<iostream>
+1483201331 /home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.h
+	"../neuron.h"
+	"../MNIST_data.h"
+	"../matrice.h"
 
-1476650539 /home/andrej/hdd/dokumentumok/neural_networks/network.h
-	"neuron.h"
-	"MNIST_data.h"
-	"matrice.h"
+1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/neuron.h
 
-1476031979 /home/andrej/hdd/dokumentumok/neural_networks/neuron.h
-
-1476306377 source:/home/andrej/hdd/dokumentumok/neural_networks/neuron.cpp
-	"neuron.h"
-	<math.h>
-
-1476218632 /home/andrej/hdd/dokumentumok/neural_networks/MNIST_data.h
+1477818321 /home/andrej/myfiles/dokumentumok/neural_networks/src/MNIST_data.h
 	<fstream>
 
-1476528833 source:/home/andrej/hdd/dokumentumok/neural_networks/MNIST_data.cpp
-	<iostream>
-	<fstream>
-	"MNIST_data.h"
-
-1476634927 source:/home/andrej/hdd/dokumentumok/neural_networks/matrice.cpp
-	"matrice.h"
-
-1476565475 /home/andrej/hdd/dokumentumok/neural_networks/matrice.h
+1483203193 /home/andrej/myfiles/dokumentumok/neural_networks/src/matrice.h
 	<iostream>
 	<stdio.h>
 
-1478180911 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
-	<iostream>
-	<fstream>
-	"MNIST_data.h"
-	"network.h"
-	"matrice.h"
-	"random.h"
-	<iosfwd>
-
-1476218632 /home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.h
-	<fstream>
-
-1478180948 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
-	"neuron.h"
-	"MNIST_data.h"
-	"matrice.h"
-
-1476912003 /home/andrej/hdd/dokumentumok/neural_networks/src/neuron.h
-
-1477604648 /home/andrej/hdd/dokumentumok/neural_networks/src/matrice.h
-	<iostream>
-	<stdio.h>
-
-1476634927 source:/home/andrej/hdd/dokumentumok/neural_networks/src/matrice.cpp
-	"matrice.h"
-
-1478119189 source:/home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.cpp
-	<iostream>
-	<fstream>
-	"MNIST_data.h"
-
-1478183535 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
-	"network.h"
-	<fstream>
-	<iostream>
-	<stdlib.h>
-	"random.h"
-	"additional.h"
-	<math.h>
-
-1476912292 source:/home/andrej/hdd/dokumentumok/neural_networks/src/neuron.cpp
-	"neuron.h"
-	<math.h>
-	<iostream>
-
-1477927507 source:/home/andrej/myfiles/dokumentumok/neural_networks/main.cpp
-	<iostream>
-	<fstream>
-	"MNIST_data.h"
-	"network.h"
-	"matrice.h"
-	"random.h"
-	<iosfwd>
-
-1477818321 /home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.h
-	<fstream>
-
-1477944032 /home/andrej/myfiles/dokumentumok/neural_networks/network.h
-	"neuron.h"
-	"MNIST_data.h"
-	"matrice.h"
-
-1477818668 /home/andrej/myfiles/dokumentumok/neural_networks/neuron.h
-
-1477818668 /home/andrej/myfiles/dokumentumok/neural_networks/matrice.h
-	<iostream>
-	<stdio.h>
-
-1477818321 source:/home/andrej/myfiles/dokumentumok/neural_networks/matrice.cpp
-	"matrice.h"
-
-1477917323 source:/home/andrej/myfiles/dokumentumok/neural_networks/MNIST_data.cpp
-	<iostream>
-	<fstream>
-	"MNIST_data.h"
-
-1477943782 source:/home/andrej/myfiles/dokumentumok/neural_networks/network.cpp
-	"network.h"
-	<fstream>
-	<iostream>
-	<stdlib.h>
-	"random.h"
-
-1477818668 source:/home/andrej/myfiles/dokumentumok/neural_networks/neuron.cpp
-	"neuron.h"
-	<math.h>
-	<iostream>
-
-1477849248 source:/home/andrej/myfiles/dokumentumok/neural_networks/random.cpp
-	"random.h"
-	<fstream>
-
-1477846850 /home/andrej/myfiles/dokumentumok/neural_networks/random.h
-	<fstream>
-
-1477942338 /home/andrej/myfiles/dokumentumok/neural_networks/cost_function.h
-	"matrice.h"
-	"network.h"
-
-1477943650 source:/home/andrej/myfiles/dokumentumok/neural_networks/cost_function.cpp
-	"network.h"
-	"matrice.h"
-
-1478119189 /home/andrej/hdd/dokumentumok/neural_networks/src/random.h
-	<fstream>
-
-1478119189 source:/home/andrej/hdd/dokumentumok/neural_networks/src/random.cpp
-	"random.h"
-	<fstream>
-
-1478124313 source:/home/andrej/hdd/dokumentumok/neural_networks/src/cost_function.cpp
-	"network.h"
-
-1478124964 source:/home/andrej/hdd/dokumentumok/neural_networks/src/additional.cpp
-	"additional.h"
-
-1478124964 /home/andrej/hdd/dokumentumok/neural_networks/src/additional.h
+1483100368 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layerdescriptor.cpp
+	"layers.h"
 
 1482773605 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/additional.cpp
 	"additional.h"
 
 1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/additional.h
 
-1482946841 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/main.cpp
+1483200268 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
+	"layers.h"
+
+1483201215 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/inputlayer.cpp
+	"layers.h"
+
+1483118975 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/main.cpp
 	<iostream>
 	<fstream>
 	"MNIST_data.h"
@@ -169,25 +39,16 @@
 	"random.h"
 	<iosfwd>
 
-1477818321 /home/andrej/myfiles/dokumentumok/neural_networks/src/MNIST_data.h
-	<fstream>
-
-1482953692 /home/andrej/myfiles/dokumentumok/neural_networks/src/network.h
+1483118975 /home/andrej/myfiles/dokumentumok/neural_networks/src/network.h
 	"neuron.h"
 	"MNIST_data.h"
 	"matrice.h"
 	"layers/layers.h"
 
-1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/neuron.h
-
-1482950344 /home/andrej/myfiles/dokumentumok/neural_networks/src/matrice.h
-	<iostream>
-	<stdio.h>
-
 1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/random.h
 	<fstream>
 
-1482950344 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/matrice.cpp
+1483203532 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/matrice.cpp
 	"matrice.h"
 
 1482773605 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/MNIST_data.cpp
@@ -195,7 +56,7 @@
 	<fstream>
 	"MNIST_data.h"
 
-1482773605 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/neuron.cpp
+1483192554 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/neuron.cpp
 	"neuron.h"
 	<math.h>
 	<iostream>
@@ -204,7 +65,7 @@
 	"random.h"
 	<fstream>
 
-1482953897 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/network.cpp
+1483198979 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>
@@ -213,24 +74,4 @@
 	"additional.h"
 	<math.h>
 	"layers/layers.h"
-
-1483007748 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
-	"layers.h"
-
-1483007748 /home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.h
-	"../neuron.h"
-	"../MNIST_data.h"
-	"../matrice.h"
-
-1482867145 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layer.cpp
-	"layers.h"
-
-1482920863 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.cpp
-	"layers.h"
-
-1482947048 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layerdescriptor.cpp
-	"layers.h"
-
-1483007862 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/inputlayer.cpp
-	"layers.h"
 

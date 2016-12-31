@@ -33,7 +33,7 @@ int main()
     LayerDescriptor *layers[2];
     layers[0] = new LayerDescriptor(FULLY_CONNECTED, 30, SIGMOID);
     layers[1] = new LayerDescriptor(FULLY_CONNECTED, 10, SIGMOID);
-    Network n(3, layers, 784, CROSS_ENTROPY_CF);
+    Network n(2, layers, 784);
     n.test(m, validation);
     input.close();
     required_output.close();

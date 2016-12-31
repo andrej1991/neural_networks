@@ -17,7 +17,8 @@ Matrice::Matrice(int row,int col) : data(NULL)
         }
     catch(bad_alloc& ba)
         {
-            cerr << "konstruktor: bad_alloc caught: " << ba.what() << endl;
+            cerr << "Matrice::constructor: bad_alloc caught: " << ba.what() << endl;
+            throw;
         }
 }
 
@@ -47,7 +48,8 @@ inline void Matrice::equality(const Matrice &mtx)
        }
     catch(bad_alloc& ba)
         {
-            cerr << "másolókonstruktor: bad_alloc caught: " << ba.what() << endl;
+            cerr << "Matrice::copyconstructor: bad_alloc caught: " << ba.what() << endl;
+            throw;
         }
     for(int i = 0; i < row; i++)
     {
@@ -80,6 +82,7 @@ Matrice Matrice::operator* (const Matrice& other)
     {
         if(col != other.row)
             {
+                std::cerr << "the condition of the if statement is fales in the operator Matrice::operator*\n";
                 throw std::exception();
             }
         else
@@ -102,6 +105,16 @@ Matrice Matrice::operator* (const Matrice& other)
                 }
     }
 
+int Matrice::get_row()
+{
+    return this->row;
+}
+
+int Matrice::get_col()
+{
+    return this->col;
+}
+
 Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2)
 {
     if((mtx1.row == mtx2.row) * (mtx1.col == mtx2.col))
@@ -114,6 +127,7 @@ Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2)
         }
     else
         {
+            std::cerr << "the condition of the if statement is fales in the function Matrice::hadamart_product\n";
             throw std::exception();
         }
 }
@@ -148,14 +162,4 @@ void print_mtx_list(Matrice **mtx, int list_len)
         cout << "]\n";
     }
 
-}
-
-inline int Matrice::get_row()
-{
-    return this->row;
-}
-
-inline int Matrice::get_col()
-{
-    return this->col;
 }
