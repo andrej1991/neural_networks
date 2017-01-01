@@ -71,9 +71,16 @@ inline Matrice FullyConnected::derivate_layers_output(Matrice &input)
     return mtx;
 }
 
-void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases)
+void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases)
 {
-    ;
+    for(int j = 0; j < this->outputlen; j++)
+        {
+            this->biases.data[j][0] -= learning_rate * biases->data[j][0];
+            for(int k = 0; k < prev_outputlen; k++)
+                {
+                    this->weights.data[j][k] = regularization_rate * this->weights.data[j][k] - learning_rate * weights->data[j][k];
+                }
+        }
 }
 
 inline void FullyConnected::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
@@ -206,12 +213,33 @@ void FullyConnected::set_input(double **input)
 
 void FullyConnected::initialize_biases()
 {
-    ;
+    ifstream random;
+    random.open("/dev/urandom", ios::in);
+    short int val;
+    for(int i = 0; i < this->biases.get_row(); i++)
+        {
+            random.read((char*)(&val), 2);
+            this->biases.data[i][0] = val;
+            this->biases.data[i][0] /= 63000;
+        }
+    random.close();
 }
 
 void FullyConnected::initialize_weights()
 {
-    ;
+    ifstream random;
+    random.open("/dev/urandom", ios::in);
+    short int val;
+    for(int i = 0; i < this->weights.get_row(); i++)
+        {
+            for(int j = 0; j < this->weights.get_col(); j++)
+                {
+                    random.read((char*)(&val), 2);
+                    this->weights.data[i][j] = val;
+                    this->weights.data[i][j] /= 63000;
+                }
+        }
+    random.close();
 }
 
 inline void FullyConnected::backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &delta)
