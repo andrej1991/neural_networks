@@ -78,12 +78,125 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
 
 inline void FullyConnected::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
 {
-    ;
+    /*
+    ///TAKE CARE!!! if this->dropout == false the function must return immediatelly!!!
+    if((this->total_layers_num <= 2) || (this->dropout == false))
+        return;
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
+    layers_bckup[0] = new int [this->total_layers_num];
+    this->layers -= 1;
+    for(int i = 0; i < this->total_layers_num; i++)
+        layers_bckup[0][i] = this->layers[i];
+    for(int i = 1; i < this->layers_num; i++)
+        this->layers[i] >>= 1;
+    this->layers += 1;
+    layers_bckup[0] += 1;
+    w_bckup[0] = new Matrice* [this->total_layers_num - 1];
+    b_bckup[0] = new Matrice* [this->total_layers_num - 1];
+    for(int i = 0; i < this->layers_num; i++)
+        {
+            w_bckup[0][i] = this->weights[i];
+            b_bckup[0][i] = this->biases[i];
+            this->biases[i] = new Matrice(this->layers[i], 1);
+            this->weights[i] = new Matrice(this->layers[i], this->layers[i - 1]);
+        }
+    indexes[0] = new int* [this->total_layers_num - 2];
+    int *tmp;
+    for(int i = 0; i < this->total_layers_num - 2; i++)
+        {
+            indexes[0][i] = new int [this->layers[i]];
+            tmp = new int[layers_bckup[0][i]];
+            for(int j = 0; j < layers_bckup[0][i]; j++)
+                tmp[j] = j;
+            shuffle(tmp, layers_bckup[0][i], rand);
+            for(int j = 0; j < this->layers[i]; j++)
+                {
+                    indexes[0][i][j] = tmp[j];
+                }
+            quickSort(indexes[0][i], 0, this->layers[i] - 1);
+            delete[] tmp;
+        }
+    for(int j = 0; j < this->layers[0]; j++)
+        {
+            this->biases[0]->data[j][0] = b_bckup[0][0]->data[indexes[0][0][j]][0];
+            for(int k = 0; k < this->layers[-1]; k++)
+                {
+                    this->weights[0]->data[j][k] = w_bckup[0][0]->data[indexes[0][0][j]][k];
+                }
+        }
+    for(int i = 1; i < this->layers_num - 1; i++)
+        {
+            for(int j = 0; j < this->layers[i]; j++)
+                {
+                    this->biases[i]->data[j][0] = b_bckup[0][i]->data[indexes[0][i][j]][0];
+                    for(int k = 0; k < this->layers[i - 1]; k++)
+                        {
+                            this->weights[i]->data[j][k] = w_bckup[0][i]->data[indexes[0][i][j]][indexes[0][i - 1][k]];
+                        }
+                }
+        }
+    for(int j = 0; j < this->layers[this->layers_num - 1]; j++)
+        {
+            this->biases[this->layers_num - 1]->data[j][0] = b_bckup[0][this->layers_num - 1]->data[j][0];
+            for(int k = 0; k < this->layers[this->layers_num - 2]; k++)
+                {
+                    this->weights[this->layers_num - 1]->data[j][k] = w_bckup[0][this->layers_num - 1]->data[j][indexes[0][this->layers_num - 2][k]];
+                }
+        }
+    rand.close();*/
 }
 
 inline void FullyConnected::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
 {
-    ;
+    /*
+    ///TAKE CARE!!! if this->dropout == false the function must return immediatelly!!!
+    if((this->total_layers_num <= 2) || (this->dropout == false))
+        return;
+    for(int j = 0; j < this->layers[0]; j++)
+        {
+            b_bckup[0]->data[indexes[0][j]][0] = this->biases[0]->data[j][0];
+            for(int k = 0; k < this->layers[-1]; k++)
+                {
+                    w_bckup[0]->data[indexes[0][j]][k] = this->weights[0]->data[j][k];
+                }
+        }
+    for(int i = 1; i < this->layers_num - 1; i++)
+        {
+            for(int j = 0; j < this->layers[i]; j++)
+                {
+                    b_bckup[i]->data[indexes[i][j]][0] = this->biases[i]->data[j][0];
+                    for(int k = 0; k < this->layers[i - 1]; k++)
+                        {
+                            w_bckup[i]->data[indexes[i][j]][indexes[i][k]] = this->weights[i]->data[j][k];
+                        }
+                }
+        }
+    for(int j = 0; j < this->layers[this->layers_num - 1]; j++)
+        {
+            b_bckup[this->layers_num - 1]->data[j][0] = this->biases[this->layers_num - 1]->data[j][0];
+            for(int k = 0; k < this->layers[this->layers_num - 2]; k++)
+                {
+                    w_bckup[this->layers_num - 1]->data[j][indexes[this->layers_num - 2][k]] = this->weights[this->layers_num - 1]->data[j][k];
+                }
+        }
+    for(int i = 0; i < this->layers_num; i++)
+        {
+            delete this->biases[i];
+            this->biases[i] = b_bckup[i];
+            delete this->weights[i];
+            this->weights[i] = w_bckup[i];
+            if(i < (this->layers_num - 1))
+                delete[] indexes[i];
+        }
+    delete[] indexes;
+    this->layers -= 1;
+    layers_bckup -= 1;
+    for(int i = 0; i < this->total_layers_num; i++)
+        this->layers[i] = layers_bckup[i];
+    this->layers += 1;
+    delete[] layers_bckup;
+*/
 }
 
 void FullyConnected::set_input(double **input)
