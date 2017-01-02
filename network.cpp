@@ -41,8 +41,8 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
 
 Network::~Network()
 {
-    //this->layers -= 1;
-    for(int i = 0; i < layers_num; i++)
+    this->layers -= 1;
+    for(int i = 0; i <= layers_num; i++)
         {
             delete this->layers[i];
         }
@@ -271,5 +271,5 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 3, 10, 5, true, 1, v);
+    this->stochastic_gradient_descent(d, 30, 10, 5, true, 0, v);
 }
