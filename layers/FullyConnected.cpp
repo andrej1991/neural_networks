@@ -276,3 +276,13 @@ inline int FullyConnected::get_neuron_count()
 {
     return this->neuron_count;
 }
+
+void FullyConnected::set_weights(Matrice *w)
+{
+    this->weights = *w;
+}
+
+void FullyConnected::set_biases(Matrice *b)
+{
+    this->biases = *b;
+}

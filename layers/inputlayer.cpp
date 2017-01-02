@@ -81,3 +81,13 @@ inline int InputLayer::get_neuron_count()
 {
     ;
 }
+
+void InputLayer::set_weights(Matrice *w)
+{
+    ;
+}
+
+void InputLayer::set_biases(Matrice *b)
+{
+    ;
+}

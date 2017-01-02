@@ -44,6 +44,8 @@ class Layer{
     virtual inline short get_layer_type() = 0;
     virtual inline int get_outputlen() = 0;
     virtual inline int get_neuron_count() = 0;
+    virtual void set_weights(Matrice *w) = 0;
+    virtual void set_biases(Matrice *b) = 0;
 };
 
 class FullyConnected : public Layer {
@@ -69,6 +71,8 @@ class FullyConnected : public Layer {
     inline short get_layer_type();
     inline int get_outputlen();
     inline int get_neuron_count();
+    void set_weights(Matrice *w);
+    void set_biases(Matrice *b);
 };
 
 /*class Convolutional : public Layer {
@@ -128,6 +132,11 @@ class Softmax : public Layer {
 
 class InputLayer : public Layer {
     public:
+    short int layer_type;
+    int outputlen;
+    Matrice output;
+    InputLayer(int row, int col, int neuron_type);
+    ~InputLayer();
     inline void backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
     inline void layers_output(Matrice &input);
     inline Matrice get_output_error(Matrice &input, double **required_output, int costfunction_type);
@@ -141,11 +150,8 @@ class InputLayer : public Layer {
     inline short get_layer_type();
     inline int get_outputlen();
     inline int get_neuron_count();
-    short int layer_type;
-    int outputlen;
-    Matrice output;
-    InputLayer(int row, int col, int neuron_type);
-    ~InputLayer();
+    void set_weights(Matrice *w);
+    void set_biases(Matrice *b);
 };
 
 #endif // LAYERS_H_INCLUDED

@@ -196,7 +196,36 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
 
 void Network::load(char *filename)
 {
-    ;
+    ifstream inp;
+    inp.open(filename, ios::in);
+    int f_layer, f_row, f_col;
+    double data;
+    Matrice *w, *b;
+    inp.read((char*)&f_layer, 4);
+    for(int i = 0; i < f_layer; i++)
+        {
+            inp.read((char*)&f_row, 4);
+            inp.read((char*)&f_col, 4);
+            w = new Matrice(f_row, f_col);
+            b = new Matrice(f_row, 1);
+            for(int j = 0; j < f_row; j++)
+                {
+                    for(int k = 0; k < f_col; k++)
+                        {
+                            inp.read((char*)&data, sizeof(double));
+                            w->data[j][k] = data;
+                        }
+                }
+            this->layers[i]->set_weights(w);
+            for(int l = 0; l < f_row; l++)
+                {
+                    inp.read((char*)&data, sizeof(double));
+                    b->data[l][0] = data;
+                }
+            this->layers[i]->set_biases(b);
+            delete w;
+            delete b;
+        }
 }
 
 void Network::store(char *filename)
