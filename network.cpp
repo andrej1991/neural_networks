@@ -32,7 +32,6 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
                     throw std::exception();
                 }
             }
-        this->load("/home/andrej/hdd/dokumentumok/neural_networks/data/training_data/w_b_data.dat");
     }
     catch(bad_alloc &ba)
         {
@@ -197,7 +196,7 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
 
 void Network::load(char *filename)
 {
-    ifstream inp;
+    /*ifstream inp;
     inp.open(filename, ios::in);
     int f_layer, f_row, f_col;
     double data;
@@ -227,7 +226,7 @@ void Network::load(char *filename)
             delete w;
             delete b;
         }
-    inp.close();
+    inp.close();*/
 }
 
 void Network::store(char *filename)
@@ -313,5 +312,5 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 30, 10, 3, true, 0, v, 50);
+    this->stochastic_gradient_descent(d, 30, 10, 3, true, 10, v, 500);
 }
