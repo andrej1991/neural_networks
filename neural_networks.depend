@@ -115,7 +115,7 @@
 	"random.h"
 	<iosfwd>
 
-1483299250 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
+1483789268 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
 	"neuron.h"
 	"MNIST_data.h"
 	"matrice.h"
@@ -141,7 +141,7 @@
 	"random.h"
 	<fstream>
 
-1483299250 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+1483789095 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>

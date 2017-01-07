@@ -32,6 +32,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
                     throw std::exception();
                 }
             }
+        this->load("/home/andrej/hdd/dokumentumok/neural_networks/data/training_data/w_b_data.dat");
     }
     catch(bad_alloc &ba)
         {
@@ -226,6 +227,7 @@ void Network::load(char *filename)
             delete w;
             delete b;
         }
+    inp.close();
 }
 
 void Network::store(char *filename)
@@ -234,9 +236,13 @@ void Network::store(char *filename)
 }
 
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, bool monitor_learning_cost,
-                                            double regularization_rate, MNIST_data **test_data, int test_data_len, int trainingdata_len)
+                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    MNIST_data **minibatch = new MNIST_data* [epoch_len];
+    if(minibatch_count < 0)
+        {
+            minibatch_count = trainingdata_len / epoch_len;
+        }
+    MNIST_data *minibatches[minibatch_count][epoch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
     int break_counter = 0;
@@ -251,11 +257,18 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     Matrice output;
     for(int i = 0; i < epochs; i++)
         {
-            for(int j = 0; j < epoch_len; j++)
+            for(int j = 0; j < minibatch_count; j++)
                 {
-                    minibatch[j] = training_data[random(0, trainingdata_len, rand)];
+                    for(int k = 0; k < epoch_len; k++)
+                        {
+                            minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                        }
                 }
-            this->update_weights_and_biasses(minibatch, epoch_len, trainingdata_len, learning_rate, regularization_rate);
+
+            for(int j = 0; j < minibatch_count; j++)
+                {
+                    this->update_weights_and_biasses(minibatches[j], epoch_len, trainingdata_len, learning_rate, regularization_rate);//
+                }
             if(test_data != NULL)
                 {
                     learning_accuracy = learning_cost = 0;
@@ -300,5 +313,5 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 30, 10, 5, true, 0, v);
+    this->stochastic_gradient_descent(d, 30, 10, 3, true, 0, v, 50);
 }
