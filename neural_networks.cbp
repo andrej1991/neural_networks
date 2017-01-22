@@ -40,6 +40,7 @@
 		<Unit filename="additional.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="layers/Convolutional.cpp" />
 		<Unit filename="layers/FullyConnected.cpp" />
 		<Unit filename="layers/inputlayer.cpp" />
 		<Unit filename="layers/layerdescriptor.cpp">

@@ -208,7 +208,8 @@ inline void FullyConnected::add_back_removed_neurons(Matrice **w_bckup, Matrice 
 
 void FullyConnected::set_input(double **input)
 {
-    ;
+    cerr << "This function can be called only for the InputLayer!\n";
+    throw exception();
 }
 
 void FullyConnected::initialize_biases()

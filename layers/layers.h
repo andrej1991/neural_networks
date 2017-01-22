@@ -51,11 +51,11 @@ class Layer{
 class FullyConnected : public Layer {
     void initialize_biases();
     void initialize_weights();
-    public:
     Matrice biases, output, weights;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
+    public:
     FullyConnected(int row, int col, int prev_row, int neuron_type);
     ~FullyConnected();
     inline void backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
@@ -75,15 +75,21 @@ class FullyConnected : public Layer {
     void set_biases(Matrice *b);
 };
 
-/*class Convolutional : public Layer {
+class Convolutional : public Layer {
+    void initialize_biases();
+    void initialize_weights();
+    Matrice biases, output, weights;
+    int neuron_type, neuron_count, outputlen, input_row, input_col, row, col, layer_count, stride, zeropadding;
+    short int layer_type;
+    Neuron neuron;
     public:
-    //Neuron neuron;
-    Convolutional(int row, int col, int neuron_type);
+    Convolutional(int input_row, int input_col, int input_layer_count, int row, int col, int layer_count, int neuron_type, int stride = 1);
     ~Convolutional();
-    inline void layers_output(double **input, int layer);
-    inline Matrice get_output_error(double **input, double **required_output, int inputlen, int costfunction_type);
-    inline Matrice derivate_layers_output(double **input, int inputlen);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
+    inline void backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
+    inline void layers_output(Matrice &input);
+    inline Matrice get_output_error(Matrice &input, double **required_output, int costfunction_type);
+    inline Matrice derivate_layers_output(Matrice &input);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(double **input);
@@ -91,9 +97,12 @@ class FullyConnected : public Layer {
     inline Matrice& get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
+    inline int get_neuron_count();
+    void set_weights(Matrice *w);
+    void set_biases(Matrice *b);
 };
 
-class Pooling : public Layer {
+/*class Pooling : public Layer {
     public:
     //Neuron neuron;
     Pooling(int row, int col, int neuron_type);

@@ -79,31 +79,76 @@ Matrice Matrice::operator= (const Matrice& mtx)
 }
 
 Matrice Matrice::operator* (const Matrice& other)
-    {
-        if(col != other.row)
-            {
-                std::cerr << "the condition of the if statement is fales in the operator Matrice::operator*\n";
-                throw std::exception();
-            }
-        else
-            {
-                Matrice mtx(row, other.col);
-                double c = 0;
-                for(int k = 0; k < row; k++)
-                    {
-                        for(int l = 0; l < other.col; l++)
-                            {
-                                for(int i = 0; i < col; i++)
-                                    {
-                                        c += data[k][i] * other.data[i][l];
-                                    }
-                                mtx.data[k][l] = c;
-                                c = 0;
-                            }
-                    }
-                    return mtx;
+{
+    if(col != other.row)
+        {
+            std::cerr << "the condition of the if statement is fales in the operator Matrice::operator*\n";
+            throw std::exception();
+        }
+    else
+        {
+            Matrice mtx(row, other.col);
+            double c = 0;
+            for(int k = 0; k < row; k++)
+                {
+                    for(int l = 0; l < other.col; l++)
+                        {
+                            for(int i = 0; i < col; i++)
+                                {
+                                    c += data[k][i] * other.data[i][l];
+                                }
+                            mtx.data[k][l] = c;
+                            c = 0;
+                        }
                 }
-    }
+                return mtx;
+            }
+}
+
+void Matrice::operator+=(const Matrice& mtx)
+{
+    if((this->col != mtx.col) + (this->row != mtx.row))
+        {
+            std::cerr << "the matrices cannot be added!\n";
+            throw std::exception();
+        }
+    for(int i = 0; i < this->row; i++)
+        {
+            for(int j = 0; j < this->col; j++)
+                {
+                    this->data[i][j] += mtx.data[i][j];
+                }
+        }
+}
+
+/*Matrice Matrice::operator-(const Matrice& mtx)
+{
+    if((this->col != mtx.col) + (this->row != mtx.row))
+        {
+            std::cerr << "the matrices cannot be substracted!\n";
+            throw std::exception();
+        }
+    Matrice difference(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+        {
+            for(int j = 0; j < this->col; j++)
+                {
+                    difference.data[i][j] = this->data[i][j] - mtx.data[i][j];
+                }
+        }
+}
+
+Matrice Matrice::operator-(double** mtx)
+{
+    Matrice difference(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+        {
+            for(int j = 0; j < this->col; j++)
+                {
+                    difference.data[i][j] = this->data[i][j] - mtx[i][j];
+                }
+        }
+}*/
 
 int Matrice::get_row()
 {
@@ -145,7 +190,7 @@ Matrice Matrice::transpose()
     return tr_mtx;
 }
 
-void print_mtx_list(Matrice **mtx, int list_len)
+/*void print_mtx_list(Matrice **mtx, int list_len)
 {
     for(int i = 0; i < list_len; i++)
     {
@@ -162,4 +207,4 @@ void print_mtx_list(Matrice **mtx, int list_len)
         cout << "]\n";
     }
 
-}
+}*/

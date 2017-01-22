@@ -46,7 +46,6 @@ Network::~Network()
         {
             delete this->layers[i];
         }
-    //this->layers -= 1;
     delete this->layers;
 }
 
@@ -86,10 +85,6 @@ double Network::cost(double **required_output)
         }
 }
 
-/*inline Matrice Network::get_output_error(double **required_output)
-{
-    ;
-}*/
 
 inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
 {
@@ -123,11 +118,11 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             dnw = new Matrice* [this->layers_num];
             for(int i = 0; i < this->layers_num; i++)
                 {
-                    w[i] = new Matrice(this->layers[i]->get_neuron_count(), this->layers[i - 1]->get_neuron_count());
-                    dnw[i] = new Matrice(this->layers[i]->get_neuron_count(), this->layers[i - 1]->get_neuron_count());
-                    b[i] = new Matrice(this->layers[i]->get_neuron_count(), 1);
-                    dnb[i] = new Matrice(this->layers[i]->get_neuron_count(), 1);
-                    for(int j = 0; j < this->layers[i]->get_neuron_count(); j++)
+                    w[i]   = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
+                    dnw[i] = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
+                    b[i]   = new Matrice(this->layers[i]->get_outputlen(), 1);
+                    dnb[i] = new Matrice(this->layers[i]->get_outputlen(), 1);
+                    for(int j = 0; j < this->layers[i]->get_outputlen(); j++)
                         {
                             dnb[i]->data[j][0] = b[i]->data[j][0] = 0;
                             for(int k = 0; k < this->layers[i - 1]->get_outputlen(); k++)
@@ -147,14 +142,14 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             this->backpropagate(training_data[i], dnb, dnw);
             for(int j = 0; j < this->layers_num; j++)
                 {
-                    for(int k = 0; k < this->layers[j]->get_neuron_count(); k++)
-                        {
-                            b[j]->data[k][0] += dnb[j]->data[k][0];
-                            for(int l = 0; l < this->layers[j - 1]->get_outputlen(); l++)
-                                {
-                                    w[j]->data[k][l] += dnw[j]->data[k][l];
-                                }
-                        }
+                    //for(int k = 0; k < this->layers[j]->get_neuron_count(); k++)
+                      //  {
+                            *b[j] += *dnb[j];
+                        //    for(int l = 0; l < this->layers[j - 1]->get_outputlen(); l++)
+                          //      {
+                                    *w[j] += *dnw[j];
+                            //    }
+                        //}
                 }
         }
     double lr = learning_rate / training_data_len;
@@ -266,7 +261,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
             for(int j = 0; j < minibatch_count; j++)
                 {
-                    this->update_weights_and_biasses(minibatches[j], epoch_len, trainingdata_len, learning_rate, regularization_rate);//
+                    this->update_weights_and_biasses(minibatches[j], epoch_len, trainingdata_len, learning_rate, regularization_rate);
                 }
             if(test_data != NULL)
                 {

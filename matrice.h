@@ -22,6 +22,9 @@ class Matrice
     Matrice(const Matrice& mtx);
     Matrice operator* (const Matrice& mtx);
     Matrice operator= (const Matrice& mtx);
+    void operator+= (const Matrice& mtx);
+    //Matrice operator- (const Matrice& mtx);
+    //Matrice operator-(double** mtx);
     friend Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2);
     Matrice transpose();
     friend void print_mtx_list(Matrice **mtx, int list_len);
