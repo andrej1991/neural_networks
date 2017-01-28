@@ -1,7 +1,7 @@
 #include "layers.h"
 
 Convolutional::Convolutional(int input_row, int input_col, int input_layer_count, int row, int col, int layer_count, int neuron_type, int stride):
-                    biases(layer_count, 1), input_row(input_row), input_col(input_col), row(row), col(col), layer_count(layer_count), stride(stride), weights(layer_count, row * col)
+                    input_row(input_row), input_col(input_col), row(row), col(col), layer_count(layer_count), stride(stride)
 {
     if(stride != 1)
         {
@@ -18,16 +18,6 @@ Convolutional::Convolutional(int input_row, int input_col, int input_layer_count
 }
 
 Convolutional::~Convolutional()
-{
-    ;
-}
-
-void Convolutional::initialize_biases()
-{
-    ;
-}
-
-void Convolutional::initialize_weights()
 {
     ;
 }
@@ -72,12 +62,12 @@ void Convolutional::set_input(double **input)
     ;
 }
 
-inline Matrice& Convolutional::get_output()
+inline Matrice* Convolutional::get_output()
 {
     ;
 }
 
-inline Matrice& Convolutional::get_weights()
+inline Matrice* Convolutional::get_weights()
 {
     ;
 }
@@ -88,11 +78,6 @@ inline short Convolutional::get_layer_type()
 }
 
 inline int Convolutional::get_outputlen()
-{
-    ;
-}
-
-inline int Convolutional::get_neuron_count()
 {
     ;
 }

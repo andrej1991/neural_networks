@@ -15,7 +15,6 @@ class Network{
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     inline void feedforward(double **input);
     double cost(double **required_output);
-    //Neuron neuron;
     public:
     void load(char *filename);
     void store(char *filename);

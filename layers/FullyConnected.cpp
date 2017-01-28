@@ -1,12 +1,10 @@
 #include "layers.h"
 
-FullyConnected::FullyConnected(int row, int col, int prev_row, int neuron_type):
-    output(row, col), weights(row, prev_row), biases(row, col), neuron(neuron_type)
+FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
+    output(row, 1), fmap(row, prev_row, 1), neuron(neuron_type)
 {
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
-    this->initialize_biases();
-    this->initialize_weights();
 }
 
 FullyConnected::~FullyConnected()
@@ -18,7 +16,7 @@ inline void FullyConnected::layers_output(Matrice &input)
 {
     for(int i = 0; i < this->outputlen; i++)
         {
-            this->output.data[i][0] = this->neuron.neuron(this->weights.data[i], input.data, this->biases.data[i][0], input.get_row());
+            this->output.data[i][0] = this->neuron.neuron(this->fmap.weights[0][0].data[i], input.data, this->fmap.biases[0][0].data[i][0], input.get_row());
         }
 }
 
@@ -66,7 +64,7 @@ inline Matrice FullyConnected::derivate_layers_output(Matrice &input)
     Matrice mtx(this->outputlen, 1);
     for(int i = 0; i < this->outputlen; i++)
         {
-            mtx.data[i][0] = this->neuron.neuron_derivate(this->weights.data[i], input.data, this->biases.data[i][0], input.get_row());
+            mtx.data[i][0] = this->neuron.neuron_derivate(this->fmap.weights[0][0].data[i], input.data, this->fmap.biases[0][0].data[i][0], input.get_row());
         }
     return mtx;
 }
@@ -75,10 +73,10 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
 {
     for(int j = 0; j < this->outputlen; j++)
         {
-            this->biases.data[j][0] -= learning_rate * biases->data[j][0];
+            this->fmap.biases[0][0].data[j][0] -= learning_rate * biases->data[j][0];
             for(int k = 0; k < prev_outputlen; k++)
                 {
-                    this->weights.data[j][k] = regularization_rate * this->weights.data[j][k] - learning_rate * weights->data[j][k];
+                    this->fmap.weights[0][0].data[j][k] = regularization_rate * this->fmap.weights[0][0].data[j][k] - learning_rate * weights->data[j][k];
                 }
         }
 }
@@ -212,36 +210,6 @@ void FullyConnected::set_input(double **input)
     throw exception();
 }
 
-void FullyConnected::initialize_biases()
-{
-    ifstream random;
-    random.open("/dev/urandom", ios::in);
-    short int val;
-    for(int i = 0; i < this->biases.get_row(); i++)
-        {
-            random.read((char*)(&val), 2);
-            this->biases.data[i][0] = val;
-            this->biases.data[i][0] /= 63000;
-        }
-    random.close();
-}
-
-void FullyConnected::initialize_weights()
-{
-    ifstream random;
-    random.open("/dev/urandom", ios::in);
-    short int val;
-    for(int i = 0; i < this->weights.get_row(); i++)
-        {
-            for(int j = 0; j < this->weights.get_col(); j++)
-                {
-                    random.read((char*)(&val), 2);
-                    this->weights.data[i][j] = val;
-                    this->weights.data[i][j] /= 63000;
-                }
-        }
-    random.close();
-}
 
 inline void FullyConnected::backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &delta)
 {
@@ -253,14 +221,14 @@ inline void FullyConnected::backpropagate(Matrice &input, Matrice& next_layers_w
     *(nabla_w) = delta * input.transpose();
 }
 
-inline Matrice& FullyConnected::get_output()
+inline Matrice* FullyConnected::get_output()
 {
-    return this->output;
+    return &(this->output);
 }
 
-inline Matrice& FullyConnected::get_weights()
+inline Matrice* FullyConnected::get_weights()
 {
-    return this->weights;
+    return this->fmap.weights[0];
 }
 
 inline short FullyConnected::get_layer_type()
@@ -273,17 +241,12 @@ inline int FullyConnected::get_outputlen()
     return this->outputlen;
 }
 
-inline int FullyConnected::get_neuron_count()
-{
-    return this->neuron_count;
-}
-
 void FullyConnected::set_weights(Matrice *w)
 {
-    this->weights = *w;
+    this->fmap.weights[0][0] = *w;
 }
 
 void FullyConnected::set_biases(Matrice *b)
 {
-    this->biases = *b;
+    this->fmap.biases[0][0] = *b;
 }

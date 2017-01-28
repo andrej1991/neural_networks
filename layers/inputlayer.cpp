@@ -44,6 +44,7 @@ inline void InputLayer::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_
 
 void InputLayer::set_input(double **input)
 {
+    ///TODO modify this function
     for (int i = 0; i < this->outputlen; i++)
         {
             this->output.data[i][0] = input[i][0];
@@ -57,12 +58,12 @@ inline void InputLayer::backpropagate(Matrice &input, Matrice& next_layers_weigh
     ;
 }
 
-inline Matrice& InputLayer::get_output()
+inline Matrice* InputLayer::get_output()
 {
-    return this->output;
+    return &(this->output);
 }
 
-inline Matrice& InputLayer::get_weights()
+inline Matrice* InputLayer::get_weights()
 {
     ;
 }
@@ -75,11 +76,6 @@ inline short InputLayer::get_layer_type()
 inline int InputLayer::get_outputlen()
 {
     return this->outputlen;
-}
-
-inline int InputLayer::get_neuron_count()
-{
-    ;
 }
 
 void InputLayer::set_weights(Matrice *w)

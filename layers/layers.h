@@ -28,6 +28,16 @@ class LayerDescriptor{
     inline int get_neuron_type();
 };
 
+class Feature_map{
+    void initialize_biases();
+    void initialize_weights();
+    public:
+    Matrice **weights, **biases;
+    int mapdepth;
+    Feature_map(int row, int col, int mapdepth);
+    ~Feature_map();
+};
+
 class Layer{
     public:
     virtual ~Layer();
@@ -39,24 +49,23 @@ class Layer{
     virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes) = 0;
     virtual inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes) = 0;
     virtual void set_input(double **input) = 0;
-    virtual inline Matrice& get_output() = 0;
-    virtual inline Matrice& get_weights() = 0;
+    virtual inline Matrice* get_output() = 0;
+    virtual inline Matrice* get_weights() = 0;
     virtual inline short get_layer_type() = 0;
     virtual inline int get_outputlen() = 0;
-    virtual inline int get_neuron_count() = 0;
+    //virtual inline int get_neuron_count() = 0;
     virtual void set_weights(Matrice *w) = 0;
     virtual void set_biases(Matrice *b) = 0;
 };
 
 class FullyConnected : public Layer {
-    void initialize_biases();
-    void initialize_weights();
-    Matrice biases, output, weights;
+    Matrice output;
+    Feature_map fmap;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
     public:
-    FullyConnected(int row, int col, int prev_row, int neuron_type);
+    FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
     inline void backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
     inline void layers_output(Matrice &input);
@@ -66,19 +75,18 @@ class FullyConnected : public Layer {
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(double **input);
-    inline Matrice& get_output();
-    inline Matrice& get_weights();
+    inline Matrice* get_output();
+    inline Matrice* get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
-    inline int get_neuron_count();
+    //inline int get_neuron_count();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
 };
 
 class Convolutional : public Layer {
-    void initialize_biases();
-    void initialize_weights();
-    Matrice biases, output, weights;
+    Matrice output;
+    Feature_map *fmap;
     int neuron_type, neuron_count, outputlen, input_row, input_col, row, col, layer_count, stride, zeropadding;
     short int layer_type;
     Neuron neuron;
@@ -93,11 +101,11 @@ class Convolutional : public Layer {
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(double **input);
-    inline Matrice& get_output();
-    inline Matrice& get_weights();
+    inline Matrice* get_output();
+    inline Matrice* get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
-    inline int get_neuron_count();
+    //inline int get_neuron_count();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
 };
@@ -154,11 +162,11 @@ class InputLayer : public Layer {
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(double **input);
-    inline Matrice& get_output();
-    inline Matrice& get_weights();
+    inline Matrice* get_output();
+    inline Matrice* get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
-    inline int get_neuron_count();
+    //inline int get_neuron_count();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
 };
