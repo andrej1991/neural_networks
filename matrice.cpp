@@ -190,7 +190,52 @@ Matrice Matrice::transpose()
     return tr_mtx;
 }
 
-/*void print_mtx_list(Matrice **mtx, int list_len)
+Matrice Matrice::rot180(Matrice &m)
+{
+    Matrice ret(m.row, m.col);
+    int i2 = 0;
+    int j2 = 0;
+    for(int i = m.row - 1; i >= 0; i--)
+        {
+            for(int j = m.col - 1; j >= 0; j--)
+                {
+                    ret.data[i][j] = m.data[i2][j2];
+                    j2++;
+                }
+            i2++;
+            j2 = 0;
+        }
+    return ret;
+}
+
+void Matrice::convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride, int left_padding, int up_padding)
+{
+    double helper;
+    int r, c;
+    r = c = 0;
+    int vertical_step = (input.row - kernel.row) / stride + 1;
+    int horizontal_step = (input.col - kernel.col) / stride + 1;
+    for(int i = 0; i < vertical_step; i += stride)
+        {
+            for(int j = 0; j < horizontal_step; j += stride)
+                {
+                    helper = 0;
+                    for(int k = 0; k < kernel.row; k++)
+                        {
+                            for(int l = 0; l < kernel.col; l++)
+                                {
+                                    helper += kernel.data[k][l] * input.data[i + k][j + l];
+                                }
+                        }
+                    output.data[r + up_padding][c + left_padding] = helper;
+                    c++;
+                }
+            r++;
+            c = 0;
+        }
+}
+
+void print_mtx_list(Matrice **mtx, int list_len)
 {
     for(int i = 0; i < list_len; i++)
     {
@@ -207,4 +252,19 @@ Matrice Matrice::transpose()
         cout << "]\n";
     }
 
-}*/
+}
+
+void print_mtx(Matrice &mtx)
+{
+    cout << "[";
+    for(int j = 0; j < mtx.row; j++)
+    {
+        cout << "[";
+        for(int k = 0; k < mtx.col; k++)
+        {
+            cout << mtx.data[j][k] << "; ";
+        }
+        cout << "]\n";
+    }
+    cout << "]\n";
+}

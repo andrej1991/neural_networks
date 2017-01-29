@@ -1,10 +1,15 @@
 #include "layers.h"
 
-InputLayer::InputLayer(int row, int col, int neuron_type):
-    output(row, col)
+InputLayer::InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type):
+    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth)
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
+    this->outputs = new Matrice* [feature_depth];
+    for(int i = 0; i < feature_depth; i++)
+        {
+            outputs[i] = new Matrice(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
+        }
 }
 
 InputLayer::~InputLayer()
@@ -12,12 +17,12 @@ InputLayer::~InputLayer()
     ;
 }
 
-inline void InputLayer::layers_output(Matrice &input)
+inline void InputLayer::layers_output(Matrice **input)
 {
-    ;
+    this->set_input(input);
 }
 
-inline Matrice InputLayer::get_output_error(Matrice &input, double **required_output, int costfunction_type)
+inline Matrice InputLayer::get_output_error(Matrice &input, Matrice &required_output, int costfunction_type)
 {
     ;
 }
@@ -42,15 +47,20 @@ inline void InputLayer::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_
     ;
 }
 
-void InputLayer::set_input(double **input)
+void InputLayer::set_input(Matrice **input)
 {
     ///TODO modify this function
-    for (int i = 0; i < this->outputlen; i++)
+    if(this->next_layers_type == FULLY_CONNECTED)
         {
-            this->output.data[i][0] = input[i][0];
+            for (int i = 0; i < this->outputlen; i++)
+                {
+                    this->outputs[0]->data[i][0] = input[0]->data[i][0];
+                }
         }
-    double **debug = this->output.data;
-    int j = 0;
+    else
+        {
+            std::cerr << "not implemented branch\n";
+        }
 }
 
 inline void InputLayer::backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
@@ -58,9 +68,9 @@ inline void InputLayer::backpropagate(Matrice &input, Matrice& next_layers_weigh
     ;
 }
 
-inline Matrice* InputLayer::get_output()
+inline Matrice** InputLayer::get_output()
 {
-    return &(this->output);
+    return this->outputs;
 }
 
 inline Matrice* InputLayer::get_weights()

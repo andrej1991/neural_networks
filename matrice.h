@@ -27,7 +27,10 @@ class Matrice
     //Matrice operator-(double** mtx);
     friend Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2);
     Matrice transpose();
+    Matrice rot180(Matrice &m);
+    void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride = 1, int left_padding = 0, int up_padding = 0);
     friend void print_mtx_list(Matrice **mtx, int list_len);
+    friend void print_mtx(Matrice &mtx);
     int get_row();
     int get_col();
 };

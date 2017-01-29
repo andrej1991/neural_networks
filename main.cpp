@@ -20,12 +20,12 @@ int main()
     MNIST_data *validation[10000];
     for(int i = 0; i < 50000; i++)
         {
-            m[i] = new MNIST_data(784, 10);
+            m[i] = new MNIST_data(784, 1, 10, 1);
             m[i]->load_data(input, required_output);
         }
     for(int i = 0; i < 10000; i++)
         {
-            validation[i] = new MNIST_data(784, 1);
+            validation[i] = new MNIST_data(784, 1, 1, 1);
             validation[i]->load_data(validation_input, validation_output);
             //cout << validation[i]->required_output[0][0];
         }

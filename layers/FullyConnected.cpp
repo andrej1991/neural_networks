@@ -1,8 +1,10 @@
 #include "layers.h"
 
 FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
-    output(row, 1), fmap(row, prev_row, 1), neuron(neuron_type)
+    fmap(row, prev_row, 1), neuron(neuron_type)
 {
+    this->output = new Matrice* [1];
+    this->output[0] = new Matrice(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
 }
@@ -12,15 +14,16 @@ FullyConnected::~FullyConnected()
     ;
 }
 
-inline void FullyConnected::layers_output(Matrice &input)
+inline void FullyConnected::layers_output(Matrice **input)
 {
+    ///TODO modify this!!!
     for(int i = 0; i < this->outputlen; i++)
         {
-            this->output.data[i][0] = this->neuron.neuron(this->fmap.weights[0][0].data[i], input.data, this->fmap.biases[0][0].data[i][0], input.get_row());
+            this->output[0]->data[i][0] = this->neuron.neuron(this->fmap.weights[0][0].data[i], input[0][0].data, this->fmap.biases[0][0].data[i][0], input[0][0].get_row());
         }
 }
 
-inline Matrice FullyConnected::get_output_error(Matrice &input, double **required_output, int costfunction_type)
+inline Matrice FullyConnected::get_output_error(Matrice &input, Matrice &required_output, int costfunction_type)
 {
     Matrice mtx(this->outputlen, 1);
     Matrice delta(this->outputlen, 1);
@@ -30,7 +33,7 @@ inline Matrice FullyConnected::get_output_error(Matrice &input, double **require
         case QUADRATIC_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output.data[i][0] - required_output[i][0];
+                    mtx.data[i][0] = this->output[0]->data[i][0] - required_output.data[i][0];
                 }
             output_derivate = this->derivate_layers_output(input);
             delta = hadamart_product(mtx, output_derivate);
@@ -41,15 +44,15 @@ inline Matrice FullyConnected::get_output_error(Matrice &input, double **require
                 case SIGMOID:
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            mtx.data[i][0] = this->output.data[i][0] - required_output[i][0];
+                            mtx.data[i][0] = this->output[0]->data[i][0] - required_output.data[i][0];
                         }
                     return mtx;
                 default:
                     output_derivate = this->derivate_layers_output(input);
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            delta.data[i][0] = (output_derivate.data[i][0] * (this->output.data[i][0] - required_output[i][0])) /
-                                                    (this->output.data[i][0] * (1 - this->output.data[i][0]));
+                            delta.data[i][0] = (output_derivate.data[i][0] * (this->output[0]->data[i][0] - required_output.data[i][0])) /
+                                                    (this->output[0]->data[i][0] * (1 - this->output[0]->data[i][0]));
                         }
                     return delta;
                 }
@@ -204,7 +207,7 @@ inline void FullyConnected::add_back_removed_neurons(Matrice **w_bckup, Matrice 
 */
 }
 
-void FullyConnected::set_input(double **input)
+void FullyConnected::set_input(Matrice **input)
 {
     cerr << "This function can be called only for the InputLayer!\n";
     throw exception();
@@ -221,9 +224,9 @@ inline void FullyConnected::backpropagate(Matrice &input, Matrice& next_layers_w
     *(nabla_w) = delta * input.transpose();
 }
 
-inline Matrice* FullyConnected::get_output()
+inline Matrice** FullyConnected::get_output()
 {
-    return &(this->output);
+    return this->output;
 }
 
 inline Matrice* FullyConnected::get_weights()
