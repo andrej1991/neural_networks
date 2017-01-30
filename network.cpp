@@ -18,7 +18,8 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
         this->total_layers_num = layers_num + 1;
         this->layers_num = layers_num;
         this->layers = new Layer* [this->total_layers_num];
-        this->layers[0] = new InputLayer(inputpixel_count, 1, SIGMOID);
+        Padding p;
+        this->layers[0] = new InputLayer(inputpixel_count, 1, 1, SIGMOID, p, FULLY_CONNECTED);
         this->layers += 1;
         for(int i = 0; i < layers_num; i++)
             {

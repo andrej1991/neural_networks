@@ -156,10 +156,11 @@ class Softmax : public Layer {
 
 class InputLayer : public Layer {
     public:
-    short int layer_type;
-    int outputlen;
+    short int layer_type, next_layers_type;
+    int outputlen, row, col, feature_depth;
     Matrice output;
-    InputLayer(int row, int col, int neuron_type);
+    Padding padd;
+    InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
     inline void backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
     inline void layers_output(Matrice &input);

@@ -1,10 +1,15 @@
 #include "layers.h"
 
-InputLayer::InputLayer(int row, int col, int neuron_type):
-    output(row, col)
+InputLayer::InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type):
+    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth), output(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding)
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
+    /*this->outputs = new Matrice* [feature_depth];
+    for(int i = 0; i < feature_depth; i++)
+        {
+            outputs[i] = new Matrice(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
+        }*/
 }
 
 InputLayer::~InputLayer()
