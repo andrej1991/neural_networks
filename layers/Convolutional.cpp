@@ -8,9 +8,13 @@ Convolutional::Convolutional(int input_row, int input_col, int input_layer_count
             std::cerr << "counting with stride different than 1 is not implemented yet!";
             throw exception();
         }
+    Matrice *helper;
     this->layer_type = CONVOLUTIONAL;
     int output_row = input_row - row + 1;
     int output_col = input_col - col + 1;
+    helper = new Matrice(output_row * output_col * layer_count, 1);
+    this->output = *helper;
+    delete helper;
 }
 
 Convolutional::~Convolutional()
@@ -23,7 +27,7 @@ inline void Convolutional::backpropagate(Matrice &input, Matrice& next_layers_we
     ;
 }
 
-inline void Convolutional::layers_output(Matrice **input)
+inline void Convolutional::layers_output(Matrice &input)
 {
     ;
 }
@@ -53,12 +57,12 @@ inline void Convolutional::add_back_removed_neurons(Matrice **w_bckup, Matrice *
     ;
 }
 
-void Convolutional::set_input(Matrice **input)
+void Convolutional::set_input(Matrice &input)
 {
     ;
 }
 
-inline Matrice** Convolutional::get_output()
+inline Matrice* Convolutional::get_output()
 {
     ;
 }

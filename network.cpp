@@ -9,17 +9,16 @@
 
 using namespace std;
 
-Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_count, int input_feature_depth, int costfunction_type,  bool dropout):
+Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_count, int costfunction_type,  bool dropout):
                 dropout(dropout), inputpixel_count(inputpixel_count)
 {
     try
     {
-        Padding p;
         this->costfunction_type = costfunction_type;
         this->total_layers_num = layers_num + 1;
         this->layers_num = layers_num;
         this->layers = new Layer* [this->total_layers_num];
-        this->layers[0] = new InputLayer(inputpixel_count, 1, input_feature_depth, SIGMOID, p);
+        this->layers[0] = new InputLayer(inputpixel_count, 1, SIGMOID);
         this->layers += 1;
         for(int i = 0; i < layers_num; i++)
             {
@@ -50,18 +49,17 @@ Network::~Network()
     delete this->layers;
 }
 
-inline void Network::feedforward(Matrice **input)
+inline void Network::feedforward(Matrice &input)
 {
     this->layers[-1]->set_input(input);
     for(int i = 0; i < this->layers_num; i++)
         {
-            this->layers[i]->layers_output(this->layers[i - 1]->get_output());
+            this->layers[i]->layers_output(*(this->layers[i - 1]->get_output()));
         }
 }
 
 double Network::cost(Matrice &required_output)
 {
-    ///TODO check this function!!!
     double helper = 0, result = 0;
     switch(this->costfunction_type)
         {
@@ -69,7 +67,7 @@ double Network::cost(Matrice &required_output)
             /// 1/2 * ||y(x) - a||^2
             for(int i = 0; i < this->layers[this->layers_num - 1]->get_outputlen(); i++)
                 {
-                    helper = required_output.data[i][0] - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0];
+                    helper = required_output.data[i][0] - this->layers[this->layers_num - 1]->get_output()->data[i][0];
                     result += helper * helper;
                 }
             return (1/2) * result;
@@ -77,12 +75,9 @@ double Network::cost(Matrice &required_output)
             ///y(x)ln a + (1 - y(x))ln(1 - a)
             for(int i = 0; i < this->layers[this->layers_num - 1]->get_outputlen(); i++)
                 {
-                    double debug1 = this->layers[1]->get_output()[0][0].data[i][0];
-                    double debug2 = 1 - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0];
-                    helper += required_output.data[i][0] * log(this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]) + (1 - required_output.data[i][0]) *
-                                    log(1 - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]);
+                    helper += required_output.data[i][0] * log(this->layers[this->layers_num - 1]->get_output()->data[i][0]) + (1 - required_output.data[i][0]) *
+                                    log(1 - this->layers[this->layers_num - 1]->get_output()->data[i][0]);
                 }
-            //print_mtx(this->layers[1]->get_output()[0][0]);
             return helper;
         default:
             cerr << "Unknown cost function\n";
@@ -93,21 +88,18 @@ double Network::cost(Matrice &required_output)
 
 inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
 {
-    ///TODO fix this function...
-    this->feedforward(trainig_data->input);
-    Matrice delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 1]->get_output()[0][0],
+    ///TODO modfy this function based on multiple input features...
+    this->feedforward(trainig_data->input[0][0]);
+    Matrice delta = this->layers[layers_num - 1]->get_output_error(*(this->layers[layers_num - 1]->get_output()),
                                                                    trainig_data->required_output, this->costfunction_type);
     *(nabla_b[this->layers_num - 1]) = delta;
-    *(nabla_w[this->layers_num - 1]) = delta * this->layers[this->layers_num - 2]->get_output()[0][0].transpose();
+    *(nabla_w[this->layers_num - 1]) = delta * this->layers[this->layers_num - 2]->get_output()->transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
-            this->layers[i]->backpropagate(this->layers[i - 1]->get_output()[0][0],
-                                           this->layers[i + 1]->get_weights()[0], nabla_b[i], nabla_w[i], delta);
+            this->layers[i]->backpropagate(*(this->layers[i - 1]->get_output()),
+                                           *(this->layers[i + 1]->get_weights()), nabla_b[i], nabla_w[i], delta);
         }
-    print_mtx(delta);
-    int xxx;
-    std::cin >> xxx;
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
@@ -118,7 +110,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     Matrice **dnw;
     Matrice **b_bck, **w_bck;
     int *layer_bck, **ind;
-    //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
+    this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -155,18 +147,13 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                     *w[j] += *dnw[j];
                 }
         }
-/*    print_mtx(*dnw[1]);
-    int xxx;
-    std::cin >> xxx;*/
     double lr = learning_rate / training_data_len;
     double reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
     for(int i = 0; i < this->layers_num; i++)
         {
             this->layers[i]->update_weights_and_biasses(lr, reg, this->layers[i - 1]->get_outputlen(), w[i], b[i]);
         }
-        //print_mtx(this->layers[layers_num - 1]->get_weights()[0]);
-    //throw std::exception();
-    //this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
+    this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
     for(int i = 0; i < this->layers_num; i++)
         {
             delete w[i];
@@ -180,10 +167,11 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     delete[] dnb;
 }
 
-Matrice Network::get_output(Matrice **input)
+Matrice Network::get_output(Matrice &input)
 {
+    ///TODO modify this function to work with multiple input features...
     this->feedforward(input);
-    Matrice ret = this->layers[this->layers_num - 1]->get_output()[0][0];
+    Matrice ret = *(this->layers[this->layers_num - 1]->get_output());
     return ret;
 }
 
@@ -250,6 +238,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     int break_counter = 0;
     int learning_accuracy, learnig_cost_counter = 0;
     double learning_cost, previoius_learning_cost = 0;
+    //double **helper = new double* [this->layers[this->layers_num - 1]->get_outputlen()];
     Matrice helper(this->layers[this->layers_num - 1]->get_outputlen(), 1);
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_outputlen(); i++)
         {
@@ -269,16 +258,14 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             for(int j = 0; j < minibatch_count; j++)
                 {
                     this->update_weights_and_biasses(minibatches[j], epoch_len, trainingdata_len, learning_rate, regularization_rate);
-                    //print_mtx(this->layers[layers_num - 1]->get_weights()[0]);
                 }
             if(test_data != NULL)
                 {
                     learning_accuracy = learning_cost = 0;
                     for(int j = 0; j < test_data_len; j++)
                         {
-                            output = this->get_output(test_data[j]->input);
-                            print_mtx(this->layers[layers_num - 1]->get_weights()[0]);
-                            print_mtx(output);
+                            ///TODO this is an errorprone as well
+                            output = this->get_output(test_data[j]->input[0][0]);
                             if(getmax(output.data) == test_data[j]->required_output.data[0][0])
                                 {
                                     learning_accuracy++;
@@ -289,7 +276,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                                         helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
                                     helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
                                     learning_cost += this->cost(helper);
-                                    throw std::exception();
                                 }
                         }
                     cout << "set " << i << ": " << learning_accuracy << " out of: " << test_data_len << endl;
@@ -319,7 +305,4 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     this->stochastic_gradient_descent(d, 30, 10, 3, true, 10, v, 500);
-    Matrice debug = this->get_output(v[1]->input);
-    print_mtx(this->layers[1]->get_output()[0][0]);
-    this->cost(debug);
 }

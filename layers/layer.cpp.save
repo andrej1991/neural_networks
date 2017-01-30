@@ -1,0 +1,8 @@
+#include "layers/layers.h"
+
+Layer::Layer()
+{
+    ;
+}
+
+Layer::~Layer()
