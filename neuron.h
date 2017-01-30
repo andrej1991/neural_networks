@@ -1,19 +1,21 @@
 #ifndef NEURON_H_INCLUDED
 #define NEURON_H_INCLUDED
 
+#include "matrice.h"
+
 #define SIGMOID 0
-#define LINEAR 1
+#define RELU 1
 
 class Neuron{
     int neuron_type;
-    inline double sigmoid(double *weights, double **inputs, double bias, int inputs_len);
-    inline double sigmoid_derivate(double *weights, double **inputs, double bias, int inputs_len);
-    inline double linear(double *weights, double **inputs, double bias, int inputs_len);
-    inline double linear_derivate(double *weights, double **inputs, double bias, int inputs_len);
+    inline Matrice sigmoid(Matrice &input);
+    inline Matrice sigmoid_derivate(Matrice &input);
+    inline Matrice relu(Matrice &input);
+    inline Matrice relu_derivate(Matrice &input);
     public:
     Neuron(int neuron_type = SIGMOID);
-    double neuron(double *weights, double **inputs, double bias, int inputs_len);
-    double neuron_derivate(double *weights, double **inputs, double bias, int inputs_len);
+    Matrice neuron(Matrice &inputs);
+    Matrice neuron_derivate(Matrice &inputs);
     void test();
 };
 

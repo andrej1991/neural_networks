@@ -4,65 +4,67 @@
 
 Neuron::Neuron(int neuron_type) : neuron_type(neuron_type) {}
 
-inline double Neuron::sigmoid(double *weights, double **inputs, double bias, int inputs_len)
+inline Matrice Neuron::sigmoid(Matrice &inputs)
 {
-    double weighted_input = 0;
-    for(int i = 0; i < inputs_len; i++)
+    int row = inputs.get_row();
+    int col = inputs.get_col();
+    Matrice ret(row, col);
+    for(int i = 0; i < row; i++)
         {
-            weighted_input += weights[i] * inputs[i][0];
+            for(int j = 0; j < col; j++)
+                {
+                    ret.data[i][j] = 1 / (1 + exp(-1 * inputs.data[i][j]));
+                }
         }
-    weighted_input += bias;
-    return (1 / (1 + exp(-1 * weighted_input)));
+    return ret;
 }
 
-inline double Neuron::sigmoid_derivate(double *weights, double **inputs, double bias, int inputs_len)
+inline Matrice Neuron::sigmoid_derivate(Matrice &inputs)
 {
-    double s = sigmoid(weights, inputs, bias, inputs_len);
-    return (s * (1 - s));
+    Matrice s = sigmoid(inputs);
+    int row = inputs.get_row();
+    int col = inputs.get_col();
+     for(int i = 0; i < row; i++)
+        {
+            for(int j = 0; j < col; j++)
+                {
+                    s.data[i][j] = s.data[i][j] * (1 - s.data[i][j]);
+                }
+        }
+    return s;
 }
 
-inline double Neuron::linear(double *weights, double **inputs, double bias, int inputs_len)
+inline Matrice Neuron::relu(Matrice &inputs)
 {
-    double weighted_input = 0;
-    for(int i = 0; i < inputs_len; i++)
-        {
-            weighted_input += weights[i] * inputs[i][0];
-        }
-    weighted_input += bias;
-    return weighted_input;
+    ;
 }
-inline double Neuron::linear_derivate(double *weights, double **inputs, double bias, int inputs_len)
+inline Matrice Neuron::relu_derivate(Matrice &inputs)
 {
-    double weighted_input = 0;
-    for(int i = 0; i < inputs_len; i++)
-        {
-            weighted_input += weights[i];
-        }
-    return weighted_input;
+    ;
 }
 
-double Neuron::neuron(double *weights, double **inputs, double bias, int inputs_len)
+Matrice Neuron::neuron(Matrice &inputs)
 {
     switch(this->neuron_type)
     {
     case SIGMOID:
-        return this->sigmoid(weights, inputs, bias, inputs_len);
-    case LINEAR:
-        return this->linear(weights, inputs, bias, inputs_len);
+        return this->sigmoid(inputs);
+    case RELU:
+        return this->relu(inputs);
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();
     }
 }
 
-double Neuron::neuron_derivate(double *weights, double **inputs, double bias, int inputs_len)
+Matrice Neuron::neuron_derivate(Matrice &inputs)
 {
     switch(this->neuron_type)
     {
     case SIGMOID:
-        return this->sigmoid_derivate(weights, inputs, bias, inputs_len);
-    case LINEAR:
-        return this->linear_derivate(weights, inputs, bias, inputs_len);
+        return this->sigmoid_derivate(inputs);
+    case RELU:
+        return this->relu_derivate(inputs);
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();

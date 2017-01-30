@@ -120,6 +120,10 @@ void Matrice::operator+=(const Matrice& mtx)
                 }
         }
 }
+Matrice Matrice::operator+(const Matrice &mtx)
+{
+    ;
+}
 
 /*Matrice Matrice::operator-(const Matrice& mtx)
 {
