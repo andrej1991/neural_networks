@@ -122,7 +122,20 @@ void Matrice::operator+=(const Matrice& mtx)
 }
 Matrice Matrice::operator+(const Matrice &mtx)
 {
-    ;
+    if((this->col != mtx.col) + (this->row != mtx.row))
+        {
+            std::cerr << "the matrices cannot be substracted!\n";
+            throw std::exception();
+        }
+    Matrice sum(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+        {
+            for(int j = 0; j < this->col; j++)
+                {
+                    sum.data[i][j] = this->data[i][j] + mtx.data[i][j];
+                }
+        }
+    return sum;
 }
 
 /*Matrice Matrice::operator-(const Matrice& mtx)
@@ -140,6 +153,7 @@ Matrice Matrice::operator+(const Matrice &mtx)
                     difference.data[i][j] = this->data[i][j] - mtx.data[i][j];
                 }
         }
+    return dufference;
 }
 
 Matrice Matrice::operator-(double** mtx)
