@@ -1,15 +1,15 @@
 #include "layers.h"
 
 InputLayer::InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type):
-    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth), output(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding)
+    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth)//, output(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding)
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
-    /*this->outputs = new Matrice* [feature_depth];
+    this->outputs = new Matrice* [feature_depth];
     for(int i = 0; i < feature_depth; i++)
         {
             outputs[i] = new Matrice(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
-        }*/
+        }
 }
 
 InputLayer::~InputLayer()
@@ -17,17 +17,17 @@ InputLayer::~InputLayer()
     ;
 }
 
-inline void InputLayer::layers_output(Matrice &input)
+inline void InputLayer::layers_output(Matrice **input)
 {
     ;
 }
 
-inline Matrice InputLayer::get_output_error(Matrice &input, Matrice &required_output, int costfunction_type)
+inline Matrice InputLayer::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
     ;
 }
 
-inline Matrice InputLayer::derivate_layers_output(Matrice &input)
+inline Matrice InputLayer::derivate_layers_output(Matrice **input)
 {
     ;
 }
@@ -47,25 +47,25 @@ inline void InputLayer::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_
     ;
 }
 
-void InputLayer::set_input(Matrice &input)
+void InputLayer::set_input(Matrice **input)
 {
     ///TODO modify this function
-    for (int i = 0; i < this->outputlen; i++)
+    for (int i = 0; i < this->feature_depth; i++)
         {
-            this->output.data[i][0] = input.data[i][0];
+            this->outputs[i][0]/*.data[i][0]*/ = input[i][0]/*.data[i][0]*/;
         }
-    double **debug = this->output.data;
-    int j = 0;
+    //double **debug = this->output.data;
+    //int j = 0;
 }
 
-inline void InputLayer::backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
+inline void InputLayer::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
 {
     ;
 }
 
-inline Matrice* InputLayer::get_output()
+inline Matrice** InputLayer::get_output()
 {
-    return &(this->output);
+    return this->outputs;
 }
 
 inline Matrice* InputLayer::get_weights()

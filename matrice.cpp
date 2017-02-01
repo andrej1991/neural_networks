@@ -13,7 +13,13 @@ Matrice::Matrice(int row,int col) : data(NULL)
         {
             data = new double* [row];
             for(int i = 0; i < row; i++)
-                data[i] = new double [col];
+                {
+                    data[i] = new double [col];
+                    for(int j = 0; j < col; j++)
+                        {
+                            data[i][j] = 0;
+                        }
+                }
         }
     catch(bad_alloc& ba)
         {

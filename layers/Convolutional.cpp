@@ -22,22 +22,22 @@ Convolutional::~Convolutional()
     ;
 }
 
-inline void Convolutional::backpropagate(Matrice &input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
+inline void Convolutional::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
 {
     ;
 }
 
-inline void Convolutional::layers_output(Matrice &input)
+inline void Convolutional::layers_output(Matrice **input)
 {
     ;
 }
 
-inline Matrice Convolutional::get_output_error(Matrice &input, Matrice &required_output, int costfunction_type)
+inline Matrice Convolutional::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
     ;
 }
 
-inline Matrice Convolutional::derivate_layers_output(Matrice &input)
+inline Matrice Convolutional::derivate_layers_output(Matrice **input)
 {
     ;
 }
@@ -57,12 +57,12 @@ inline void Convolutional::add_back_removed_neurons(Matrice **w_bckup, Matrice *
     ;
 }
 
-void Convolutional::set_input(Matrice &input)
+void Convolutional::set_input(Matrice **input)
 {
     ;
 }
 
-inline Matrice* Convolutional::get_output()
+inline Matrice** Convolutional::get_output()
 {
     ;
 }

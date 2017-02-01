@@ -2,10 +2,14 @@
 1483265878 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.cpp
 	"layers.h"
 
+1485898993 
+
 1483267574 /home/andrej/myfiles/dokumentumok/neural_networks/src/layers/layers.h
 	"../neuron.h"
 	"../MNIST_data.h"
 	"../matrice.h"
+
+1485951080 e.h"
 
 1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/neuron.h
 
@@ -21,6 +25,8 @@
 
 1482773605 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/additional.cpp
 	"additional.h"
+
+1485898993 l.h"
 
 1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/additional.h
 
@@ -45,16 +51,22 @@
 	"matrice.h"
 	"layers/layers.h"
 
+1485898993 yers.h"
+
 1482773605 /home/andrej/myfiles/dokumentumok/neural_networks/src/random.h
 	<fstream>
 
 1483265878 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/matrice.cpp
 	"matrice.h"
 
+1485951188 "
+
 1482773605 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/MNIST_data.cpp
 	<iostream>
 	<fstream>
 	"MNIST_data.h"
+
+1485898993 a.h"
 
 1483192554 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/neuron.cpp
 	"neuron.h"
@@ -158,4 +170,172 @@
 
 1485643750 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Feature_map.cpp
 	"layers.h"
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\layers.cpp
+	"layers.h"
+
+1485951080 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\layers.h
+	"../neuron.h"
+	"../MNIST_data.h"
+	"../matrice.h"
+
+1485898993 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\neuron.h
+	"matrice.h"
+
+1485898993 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\matrice.h
+	<iostream>
+	<stdio.h>
+
+1485898993 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\mnist_data.h
+	<fstream>
+	"matrice.h"
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\layerdescriptor.cpp
+	"layers.h"
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\additional.cpp
+	"additional.h"
+
+1485898993 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\additional.h
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\feature_map.cpp
+	"layers.h"
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\main.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+	"network.h"
+	"matrice.h"
+	"random.h"
+	<iosfwd>
+
+1485898993 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\network.h
+	"neuron.h"
+	"MNIST_data.h"
+	"matrice.h"
+	"layers/layers.h"
+
+1485898993 d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\random.h
+	<fstream>
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\mnist_data.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\neuron.cpp
+	"neuron.h"
+	<math.h>
+	<iostream>
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\random.cpp
+	"random.h"
+	<fstream>
+
+1485898993 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\network.cpp
+	"network.h"
+	<fstream>
+	<iostream>
+	<stdlib.h>
+	"random.h"
+	"additional.h"
+	<math.h>
+	"layers/layers.h"
+
+1485951080 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\convolutional.cpp
+	"layers.h"
+
+1485951146 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\fullyconnected.cpp
+	"layers.h"
+
+1485951080 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\layers\inputlayer.cpp
+	"layers.h"
+
+1485951188 source:d:\userdata\aantal\desktop\cnn\neural_networks-convolutional_neural_network\matrice.cpp
+	"matrice.h"
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.cpp
+	"layers.h"
+
+1485986630 /home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.h
+	"../neuron.h"
+	"../MNIST_data.h"
+	"../matrice.h"
+
+1485898994 /home/andrej/hdd/dokumentumok/neural_networks/src/neuron.h
+	"matrice.h"
+
+1485898994 /home/andrej/hdd/dokumentumok/neural_networks/src/matrice.h
+	<iostream>
+	<stdio.h>
+
+1485898994 /home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.h
+	<fstream>
+	"matrice.h"
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/layerdescriptor.cpp
+	"layers.h"
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Feature_map.cpp
+	"layers.h"
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/main.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+	"network.h"
+	"matrice.h"
+	"random.h"
+	<iosfwd>
+
+1485986865 /home/andrej/hdd/dokumentumok/neural_networks/src/network.h
+	"neuron.h"
+	"MNIST_data.h"
+	"matrice.h"
+	"layers/layers.h"
+
+1485898994 /home/andrej/hdd/dokumentumok/neural_networks/src/random.h
+	<fstream>
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/MNIST_data.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/neuron.cpp
+	"neuron.h"
+	<math.h>
+	<iostream>
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/additional.cpp
+	"additional.h"
+
+1485898994 /home/andrej/hdd/dokumentumok/neural_networks/src/additional.h
+
+1485982801 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Convolutional.cpp
+	"layers.h"
+
+1485986988 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
+	"layers.h"
+
+1485986577 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/inputlayer.cpp
+	"layers.h"
+
+1485951190 source:/home/andrej/hdd/dokumentumok/neural_networks/src/matrice.cpp
+	"matrice.h"
+
+1485898994 source:/home/andrej/hdd/dokumentumok/neural_networks/src/random.cpp
+	"random.h"
+	<fstream>
+
+1485986897 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+	"network.h"
+	<fstream>
+	<iostream>
+	<stdlib.h>
+	"random.h"
+	"additional.h"
+	<math.h>
+	"layers/layers.h"
 

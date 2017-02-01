@@ -13,7 +13,7 @@ class Network{
     void update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    inline void feedforward(Matrice &input);
+    inline void feedforward(Matrice **input);
     double cost(Matrice &required_output);
     public:
     void load(char *filename);
@@ -23,7 +23,7 @@ class Network{
     Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_count, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false);
     ~Network();
     void test(MNIST_data **d, MNIST_data **v);
-    Matrice get_output(Matrice &input);
+    Matrice get_output(Matrice **input);
 };
 
 #endif // NETWORK_H_INCLUDED
