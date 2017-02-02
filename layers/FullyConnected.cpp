@@ -1,10 +1,11 @@
 #include "layers.h"
 
 FullyConnected::FullyConnected(int row, int prev_row, int input_fmap_cnt, int neuron_type):
+///the fully connected layer contains only one set of weights
     fmap(row, prev_row, 1), neuron(neuron_type), input_fmap_count(input_fmap_cnt)
 {
     this->output = new Matrice*[1];
-    this->output[1] = new Matrice(row, 1);
+    this->output[0] = new Matrice(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
 }

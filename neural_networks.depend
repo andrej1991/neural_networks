@@ -316,7 +316,7 @@
 1485982801 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Convolutional.cpp
 	"layers.h"
 
-1485986988 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
+1486069089 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
 	"layers.h"
 
 1485986577 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/inputlayer.cpp
@@ -329,7 +329,7 @@
 	"random.h"
 	<fstream>
 
-1485986897 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+1486070406 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>

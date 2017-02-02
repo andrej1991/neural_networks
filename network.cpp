@@ -91,7 +91,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, 
 {
     ///TODO modfy this function based on multiple input features...
     this->feedforward(trainig_data->input);
-    Matrice delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 1]->get_output(),
+    Matrice delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
                                                                    trainig_data->required_output, this->costfunction_type);
     *(nabla_b[this->layers_num - 1]) = delta;
     *(nabla_w[this->layers_num - 1]) = delta * this->layers[this->layers_num - 2]->get_output()[0]->transpose();
