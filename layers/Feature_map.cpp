@@ -16,7 +16,13 @@ Feature_map::Feature_map(int row, int col, int depth):
 
 Feature_map::~Feature_map()
 {
-    ;
+    for(int i = 0; i < this->mapdepth; i++)
+        {
+            delete this->weights[i];
+            delete this->biases[i];
+        }
+    delete[] this->weights;
+    delete[] this->biases;
 }
 
 void Feature_map::initialize_biases()

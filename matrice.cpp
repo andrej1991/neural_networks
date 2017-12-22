@@ -130,7 +130,7 @@ Matrice Matrice::operator+(const Matrice &mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
         {
-            std::cerr << "the matrices cannot be substracted!\n";
+            std::cerr << "the matrices cannot be added!\n";
             throw std::exception();
         }
     Matrice sum(this->row, this->col);
@@ -214,16 +214,16 @@ Matrice Matrice::transpose()
     return tr_mtx;
 }
 
-Matrice Matrice::rot180(Matrice &m)
+Matrice Matrice::rot180()
 {
-    Matrice ret(m.row, m.col);
+    Matrice ret(this->row, this->col);
     int i2 = 0;
     int j2 = 0;
-    for(int i = m.row - 1; i >= 0; i--)
+    for(int i = this->row - 1; i >= 0; i--)
         {
-            for(int j = m.col - 1; j >= 0; j--)
+            for(int j = this->col - 1; j >= 0; j--)
                 {
-                    ret.data[i][j] = m.data[i2][j2];
+                    ret.data[i][j] = this->data[i2][j2];
                     j2++;
                 }
             i2++;
@@ -232,7 +232,20 @@ Matrice Matrice::rot180(Matrice &m)
     return ret;
 }
 
-void Matrice::convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride, int left_padding, int up_padding)
+Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
+{
+    Matrice ret(this->row + top + bottom, this->col + left + right);
+    for(int i = 0; i < this->row; i++)
+        {
+            for(int j = 0; j < this->col; j++)
+                {
+                    ret.data[top + i][left + j] = this->data[i][j];
+                }
+        }
+    return ret;
+}
+
+void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
 {
     double helper;
     int r, c;
@@ -251,7 +264,7 @@ void Matrice::convolution(Matrice &input, Matrice &kernel, Matrice &output, int 
                                     helper += kernel.data[k][l] * input.data[i + k][j + l];
                                 }
                         }
-                    output.data[r + up_padding][c + left_padding] = helper;
+                    output.data[r][c] = helper;
                     c++;
                 }
             r++;

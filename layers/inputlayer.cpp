@@ -1,7 +1,7 @@
 #include "layers.h"
 
 InputLayer::InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type):
-    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth)//, output(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding)
+    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth)
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
@@ -14,12 +14,16 @@ InputLayer::InputLayer(int row, int col, int feature_depth, int neuron_type, Pad
 
 InputLayer::~InputLayer()
 {
-    ;
+    for(int i = 0; i < this->feature_depth; i++)
+        {
+            delete this->outputs[i];
+        }
+    delete[] this->outputs;
 }
 
 inline void InputLayer::layers_output(Matrice **input)
 {
-    ;
+    this->set_input(input);
 }
 
 inline Matrice InputLayer::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
@@ -49,13 +53,27 @@ inline void InputLayer::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_
 
 void InputLayer::set_input(Matrice **input)
 {
-    ///TODO modify this function
-    for (int i = 0; i < this->feature_depth; i++)
+    ///TODO modify this function to work with FC layer and convolutional layer
+    if(this->next_layers_type == SIGMOID)
         {
-            this->outputs[i][0]/*.data[i][0]*/ = input[i][0]/*.data[i][0]*/;
+            for (int i = 0; i < this->feature_depth; i++)
+                {
+                    this->outputs[i][0] = input[i][0];
+                }
         }
-    //double **debug = this->output.data;
-    //int j = 0;
+    else if(this->next_layers_type == CONVOLUTIONAL)
+        {
+            for(int l = 0; l < this->feature_depth; l++)
+                {
+                    for(int i = 0; i < this->row; i++)
+                        {
+                            for(int j = 0; j < this->col; j++)
+                                {
+                                    this->outputs[l][0].data[i][j] = input[i][0].data[i * this->row + j][0];
+                                }
+                        }
+                }
+        }
 }
 
 inline void InputLayer::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)

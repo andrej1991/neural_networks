@@ -1,8 +1,7 @@
 #include "layers.h"
 
-FullyConnected::FullyConnected(int row, int prev_row, int input_fmap_cnt, int neuron_type):
-///the fully connected layer contains only one set of weights
-    fmap(row, prev_row, 1), neuron(neuron_type), input_fmap_count(input_fmap_cnt)
+FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
+    fmap(row, prev_row, 1), neuron(neuron_type)
 {
     this->output = new Matrice*[1];
     this->output[0] = new Matrice(row, 1);
@@ -12,17 +11,14 @@ FullyConnected::FullyConnected(int row, int prev_row, int input_fmap_cnt, int ne
 
 FullyConnected::~FullyConnected()
 {
-    ;
+    delete this->output[0];
+    delete[] this->output;
 }
 
 inline void FullyConnected::layers_output(Matrice **input)
 {
-    ///TODO rewrite this function for multiple feature maps
     Matrice inputparam(this->fmap.biases[0][0].get_row(), this->fmap.biases[0][0].get_col());
-    for(int i = 0; i < this->input_fmap_count; i++)
-        {
-            inputparam += (this->fmap.weights[0][0] * input[i][0] + this->fmap.biases[0][0]);
-        }
+    inputparam += (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
     this->output[0][0] = this->neuron.neuron(inputparam);
 }
 
@@ -69,10 +65,7 @@ inline Matrice FullyConnected::derivate_layers_output(Matrice **input)
 {
     Matrice mtx(this->outputlen, 1);
     Matrice inputparam(this->fmap.biases[0][0].get_row(), this->fmap.biases[0][0].get_col());
-    for(int i = 0; i < this->input_fmap_count; i++)
-        {
-            inputparam += (this->fmap.weights[0][0] * input[i][0] + this->fmap.biases[0][0]);
-        }
+    inputparam += (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
     mtx = this->neuron.neuron_derivate(inputparam);
     return mtx;
 }

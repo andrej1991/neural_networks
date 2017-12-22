@@ -60,7 +60,6 @@ class Layer{
     virtual inline Matrice* get_weights() = 0;
     virtual inline short get_layer_type() = 0;
     virtual inline int get_outputlen() = 0;
-    //virtual inline int get_neuron_count() = 0;
     virtual void set_weights(Matrice *w) = 0;
     virtual void set_biases(Matrice *b) = 0;
 };
@@ -68,11 +67,11 @@ class Layer{
 class FullyConnected : public Layer {
     Matrice **output;
     Feature_map fmap;
-    int neuron_type, neuron_count, outputlen, input_fmap_count;
+    int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
     public:
-    FullyConnected(int row, int prev_row, int input_fmap_cnt, int neuron_type);
+    FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
     inline void backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
     inline void layers_output(Matrice **input);
@@ -86,19 +85,19 @@ class FullyConnected : public Layer {
     inline Matrice* get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
-    //inline int get_neuron_count();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
 };
 
 class Convolutional : public Layer {
-    Matrice output;
-    Feature_map *fmap;
-    int neuron_type, neuron_count, outputlen, input_row, input_col, row, col, layer_count, stride, zeropadding;
+    Matrice **outputs, **flattened_output;
+    Feature_map **fmap;
+    Padding pad;
+    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
     public:
-    Convolutional(int input_row, int input_col, int input_layer_count, int row, int col, int layer_count, int neuron_type, int stride = 1);
+    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
     ~Convolutional();
     inline void backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
     inline void layers_output(Matrice **input);
@@ -112,9 +111,10 @@ class Convolutional : public Layer {
     inline Matrice* get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
-    //inline int get_neuron_count();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
+    void flatten();
+    Matrice flatten_to_2D(Matrice &m);
 };
 
 /*class Pooling : public Layer {
@@ -174,7 +174,6 @@ class InputLayer : public Layer {
     inline Matrice* get_weights();
     inline short get_layer_type();
     inline int get_outputlen();
-    //inline int get_neuron_count();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
 };

@@ -19,17 +19,22 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
         this->layers_num = layers_num;
         this->layers = new Layer* [this->total_layers_num];
         Padding p;
-        this->layers[0] = new InputLayer(inputpixel_count, 1, 1, SIGMOID, p, FULLY_CONNECTED);
+        //this->layers[0] = new InputLayer(inputpixel_count, 1, 1, SIGMOID, p, FULLY_CONNECTED);
+        this->layers[0] = new InputLayer(28, 28, 1, SIGMOID, p, CONVOLUTIONAL);
         this->layers += 1;
         for(int i = 0; i < layers_num; i++)
             {
                 switch(layerdesc[i]->layer_type)
                 {
                 case FULLY_CONNECTED:
-                    this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_outputlen(), 1, layerdesc[i]->neuron_type);
+                    this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_outputlen(), layerdesc[i]->neuron_type);
+                    break;
+                case CONVOLUTIONAL:
+                    ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1)
+                    this->layers[i] = new Convolutional(28, 28, 1, 5, 5, 4, SIGMOID, layerdesc[i+1]->layer_type, p, 1);
                     break;
                 default:
-                    cerr << "Unknown layer type\n";
+                    cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                     throw std::exception();
                 }
             }
@@ -305,5 +310,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 30, 10, 3, true, 10, v, 500);
+    //this->stochastic_gradient_descent(d, 30, 10, 3, true, 10, v, 500);
+    this->get_output(v[0]->input);
 }
