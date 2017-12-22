@@ -30,7 +30,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
                     this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_outputlen(), layerdesc[i]->neuron_type);
                     break;
                 case CONVOLUTIONAL:
-                    ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1)
+                    ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                     this->layers[i] = new Convolutional(28, 28, 1, 5, 5, 4, SIGMOID, layerdesc[i+1]->layer_type, p, 1);
                     break;
                 default:

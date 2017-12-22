@@ -42,6 +42,7 @@ inline void Convolutional::layers_output(Matrice **input)
                     helper += convolved;
                 }
             this->outputs[map_index][0] = this->neuron.neuron(helper);
+            helper.zero();
         }
 }
 

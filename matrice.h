@@ -35,6 +35,7 @@ class Matrice
     friend void print_mtx(Matrice &mtx);
     int get_row();
     int get_col();
+    void zero();
 };
 
 

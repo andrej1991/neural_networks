@@ -272,6 +272,13 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
         }
 }
 
+void Matrice::zero()
+{
+    for(int i = 0; i < this->row; i++)
+        for(int j = 0; j < this->col; j++)
+            this->data[i][j] = 0;
+}
+
 void print_mtx_list(Matrice **mtx, int list_len)
 {
     for(int i = 0; i < list_len; i++)
