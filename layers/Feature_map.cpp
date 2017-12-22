@@ -1,14 +1,19 @@
 #include "layers.h"
 
-Feature_map::Feature_map(int row, int col, int depth):
+Feature_map::Feature_map(int row, int col, int depth, int biascnt):
                 mapdepth(depth)
 {
     this->weights = new Matrice* [depth];
     this->biases = new Matrice* [depth];
+    int biascount;
+    if(biascnt > 1)
+        biascount = biascnt;
+    else
+        biascount = 1;
     for(int i = 0; i < depth; i++)
         {
             this->weights[i] = new Matrice(row, col);
-            this->biases[i] = new Matrice(row, 1);
+            this->biases[i] = new Matrice(biascount, 1);
         }
     this->initialize_weights();
     this->initialize_biases();

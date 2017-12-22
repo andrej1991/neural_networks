@@ -23,6 +23,7 @@ class Matrice
     Matrice operator* (const Matrice& mtx);
     Matrice operator= (const Matrice& mtx);
     void operator+= (const Matrice& mtx);
+    void operator+= (double d);
     Matrice operator+ (const Matrice &mtx);
     //Matrice operator- (const Matrice& mtx);
     //Matrice operator-(double** mtx);

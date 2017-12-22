@@ -126,6 +126,18 @@ void Matrice::operator+=(const Matrice& mtx)
                 }
         }
 }
+
+void Matrice::operator+=(double d)
+{
+    for(int i = 0; i < this->row; i++)
+        {
+            for(int j = 0; j < this->col; j++)
+                {
+                    this->data[i][j] += d;
+                }
+        }
+}
+
 Matrice Matrice::operator+(const Matrice &mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))

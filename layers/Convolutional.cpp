@@ -41,6 +41,7 @@ inline void Convolutional::layers_output(Matrice **input)
                     convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->stride);
                     helper += convolved;
                 }
+            helper+=this->fmap[map_index]->biases[0][0].data[0][0];
             this->outputs[map_index][0] = this->neuron.neuron(helper);
             helper.zero();
         }

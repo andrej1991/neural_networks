@@ -1,7 +1,7 @@
 #include "layers.h"
 
 FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
-    fmap(row, prev_row, 1), neuron(neuron_type)
+    fmap(row, prev_row, 1, row), neuron(neuron_type)
 {
     this->output = new Matrice*[1];
     this->output[0] = new Matrice(row, 1);
@@ -64,8 +64,8 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
 inline Matrice FullyConnected::derivate_layers_output(Matrice **input)
 {
     Matrice mtx(this->outputlen, 1);
-    Matrice inputparam(this->fmap.biases[0][0].get_row(), this->fmap.biases[0][0].get_col());
-    inputparam += (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
+    Matrice inputparam;
+    inputparam = (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
     mtx = this->neuron.neuron_derivate(inputparam);
     return mtx;
 }

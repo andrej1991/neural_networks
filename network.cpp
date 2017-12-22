@@ -19,8 +19,10 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
         this->layers_num = layers_num;
         this->layers = new Layer* [this->total_layers_num];
         Padding p;
-        //this->layers[0] = new InputLayer(inputpixel_count, 1, 1, SIGMOID, p, FULLY_CONNECTED);
-        this->layers[0] = new InputLayer(28, 28, 1, SIGMOID, p, CONVOLUTIONAL);
+        if(layerdesc[0]->layer_type == FULLY_CONNECTED)
+            this->layers[0] = new InputLayer(inputpixel_count, 1, 1, SIGMOID, p, FULLY_CONNECTED);
+        else
+            this->layers[0] = new InputLayer(28, 28, 1, SIGMOID, p, CONVOLUTIONAL);
         this->layers += 1;
         for(int i = 0; i < layers_num; i++)
             {
@@ -129,14 +131,15 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                     dnw[i] = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
                     b[i]   = new Matrice(this->layers[i]->get_outputlen(), 1);
                     dnb[i] = new Matrice(this->layers[i]->get_outputlen(), 1);
-                    for(int j = 0; j < this->layers[i]->get_outputlen(); j++)
+                    ///in the constructor the matrices are filled with zeros
+                    /*for(int j = 0; j < this->layers[i]->get_outputlen(); j++)
                         {
                             dnb[i]->data[j][0] = b[i]->data[j][0] = 0;
                             for(int k = 0; k < this->layers[i - 1]->get_outputlen(); k++)
                                 {
                                     dnw[i]->data[j][k] = w[i]->data[j][k] = 0;
                                 }
-                        }
+                        }*/
                 }
         }
     catch(bad_alloc& ba)
