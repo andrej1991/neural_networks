@@ -70,8 +70,10 @@ inline Matrice FullyConnected::derivate_layers_output(Matrice **input)
     return mtx;
 }
 
-void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases)
+void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases)
 {
+    int prev_outputlen = this->fmap.get_col();
+    cout << prev_outputlen << "\n";
     for(int j = 0; j < this->outputlen; j++)
         {
             this->fmap.biases[0][0].data[j][0] -= learning_rate * biases->data[j][0];

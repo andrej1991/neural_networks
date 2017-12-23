@@ -1,7 +1,7 @@
 #include "layers.h"
 
 Feature_map::Feature_map(int row, int col, int depth, int biascnt):
-                mapdepth(depth)
+                mapdepth(depth), row(row), col(col)
 {
     this->weights = new Matrice* [depth];
     this->biases = new Matrice* [depth];
@@ -62,3 +62,8 @@ void Feature_map::initialize_weights()
         }
     random.close();
 }
+
+int Feature_map::get_col()
+    {
+        return this->col;
+    }

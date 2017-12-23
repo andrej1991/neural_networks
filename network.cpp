@@ -118,7 +118,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     Matrice **dnw;
     Matrice **b_bck, **w_bck;
     int *layer_bck, **ind;
-    this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
+    //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     try
         {
             w = new Matrice* [this->layers_num];
@@ -160,9 +160,9 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     double reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
     for(int i = 0; i < this->layers_num; i++)
         {
-            this->layers[i]->update_weights_and_biasses(lr, reg, this->layers[i - 1]->get_outputlen(), w[i], b[i]);
+            this->layers[i]->update_weights_and_biasses(lr, reg, w[i], b[i]);
         }
-    this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
+    //this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
     for(int i = 0; i < this->layers_num; i++)
         {
             delete w[i];
@@ -313,6 +313,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    //this->stochastic_gradient_descent(d, 30, 10, 3, true, 10, v, 500);
-    this->get_output(v[0]->input);
+    this->stochastic_gradient_descent(d, 30, 10, 3, true, 10, v, 500);
+    //this->get_output(v[0]->input);
 }

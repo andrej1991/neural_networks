@@ -21,20 +21,18 @@ class LayerDescriptor{
     int stride;
     int neuron_type;
     public:
-    LayerDescriptor(int layer_type, int neuron_count, int neuron_type, int stride = 1);
-    inline int get_layer_type();
-    inline int get_neuron_count();
-    inline int get_stride();
-    inline int get_neuron_type();
+    LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int stride = 1);
 };
 
 class Feature_map{
     void initialize_biases();
     void initialize_weights();
+    int row, col;
     public:
     Matrice **weights, **biases;
     int mapdepth;
     Feature_map(int row, int col, int mapdepth, int biascnt = -1);
+    int get_col();
     ~Feature_map();
 };
 
@@ -52,7 +50,7 @@ class Layer{
     virtual inline void layers_output(Matrice **input) = 0;
     virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type) = 0;
     virtual inline Matrice derivate_layers_output(Matrice **input) = 0;
-    virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases) = 0;
+    virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases) = 0;
     virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes) = 0;
     virtual inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes) = 0;
     virtual void set_input(Matrice **input) = 0;
@@ -77,7 +75,7 @@ class FullyConnected : public Layer {
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice derivate_layers_output(Matrice **input);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(Matrice **input);
@@ -103,7 +101,7 @@ class Convolutional : public Layer {
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice derivate_layers_output(Matrice **input);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(Matrice **input);
@@ -166,7 +164,7 @@ class InputLayer : public Layer {
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice derivate_layers_output(Matrice **input);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, int prev_outputlen, Matrice *weights, Matrice *biases);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(Matrice **input);
