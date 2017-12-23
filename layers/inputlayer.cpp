@@ -1,7 +1,8 @@
 #include "layers.h"
 
 InputLayer::InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type):
-    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth)
+    next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), feature_depth(feature_depth),
+    row(row), col(col)
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
@@ -76,7 +77,7 @@ void InputLayer::set_input(Matrice **input)
         }
 }
 
-inline void InputLayer::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
+inline void InputLayer::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount)
 {
     ;
 }
@@ -86,7 +87,7 @@ inline Matrice** InputLayer::get_output()
     return this->outputs;
 }
 
-inline Matrice* InputLayer::get_weights()
+inline Feature_map** InputLayer::get_feature_maps()
 {
     ;
 }
@@ -109,4 +110,24 @@ void InputLayer::set_weights(Matrice *w)
 void InputLayer::set_biases(Matrice *b)
 {
     ;
+}
+
+int InputLayer::get_weights_row()
+{
+    return this->row;
+}
+
+int InputLayer::get_weights_col()
+{
+    return this->col;
+}
+
+int InputLayer::get_mapcount()
+{
+    return this->feature_depth;
+}
+
+int InputLayer::get_mapdepth()
+{
+    1;
 }

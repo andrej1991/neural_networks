@@ -26,7 +26,7 @@ Convolutional::~Convolutional()
     ;
 }
 
-inline void Convolutional::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error)
+inline void Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount)
 {
     ;
 }
@@ -36,7 +36,7 @@ inline void Convolutional::layers_output(Matrice **input)
     Matrice convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
     for(int map_index = 0; map_index < this->map_count; map_index++)
         {
-            for(int channel_index = 0; channel_index < this->fmap[map_index]->mapdepth; channel_index++)
+            for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
                 {
                     convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->stride);
                     helper += convolved;
@@ -114,7 +114,7 @@ inline Matrice** Convolutional::get_output()
         return this->outputs;
 }
 
-inline Matrice* Convolutional::get_weights()
+inline Feature_map** Convolutional::get_feature_maps()
 {
     ;
 }
@@ -137,4 +137,24 @@ void Convolutional::set_weights(Matrice *w)
 void Convolutional::set_biases(Matrice *b)
 {
     ;
+}
+
+int Convolutional::get_mapcount()
+{
+    return this->map_count;
+}
+
+int Convolutional::get_mapdepth()
+{
+    return this->fmap[0]->get_mapdepth();
+}
+
+int Convolutional::get_weights_row()
+{
+    return this->kernel_row;
+}
+
+int Convolutional::get_weights_col()
+{
+    return this->kernel_col;
 }

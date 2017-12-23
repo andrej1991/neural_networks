@@ -17,23 +17,34 @@
 class LayerDescriptor{
     public:
     int layer_type;
-    int neuron_count;
+    int neuron_count, row, col;
+    int mapcount;
     int stride;
     int neuron_type;
     public:
-    LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int stride = 1);
+    LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1);
 };
 
 class Feature_map{
     void initialize_biases();
     void initialize_weights();
-    int row, col;
+    int row, col, mapdepth;
     public:
     Matrice **weights, **biases;
-    int mapdepth;
     Feature_map(int row, int col, int mapdepth, int biascnt = -1);
     int get_col();
+    int get_row();
+    int get_mapdepth();
     ~Feature_map();
+};
+
+class Layers_features{
+    int fmap_count;
+    public:
+    Feature_map **fmap;
+    Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+    ~Layers_features();
+    void operator+=(Layers_features &layer);
 };
 
 class Padding{
@@ -46,7 +57,7 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual inline void backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error) = 0;
+    virtual inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount) = 0;
     virtual inline void layers_output(Matrice **input) = 0;
     virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type) = 0;
     virtual inline Matrice derivate_layers_output(Matrice **input) = 0;
@@ -55,11 +66,15 @@ class Layer{
     virtual inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes) = 0;
     virtual void set_input(Matrice **input) = 0;
     virtual inline Matrice** get_output() = 0;
-    virtual inline Matrice* get_weights() = 0;
+    virtual inline Feature_map** get_feature_maps() = 0;
     virtual inline short get_layer_type() = 0;
     virtual inline int get_outputlen() = 0;
     virtual void set_weights(Matrice *w) = 0;
     virtual void set_biases(Matrice *b) = 0;
+    virtual int get_mapcount() = 0;
+    virtual int get_mapdepth() = 0;
+    virtual int get_weights_row() = 0;
+    virtual int get_weights_col() = 0;
 };
 
 class FullyConnected : public Layer {
@@ -71,7 +86,7 @@ class FullyConnected : public Layer {
     public:
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
-    inline void backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
+    inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice derivate_layers_output(Matrice **input);
@@ -80,11 +95,15 @@ class FullyConnected : public Layer {
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(Matrice **input);
     inline Matrice** get_output();
-    inline Matrice* get_weights();
+    inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_outputlen();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
+    int get_mapcount();
+    int get_mapdepth();
+    int get_weights_row();
+    int get_weights_col();
 };
 
 class Convolutional : public Layer {
@@ -97,7 +116,7 @@ class Convolutional : public Layer {
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
     ~Convolutional();
-    inline void backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
+    inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice derivate_layers_output(Matrice **input);
@@ -106,13 +125,17 @@ class Convolutional : public Layer {
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(Matrice **input);
     inline Matrice** get_output();
-    inline Matrice* get_weights();
+    inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_outputlen();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     void flatten();
     Matrice flatten_to_2D(Matrice &m);
+    int get_mapcount();
+    int get_mapdepth();
+    int get_weights_row();
+    int get_weights_col();
 };
 
 /*class Pooling : public Layer {
@@ -160,7 +183,7 @@ class InputLayer : public Layer {
     Padding padd;
     InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    inline void backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &next_layers_error);
+    inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice derivate_layers_output(Matrice **input);
@@ -169,11 +192,15 @@ class InputLayer : public Layer {
     inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
     void set_input(Matrice **input);
     inline Matrice** get_output();
-    inline Matrice* get_weights();
+    inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_outputlen();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
+    int get_mapcount();
+    int get_mapdepth();
+    int get_weights_row();
+    int get_weights_col();
 };
 
 #endif // LAYERS_H_INCLUDED

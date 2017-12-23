@@ -33,7 +33,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
                     break;
                 case CONVOLUTIONAL:
                     ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
-                    this->layers[i] = new Convolutional(28, 28, 1, 5, 5, 4, SIGMOID, layerdesc[i+1]->layer_type, p, 1);
+                    this->layers[i] = new Convolutional(28, 28, 1, layerdesc[i]->row, layerdesc[i]->col, layerdesc[i]->mapcount, SIGMOID, layerdesc[i+1]->layer_type, p, 1);
                     break;
                 default:
                     cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
@@ -94,7 +94,7 @@ double Network::cost(Matrice &required_output)
 }
 
 
-inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, Matrice **nabla_w)
+inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **nabla)
 {
     ///TODO modfy this function based on multiple input features...
     this->feedforward(trainig_data->input);
@@ -106,12 +106,13 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Matrice **nabla_b, 
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
             this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
-                                           *(this->layers[i + 1]->get_weights()), nabla_b[i], nabla_w[i], delta);
+                                           *(this->layers[i + 1]->get_weights()), nabla[i]->fmap, delta);
         }
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
 {
+    Layers_features **nabla, **deltanabla;
     Matrice **w;
     Matrice **b;
     Matrice **dnb;
@@ -121,25 +122,34 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     try
         {
+            nabla = new Layers_features* [this->layers_num];
+            deltanabla = new Layers_features* [this->layers_num];
             w = new Matrice* [this->layers_num];
             b = new Matrice* [this->layers_num];
             dnb = new Matrice* [this->layers_num];
             dnw = new Matrice* [this->layers_num];
             for(int i = 0; i < this->layers_num; i++)
                 {
+                    ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+                    int biascnt;
+                    if(this->layers[i]->get_layer_type() == FULLY_CONNECTED)
+                        biascnt = this->layers[i]->get_weights_row();
+                    else
+                        biascnt = 1;
+                    nabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                   this->layers[i]->get_weights_row(),
+                                                   this->layers[i]->get_weights_col(),
+                                                   this->layers[i]->get_mapdepth(),
+                                                   biascnt);
+                    deltanabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                        this->layers[i]->get_weights_row(),
+                                                        this->layers[i]->get_weights_col(),
+                                                        this->layers[i]->get_mapdepth(),
+                                                        biascnt);
                     w[i]   = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
                     dnw[i] = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
                     b[i]   = new Matrice(this->layers[i]->get_outputlen(), 1);
                     dnb[i] = new Matrice(this->layers[i]->get_outputlen(), 1);
-                    ///in the constructor the matrices are filled with zeros
-                    /*for(int j = 0; j < this->layers[i]->get_outputlen(); j++)
-                        {
-                            dnb[i]->data[j][0] = b[i]->data[j][0] = 0;
-                            for(int k = 0; k < this->layers[i - 1]->get_outputlen(); k++)
-                                {
-                                    dnw[i]->data[j][k] = w[i]->data[j][k] = 0;
-                                }
-                        }*/
                 }
         }
     catch(bad_alloc& ba)

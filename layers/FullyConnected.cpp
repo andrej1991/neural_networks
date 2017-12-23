@@ -73,7 +73,6 @@ inline Matrice FullyConnected::derivate_layers_output(Matrice **input)
 void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases)
 {
     int prev_outputlen = this->fmap.get_col();
-    cout << prev_outputlen << "\n";
     for(int j = 0; j < this->outputlen; j++)
         {
             this->fmap.biases[0][0].data[j][0] -= learning_rate * biases->data[j][0];
@@ -101,15 +100,21 @@ void FullyConnected::set_input(Matrice **input)
 }
 
 
-inline void FullyConnected::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &delta)
+inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &delta, int next_layers_fmapcount)
+//inline void FullyConnected::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &delta)
 {
     ///TODO think through this function from mathematical perspective!!!
+    if(next_layers_fmapcount != 1)
+        {
+            cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
+            throw exception();
+        }
     Matrice multiplied, output_derivate;
     output_derivate = this->derivate_layers_output(input);
-    multiplied = next_layers_weights.transpose() * delta;
+    multiplied = next_layers_fmaps[0][0].weights[0][0].transpose() * delta;
     delta = hadamart_product(multiplied, output_derivate);
-    *(nabla_b) = delta;
-    *(nabla_w) = delta * input[0][0].transpose();
+    nabla[0][0].biases[0][0] = delta;
+    nabla[0][0].weights[0][0] = delta * input[0][0].transpose();
 }
 
 inline Matrice** FullyConnected::get_output()
@@ -117,9 +122,9 @@ inline Matrice** FullyConnected::get_output()
     return this->output;
 }
 
-inline Matrice* FullyConnected::get_weights()
+inline Feature_map** FullyConnected::get_feature_maps()
 {
-    return this->fmap.weights[0];
+    return &(&(this->fmap));
 }
 
 inline short FullyConnected::get_layer_type()
@@ -140,4 +145,24 @@ void FullyConnected::set_weights(Matrice *w)
 void FullyConnected::set_biases(Matrice *b)
 {
     this->fmap.biases[0][0] = *b;
+}
+
+int FullyConnected::get_mapcount()
+{
+    return 1;
+}
+
+int FullyConnected::get_mapdepth()
+{
+    return 1;
+}
+
+int FullyConnected::get_weights_row()
+{
+    return this->fmap.get_row();
+}
+
+int FullyConnected::get_weights_col()
+{
+    return this->fmap.get_col();
 }

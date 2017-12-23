@@ -1,4 +1,38 @@
 #include "layers.h"
 
-LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int stride):
-            layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), stride(stride) {}
+LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col, int mapcount, int stride):
+            layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), stride(stride),
+            row(neuron_count), col(col), mapcount(mapcount) {}
+
+
+Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt):
+            fmap_count(mapcount)
+{
+    this->fmap = new Feature_map* [this->fmap_count];
+    for(int i = 0; i < mapcount; i++)
+        {
+            this->fmap[i] = new Feature_map(row, col, depth, biascnt);
+        }
+}
+
+Layers_features::~Layers_features()
+{
+    for(int i = 0; i < this->fmap_count; i++)
+        {
+            delete this->fmap[i];
+        }
+    delete this->fmap;
+}
+
+void Layers_features::operator+= (Layers_features &layer)
+{
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+        {
+            int mapdepth = this->fmap[map_index]->get_mapdepth();
+            for(int i = 0; i < mapdepth; i++)
+                {
+                    this->fmap[map_index]->weights[i][0] += layer.fmap[map_index]->weights[i][0];
+                    this->fmap[map_index]->biases[i][0] += layer.fmap[map_index]->biases[i][0];
+                }
+        }
+}

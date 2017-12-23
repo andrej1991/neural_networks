@@ -64,6 +64,16 @@ void Feature_map::initialize_weights()
 }
 
 int Feature_map::get_col()
-    {
-        return this->col;
-    }
+{
+    return this->col;
+}
+
+int Feature_map::get_row()
+{
+    return this->row;
+}
+
+int Feature_map::get_mapdepth()
+{
+    return this->mapdepth;
+}
