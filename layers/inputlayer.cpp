@@ -32,7 +32,7 @@ inline Matrice InputLayer::get_output_error(Matrice **input, Matrice &required_o
     ;
 }
 
-inline Matrice InputLayer::derivate_layers_output(Matrice **input)
+inline Matrice** InputLayer::derivate_layers_output(Matrice **input)
 {
     ;
 }
@@ -77,7 +77,7 @@ void InputLayer::set_input(Matrice **input)
         }
 }
 
-inline void InputLayer::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &next_layers_error, int next_layers_fmapcount)
+inline void InputLayer::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount)
 {
     ;
 }

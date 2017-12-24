@@ -26,7 +26,7 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
 {
     Matrice mtx(this->outputlen, 1);
     Matrice delta(this->outputlen, 1);
-    Matrice output_derivate(this->outputlen, 1);
+    Matrice **output_derivate;
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
@@ -35,7 +35,8 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                     mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
                 }
             output_derivate = this->derivate_layers_output(input);
-            delta = hadamart_product(mtx, output_derivate);
+            delta = hadamart_product(mtx, **output_derivate);
+            delete[] output_derivate;
             return delta;
         case CROSS_ENTROPY_CF:
             switch(this->neuron_type)
@@ -50,9 +51,10 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                     output_derivate = this->derivate_layers_output(input);
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            delta.data[i][0] = (output_derivate.data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
+                            delta.data[i][0] = (output_derivate[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
                                                     (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
                         }
+                    delete[] output_derivate;
                     return delta;
                 }
         default:
@@ -61,12 +63,14 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
         };
 }
 
-inline Matrice FullyConnected::derivate_layers_output(Matrice **input)
+inline Matrice** FullyConnected::derivate_layers_output(Matrice **input)
 {
-    Matrice mtx(this->outputlen, 1);
+    Matrice **mtx;
+    mtx = new Matrice* [1];
+    mtx[0] = new Matrice;
     Matrice inputparam;
     inputparam = (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
-    mtx = this->neuron.neuron_derivate(inputparam);
+    mtx[0][0] = this->neuron.neuron_derivate(inputparam);
     return mtx;
 }
 
@@ -106,8 +110,7 @@ void FullyConnected::set_input(Matrice **input)
 
 
 inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
-                                          Matrice &delta, int next_layers_fmapcount)
-//inline void FullyConnected::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &delta)
+                                          Matrice **delta, int next_layers_fmapcount)
 {
     ///TODO think through this function from mathematical perspective!!!
     if(next_layers_fmapcount != 1)
@@ -115,17 +118,13 @@ inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_la
             cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
             throw exception();
         }
-    Matrice multiplied, output_derivate;
+    Matrice multiplied, **output_derivate;
     output_derivate = this->derivate_layers_output(input);
-    //int debug1 = next_layers_fmaps[0][0].weights[0][0].get_row();
-    //int debug2 = next_layers_fmaps[0][0].weights[0]->get_col();
-    //int debug3 = delta.get_row();
-    //int debug4 = delta.get_col();
-    multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta;
-    //int debug5 = 0;
-    delta = hadamart_product(multiplied, output_derivate);
-    nabla[0][0].biases[0][0] = delta;
-    nabla[0][0].weights[0][0] = delta * input[0][0].transpose();
+    multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
+    delta[0][0] = hadamart_product(multiplied, **output_derivate);
+    nabla[0][0].biases[0][0] = delta[0][0];
+    nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
+    delete[] output_derivate;
 }
 
 inline Matrice** FullyConnected::get_output()
@@ -137,7 +136,6 @@ inline Feature_map** FullyConnected::get_feature_maps()
 {
     Feature_map *helper = &(this->fmap);
     Feature_map **h2 = &helper;
-    //int debug1 = h2[0][0].weights[0][0].get_row();
     return h2;
 }
 

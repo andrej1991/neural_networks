@@ -100,10 +100,12 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     ///currently the final layer has to be a clasification layer
     ///TODO make some check if the final layer has only one output vector
     this->feedforward(trainig_data->input);
-    Matrice delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
-                                                                   trainig_data->required_output, this->costfunction_type);
-    nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = delta;
-    nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = delta * this->layers[this->layers_num - 2]->get_output()[0]->transpose();
+    Matrice **delta = new Matrice* [1];
+    delta[0] = new Matrice;
+    delta[0][0] = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
+                                                    trainig_data->required_output, this->costfunction_type);
+    nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = delta[0][0];
+    nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2]->get_output()[0]->transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
