@@ -107,8 +107,8 @@ Matrice Matrice::operator* (const Matrice& other)
                             c = 0;
                         }
                 }
-                return mtx;
-            }
+            return mtx;
+        }
 }
 
 void Matrice::operator+=(const Matrice& mtx)

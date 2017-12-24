@@ -58,7 +58,7 @@ inline Matrice Convolutional::derivate_layers_output(Matrice **input)
     ;
 }
 
-void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases)
+void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
     ;
 }

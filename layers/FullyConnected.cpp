@@ -70,15 +70,20 @@ inline Matrice FullyConnected::derivate_layers_output(Matrice **input)
     return mtx;
 }
 
-void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases)
+void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
+    if((layer->get_fmap_count() != 1) + (layer->fmap[0]->get_mapdepth() != 1))
+        {
+            cerr << "the fully connected layer must have only one set of weights!!!\n";
+            throw exception();
+        }
     int prev_outputlen = this->fmap.get_col();
     for(int j = 0; j < this->outputlen; j++)
         {
-            this->fmap.biases[0][0].data[j][0] -= learning_rate * biases->data[j][0];
+            this->fmap.biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
             for(int k = 0; k < prev_outputlen; k++)
                 {
-                    this->fmap.weights[0][0].data[j][k] = regularization_rate * this->fmap.weights[0][0].data[j][k] - learning_rate * weights->data[j][k];
+                    this->fmap.weights[0][0].data[j][k] = regularization_rate * this->fmap.weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
                 }
         }
 }
@@ -100,7 +105,8 @@ void FullyConnected::set_input(Matrice **input)
 }
 
 
-inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice &delta, int next_layers_fmapcount)
+inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
+                                          Matrice &delta, int next_layers_fmapcount)
 //inline void FullyConnected::backpropagate(Matrice **input, Matrice& next_layers_weights, Matrice *nabla_b, Matrice *nabla_w, Matrice &delta)
 {
     ///TODO think through this function from mathematical perspective!!!
@@ -111,7 +117,12 @@ inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_la
         }
     Matrice multiplied, output_derivate;
     output_derivate = this->derivate_layers_output(input);
-    multiplied = next_layers_fmaps[0][0].weights[0][0].transpose() * delta;
+    //int debug1 = next_layers_fmaps[0][0].weights[0][0].get_row();
+    //int debug2 = next_layers_fmaps[0][0].weights[0]->get_col();
+    //int debug3 = delta.get_row();
+    //int debug4 = delta.get_col();
+    multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta;
+    //int debug5 = 0;
     delta = hadamart_product(multiplied, output_derivate);
     nabla[0][0].biases[0][0] = delta;
     nabla[0][0].weights[0][0] = delta * input[0][0].transpose();
@@ -124,7 +135,10 @@ inline Matrice** FullyConnected::get_output()
 
 inline Feature_map** FullyConnected::get_feature_maps()
 {
-    return &(&(this->fmap));
+    Feature_map *helper = &(this->fmap);
+    Feature_map **h2 = &helper;
+    //int debug1 = h2[0][0].weights[0][0].get_row();
+    return h2;
 }
 
 inline short FullyConnected::get_layer_type()

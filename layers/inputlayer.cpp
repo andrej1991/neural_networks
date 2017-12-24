@@ -37,7 +37,7 @@ inline Matrice InputLayer::derivate_layers_output(Matrice **input)
     ;
 }
 
-void InputLayer::update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases)
+void InputLayer::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
     ;
 }

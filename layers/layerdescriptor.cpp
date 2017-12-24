@@ -21,7 +21,7 @@ Layers_features::~Layers_features()
         {
             delete this->fmap[i];
         }
-    delete this->fmap;
+    delete[] this->fmap;
 }
 
 void Layers_features::operator+= (Layers_features &layer)
@@ -35,4 +35,9 @@ void Layers_features::operator+= (Layers_features &layer)
                     this->fmap[map_index]->biases[i][0] += layer.fmap[map_index]->biases[i][0];
                 }
         }
+}
+
+int Layers_features::get_fmap_count()
+{
+    return this->fmap_count;
 }

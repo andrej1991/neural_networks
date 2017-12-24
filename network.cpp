@@ -97,37 +97,32 @@ double Network::cost(Matrice &required_output)
 inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **nabla)
 {
     ///TODO modfy this function based on multiple input features...
+    ///currently the final layer has to be a clasification layer
+    ///TODO make some check if the final layer has only one output vector
     this->feedforward(trainig_data->input);
     Matrice delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
                                                                    trainig_data->required_output, this->costfunction_type);
-    *(nabla_b[this->layers_num - 1]) = delta;
-    *(nabla_w[this->layers_num - 1]) = delta * this->layers[this->layers_num - 2]->get_output()[0]->transpose();
+    nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = delta;
+    nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = delta * this->layers[this->layers_num - 2]->get_output()[0]->transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
             this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
-                                           *(this->layers[i + 1]->get_weights()), nabla[i]->fmap, delta);
+                                           this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
+                                           nabla[i+1]->get_fmap_count());
         }
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
 {
     Layers_features **nabla, **deltanabla;
-    Matrice **w;
-    Matrice **b;
-    Matrice **dnb;
-    Matrice **dnw;
-    Matrice **b_bck, **w_bck;
+    //Matrice **b_bck, **w_bck;
     int *layer_bck, **ind;
     //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     try
         {
             nabla = new Layers_features* [this->layers_num];
             deltanabla = new Layers_features* [this->layers_num];
-            w = new Matrice* [this->layers_num];
-            b = new Matrice* [this->layers_num];
-            dnb = new Matrice* [this->layers_num];
-            dnw = new Matrice* [this->layers_num];
             for(int i = 0; i < this->layers_num; i++)
                 {
                     ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
@@ -146,10 +141,6 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                                                         this->layers[i]->get_weights_col(),
                                                         this->layers[i]->get_mapdepth(),
                                                         biascnt);
-                    w[i]   = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
-                    dnw[i] = new Matrice(this->layers[i]->get_outputlen(), this->layers[i - 1]->get_outputlen());
-                    b[i]   = new Matrice(this->layers[i]->get_outputlen(), 1);
-                    dnb[i] = new Matrice(this->layers[i]->get_outputlen(), 1);
                 }
         }
     catch(bad_alloc& ba)
@@ -159,31 +150,27 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
         }
     for(int i = 0; i < training_data_len; i++)
         {
-            this->backpropagate(training_data[i], dnb, dnw);
+            this->backpropagate(training_data[i], deltanabla);
             for(int j = 0; j < this->layers_num; j++)
                 {
-                    *b[j] += *dnb[j];
-                    *w[j] += *dnw[j];
+                    *nabla[j] += *deltanabla[j];
+                    //*w[j] += *dnw[j];
                 }
         }
     double lr = learning_rate / training_data_len;
     double reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
     for(int i = 0; i < this->layers_num; i++)
         {
-            this->layers[i]->update_weights_and_biasses(lr, reg, w[i], b[i]);
+            this->layers[i]->update_weights_and_biasses(lr, reg, nabla[i]);
         }
     //this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
     for(int i = 0; i < this->layers_num; i++)
         {
-            delete w[i];
-            delete dnw[i];
-            delete b[i];
-            delete dnb[i];
+            delete nabla[i];
+            delete deltanabla[i];
         }
-    delete[] w;
-    delete[] dnw;
-    delete[] b;
-    delete[] dnb;
+    delete[] nabla;
+    delete[] deltanabla;
 }
 
 Matrice Network::get_output(Matrice **input)
