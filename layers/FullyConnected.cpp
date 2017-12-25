@@ -1,12 +1,14 @@
 #include "layers.h"
 
 FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
-    fmap(row, prev_row, 1, row), neuron(neuron_type)
+    neuron(neuron_type)
 {
     this->output = new Matrice*[1];
     this->output[0] = new Matrice(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
+    this->fmap = new Feature_map* [1];
+    this->fmap[0] = new Feature_map(row, prev_row, 1, row);
 }
 
 FullyConnected::~FullyConnected()
@@ -17,8 +19,8 @@ FullyConnected::~FullyConnected()
 
 inline void FullyConnected::layers_output(Matrice **input)
 {
-    Matrice inputparam(this->fmap.biases[0][0].get_row(), this->fmap.biases[0][0].get_col());
-    inputparam += (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
+    Matrice inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
+    inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
     this->output[0][0] = this->neuron.neuron(inputparam);
 }
 
@@ -69,7 +71,7 @@ inline Matrice** FullyConnected::derivate_layers_output(Matrice **input)
     mtx = new Matrice* [1];
     mtx[0] = new Matrice;
     Matrice inputparam;
-    inputparam = (this->fmap.weights[0][0] * input[0][0] + this->fmap.biases[0][0]);
+    inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
     mtx[0][0] = this->neuron.neuron_derivate(inputparam);
     return mtx;
 }
@@ -81,13 +83,13 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
             cerr << "the fully connected layer must have only one set of weights!!!\n";
             throw exception();
         }
-    int prev_outputlen = this->fmap.get_col();
+    int prev_outputlen = this->fmap[0]->get_col();
     for(int j = 0; j < this->outputlen; j++)
         {
-            this->fmap.biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
+            this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
             for(int k = 0; k < prev_outputlen; k++)
                 {
-                    this->fmap.weights[0][0].data[j][k] = regularization_rate * this->fmap.weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
+                    this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
                 }
         }
 }
@@ -134,9 +136,7 @@ inline Matrice** FullyConnected::get_output()
 
 inline Feature_map** FullyConnected::get_feature_maps()
 {
-    Feature_map *helper = &(this->fmap);
-    Feature_map **h2 = &helper;
-    return h2;
+    return this->fmap;
 }
 
 inline short FullyConnected::get_layer_type()
@@ -151,12 +151,12 @@ inline int FullyConnected::get_outputlen()
 
 void FullyConnected::set_weights(Matrice *w)
 {
-    this->fmap.weights[0][0] = *w;
+    this->fmap[0]->weights[0][0] = *w;
 }
 
 void FullyConnected::set_biases(Matrice *b)
 {
-    this->fmap.biases[0][0] = *b;
+    this->fmap[0]->biases[0][0] = *b;
 }
 
 int FullyConnected::get_mapcount()
@@ -171,10 +171,10 @@ int FullyConnected::get_mapdepth()
 
 int FullyConnected::get_weights_row()
 {
-    return this->fmap.get_row();
+    return this->fmap[0]->get_row();
 }
 
 int FullyConnected::get_weights_col()
 {
-    return this->fmap.get_col();
+    return this->fmap[0]->get_col();
 }

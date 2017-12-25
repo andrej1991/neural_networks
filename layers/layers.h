@@ -84,7 +84,7 @@ class FullyConnected : public Layer {
     short int layer_type;
     Neuron neuron;
     public:
-    Feature_map fmap;
+    Feature_map **fmap;
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
     inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
