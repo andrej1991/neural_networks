@@ -80,11 +80,11 @@ class Layer{
 
 class FullyConnected : public Layer {
     Matrice **output;
-    Feature_map fmap;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
     public:
+    Feature_map fmap;
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
     inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
@@ -109,13 +109,13 @@ class FullyConnected : public Layer {
 
 class Convolutional : public Layer {
     Matrice **outputs, **flattened_output;
-    Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
-    inline void fulldepth_conv(Matrice &helper, Matrice &convolved);
+    inline void fulldepth_conv(Matrice &helper, Matrice &convolved, Matrice **input, int map_index);
     public:
+    Feature_map **fmap;
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
     ~Convolutional();
     inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
@@ -133,7 +133,7 @@ class Convolutional : public Layer {
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     void flatten();
-    Matrice** flatten_to_2D(Matrice &m);
+    Matrice** flattened_to_2D(Matrice &m);
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();

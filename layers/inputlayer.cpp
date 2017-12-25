@@ -66,11 +66,13 @@ void InputLayer::set_input(Matrice **input)
         {
             for(int l = 0; l < this->feature_depth; l++)
                 {
+                    //int debug1 = this->outputs[l]->get_col();
+                    //int debug2 = this->outputs[l]->get_row();
                     for(int i = 0; i < this->row; i++)
                         {
                             for(int j = 0; j < this->col; j++)
                                 {
-                                    this->outputs[l][0].data[i][j] = input[i][0].data[i * this->row + j][0];
+                                    this->outputs[l][0].data[i][j] = input[l][0].data[i * this->row + j][0];
                                 }
                         }
                 }

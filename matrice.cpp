@@ -262,6 +262,7 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
     double helper;
     int r, c;
     r = c = 0;
+    Matrice rotated_kernel = kernel.rot180();
     int vertical_step = (input.row - kernel.row) / stride + 1;
     int horizontal_step = (input.col - kernel.col) / stride + 1;
     for(int i = 0; i < vertical_step; i += stride)
@@ -273,7 +274,7 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
                         {
                             for(int l = 0; l < kernel.col; l++)
                                 {
-                                    helper += kernel.data[k][l] * input.data[i + k][j + l];
+                                    helper += rotated_kernel.data[k][l] * input.data[i + k][j + l];
                                 }
                         }
                     output.data[r][c] = helper;

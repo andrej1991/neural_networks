@@ -28,34 +28,60 @@ Convolutional::~Convolutional()
 
 inline void Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **delta, int next_layers_fmapcount)
 {
-    /*Matrice multiplied, **output_derivate;
+    Matrice **layers_delta = new Matrice* [this->map_count];
+    Matrice **output_derivate;
     output_derivate = this->derivate_layers_output(input);
-    multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
-    delta[0][0] = hadamart_product(multiplied, **output_derivate);
-    nabla[0][0].biases[0][0] = delta[0][0];
-    nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
-    delete[] output_derivate;*/
+    Matrice **delta_helper;
     if(this->next_layers_type == FULLY_CONNECTED)
         {
-            Matrice multiplied, **output_derivate;
-            Matrice **delta_helper = new Matrice* [this->map_count];
-            /*for(int j = 0; j < this->map_count; j++)
-                {
-                    delta_helper[j] = new Matrice(this->output_row, this->output_col);
-                }*/
-            output_derivate = this->derivate_layers_output(input);
+            int debug1 = next_layers_fmaps[0]->get_mapdepth();
+            int debug2 = next_layers_fmaps[0][0].weights[0]->get_row();
+            Matrice multiplied;
             multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
-            for(int j = 0; j < this->map_count; j++)
+            delta_helper = this->flattened_to_2D(multiplied);
+        }
+    else
+        {
+            ;///convolution full
+        }
+    for(int i = 0; i < this->map_count; i++)
+        {
+            layers_delta[i] = new Matrice;
+            layers_delta[i][0] = hadamart_product(delta_helper[0][0], output_derivate[0][0]);
+            for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
                 {
-                    delta_helper[j] = new Matrice(this->output_row, this->output_col);
-                    delta_helper[j][0] = hadamart_product(multiplied, **output_derivate);
-                    nabla[0][0].biases[0][0] = delta_helper[j][0];
-                    nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
+                     convolution(input[j][0], layers_delta[i][0], nabla[i]->weights[j][0]);
+                }
+        }
+    for(int i = 0; i < next_layers_fmapcount; i++)
+        {
+            delete delta_helper[i];
+            delete delta[i];
+        }
+    delete[] delta_helper;
+    delete[] delta;
+}
+
+void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+{
+    for(int i = 0; i < this->map_count; i++)
+        {
+            for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
+                {
+                    for(int row = 0; row < this->kernel_row; row++)
+                        {
+                            for(int col = 0; col < this->kernel_col; col++)
+                                {
+                                    this->fmap[i]->weights[j]->data[row][col] =
+                                                    regularization_rate * this->fmap[i]->weights[j]->data[row][col] -
+                                                    learning_rate * layer->fmap[i]->weights[j]->data[row][col];
+                                }
+                        }
                 }
         }
 }
 
-inline void Convolutional::fulldepth_conv(Matrice &helper, Matrice &convolved)
+inline void Convolutional::fulldepth_conv(Matrice &helper, Matrice &convolved, Matrice **input, int map_index)
 {
     for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
         {
@@ -70,7 +96,7 @@ inline void Convolutional::layers_output(Matrice **input)
     Matrice convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
     for(int map_index = 0; map_index < this->map_count; map_index++)
         {
-            this->fulldepth_conv(helper, convolved);
+            this->fulldepth_conv(helper, convolved, input, map_index);
             this->outputs[map_index][0] = this->neuron.neuron(helper);
             helper.zero();
         }
@@ -92,16 +118,11 @@ inline Matrice** Convolutional::derivate_layers_output(Matrice **input)
         }
     for(int map_index = 0; map_index < this->map_count; map_index++)
         {
-            this->fulldepth_conv(helper, convolved);
-            this->ret[map_index][0] = this->neuron.neuron_derivate(helper);
+            this->fulldepth_conv(helper, convolved, input, map_index);
+            ret[map_index][0] = this->neuron.neuron_derivate(helper);
             helper.zero();
         }
     return ret;
-}
-
-void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
-{
-    ;
 }
 
 void Convolutional::flatten()
@@ -123,7 +144,7 @@ void Convolutional::flatten()
         }
 }
 
-Matrice** Convolutional::flatten_to_2D(Matrice &m)
+Matrice** Convolutional::flattened_to_2D(Matrice &m)
 {
     ///TODO rewrite this if the feature maps can have different kernel size;
     Matrice **ret = new Matrice* [this->map_count];

@@ -109,6 +109,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
+            Feature_map **test = this->layers[i + 1]->get_feature_maps();
             this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
                                            this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1]->get_fmap_count());
