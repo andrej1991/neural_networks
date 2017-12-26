@@ -69,7 +69,7 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
     for(int i = 0; i < this->map_count; i++)
         {
             layers_delta[i] = new Matrice;
-            layers_delta[i][0] = hadamart_product(delta_helper[0][0], output_derivate[0][0]);
+            layers_delta[i][0] = hadamart_product(delta_helper[i][0], output_derivate[i][0]);
             for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
                 {
                      convolution(input[j][0], layers_delta[i][0], nabla[i]->weights[j][0]);

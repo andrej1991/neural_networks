@@ -117,6 +117,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
                                            this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1]->get_fmap_count());
         }
+    //print_mtx(delta[3][0]);
     if(this->layers[0]->get_mapcount() > 1)
         {
             for(int i = 0; i < this->layers[0]->get_mapcount(); i++)
@@ -170,7 +171,6 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             for(int j = 0; j < this->layers_num; j++)
                 {
                     *nabla[j] += *deltanabla[j];
-                    //*w[j] += *dnw[j];
                 }
         }
     double lr = learning_rate / training_data_len;
@@ -287,6 +287,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                         {
                             ///TODO this is an errorprone as well
                             output = this->get_output(test_data[j]->input);
+                            //print_mtx(output);
                             if(getmax(output.data) == test_data[j]->required_output.data[0][0])
                                 {
                                     learning_accuracy++;
@@ -325,6 +326,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 10, 10, 3, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 1, 10, 3, true, 10, v, 50);
     //this->get_output(v[0]->input);
 }

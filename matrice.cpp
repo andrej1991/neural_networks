@@ -30,7 +30,6 @@ Matrice::Matrice(int row,int col) : data(NULL)
 
 inline void Matrice::destruct()
 {
-    //cout << this->data << endl;
     if(this->data != NULL)
         {
             for(int i = 0; i < this->row; i++)
