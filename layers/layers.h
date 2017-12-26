@@ -58,7 +58,7 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount) = 0;
+    virtual inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount) = 0;
     virtual inline void layers_output(Matrice **input) = 0;
     virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type) = 0;
     virtual inline Matrice** derivate_layers_output(Matrice **input) = 0;
@@ -69,7 +69,9 @@ class Layer{
     virtual inline Matrice** get_output() = 0;
     virtual inline Feature_map** get_feature_maps() = 0;
     virtual inline short get_layer_type() = 0;
-    virtual inline int get_outputlen() = 0;
+    virtual inline int get_output_len() = 0;
+    virtual inline int get_output_row() = 0;
+    virtual inline int get_output_col() = 0;
     virtual void set_weights(Matrice *w) = 0;
     virtual void set_biases(Matrice *b) = 0;
     virtual int get_mapcount() = 0;
@@ -87,7 +89,7 @@ class FullyConnected : public Layer {
     Feature_map **fmap;
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
-    inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
+    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
@@ -98,7 +100,9 @@ class FullyConnected : public Layer {
     inline Matrice** get_output();
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
-    inline int get_outputlen();
+    inline int get_output_len();
+    inline int get_output_row();
+    inline int get_output_col();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     int get_mapcount();
@@ -118,7 +122,7 @@ class Convolutional : public Layer {
     Feature_map **fmap;
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
     ~Convolutional();
-    inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
+    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
@@ -129,7 +133,9 @@ class Convolutional : public Layer {
     inline Matrice** get_output();
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
-    inline int get_outputlen();
+    inline int get_output_len();
+    inline int get_output_row();
+    inline int get_output_col();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     void flatten();
@@ -180,12 +186,12 @@ class Softmax : public Layer {
 class InputLayer : public Layer {
     public:
     short int layer_type, next_layers_type;
-    int outputlen, row, col, feature_depth;
+    int outputlen, row, col, input_channel_count;
     Matrice **outputs;
     Padding padd;
-    InputLayer(int row, int col, int feature_depth, int neuron_type, Padding &p, short int next_layers_type);
+    InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    inline void backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
+    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
@@ -196,7 +202,9 @@ class InputLayer : public Layer {
     inline Matrice** get_output();
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
-    inline int get_outputlen();
+    inline int get_output_len();
+    inline int get_output_row();
+    inline int get_output_col();
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     int get_mapcount();

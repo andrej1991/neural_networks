@@ -111,7 +111,7 @@ void FullyConnected::set_input(Matrice **input)
 }
 
 
-inline void FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
+inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
                                           Matrice **delta, int next_layers_fmapcount)
 {
     ///TODO think through this function from mathematical perspective!!!
@@ -144,9 +144,19 @@ inline short FullyConnected::get_layer_type()
     return this->layer_type;
 }
 
-inline int FullyConnected::get_outputlen()
+inline int FullyConnected::get_output_row()
 {
     return this->outputlen;
+}
+
+inline int FullyConnected::get_output_len()
+{
+    return this->outputlen;
+}
+
+inline int FullyConnected::get_output_col()
+{
+    return 1;
 }
 
 void FullyConnected::set_weights(Matrice *w)

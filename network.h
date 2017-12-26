@@ -6,7 +6,7 @@
 #include "layers/layers.h"
 
 class Network{
-    int total_layers_num, layers_num, costfunction_type, inputpixel_count;
+    int total_layers_num, layers_num, costfunction_type, input_row, input_col, input_channel_count;
     Layer **layers;
     bool dropout;
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
@@ -20,7 +20,8 @@ class Network{
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);
-    Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_count, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false);
+    Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int input_channel_count = 1,
+            int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false);
     ~Network();
     void test(MNIST_data **d, MNIST_data **v);
     Matrice get_output(Matrice **input);

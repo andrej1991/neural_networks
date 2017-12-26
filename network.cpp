@@ -8,9 +8,9 @@
 #include "layers/layers.h"
 
 using namespace std;
-
-Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_count, int costfunction_type,  bool dropout):
-                dropout(dropout), inputpixel_count(inputpixel_count)
+///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false
+Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout):
+                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count)
 {
     try
     {
@@ -20,20 +20,23 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int inputpixel_cou
         this->layers = new Layer* [this->total_layers_num];
         Padding p;
         if(layerdesc[0]->layer_type == FULLY_CONNECTED)
-            this->layers[0] = new InputLayer(inputpixel_count, 1, 1, SIGMOID, p, FULLY_CONNECTED);
+            this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
         else
-            this->layers[0] = new InputLayer(28, 28, 1, SIGMOID, p, CONVOLUTIONAL);
+            this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL);
         this->layers += 1;
         for(int i = 0; i < layers_num; i++)
             {
                 switch(layerdesc[i]->layer_type)
                 {
                 case FULLY_CONNECTED:
-                    this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_outputlen(), layerdesc[i]->neuron_type);
+                    this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len(),
+                                                         layerdesc[i]->neuron_type);
                     break;
                 case CONVOLUTIONAL:
                     ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
-                    this->layers[i] = new Convolutional(28, 28, 1, layerdesc[i]->row, layerdesc[i]->col, layerdesc[i]->mapcount, SIGMOID, layerdesc[i+1]->layer_type, p, 1);
+                    this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
+                                                        this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
+                                                        layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, 1);
                     break;
                 default:
                     cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
@@ -73,7 +76,7 @@ double Network::cost(Matrice &required_output)
         {
         case QUADRATIC_CF:
             /// 1/2 * ||y(x) - a||^2
-            for(int i = 0; i < this->layers[this->layers_num - 1]->get_outputlen(); i++)
+            for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_len(); i++)
                 {
                     helper = required_output.data[i][0] - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0];
                     result += helper * helper;
@@ -81,7 +84,7 @@ double Network::cost(Matrice &required_output)
             return (1/2) * result;
         case CROSS_ENTROPY_CF:
             ///y(x)ln a + (1 - y(x))ln(1 - a)
-            for(int i = 0; i < this->layers[this->layers_num - 1]->get_outputlen(); i++)
+            for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_len(); i++)
                 {
                     helper += required_output.data[i][0] * log(this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]) + (1 - required_output.data[i][0]) *
                                     log(1 - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]);
@@ -110,9 +113,19 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
             Feature_map **test = this->layers[i + 1]->get_feature_maps();
-            this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
+            delta = this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
                                            this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1]->get_fmap_count());
+        }
+    if(this->layers[0]->get_mapcount() > 1)
+        {
+            for(int i = 0; i < this->layers[0]->get_mapcount(); i++)
+                delete delta[i];
+            delete[] delta;
+        }
+    else
+        {
+            ;//delete[] delta[0][0];
         }
 }
 
@@ -247,9 +260,8 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     int break_counter = 0;
     int learning_accuracy, learnig_cost_counter = 0;
     double learning_cost, previoius_learning_cost = 0;
-    //double **helper = new double* [this->layers[this->layers_num - 1]->get_outputlen()];
-    Matrice helper(this->layers[this->layers_num - 1]->get_outputlen(), 1);
-    for(int i = 0; i < this->layers[this->layers_num - 1]->get_outputlen(); i++)
+    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
         {
             helper.data[i][0] == 0;
         }
@@ -313,6 +325,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 1, 10, 3, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 10, 10, 3, true, 10, v, 50);
     //this->get_output(v[0]->input);
 }

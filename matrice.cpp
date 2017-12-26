@@ -246,7 +246,9 @@ Matrice Matrice::rot180()
 
 Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
 {
-    Matrice ret(this->row + top + bottom, this->col + left + right);
+    int padded_row = this->row + top + bottom;
+    int padded_col = this->col + left + right;
+    Matrice ret(padded_row, padded_col);
     for(int i = 0; i < this->row; i++)
         {
             for(int j = 0; j < this->col; j++)
