@@ -14,6 +14,8 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->layer_type = CONVOLUTIONAL;
     this->fmap = new Feature_map* [map_count];
     this->outputs = new Matrice* [map_count];
+    this->flattened_output = new Matrice* [1];
+    this->flattened_output[0] = new Matrice(this->map_count * this->output_row * this->output_col, 1);
     for(int i = 0; i < map_count; i++)
         {
             fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);
@@ -23,7 +25,15 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
 
 Convolutional::~Convolutional()
 {
-    ;
+    delete flattened_output[0];
+    delete[] flattened_output;
+    for(int i = 0; i < this->map_count; i++)
+        {
+            delete fmap[i];
+            delete outputs[i];
+        }
+    delete[] fmap;
+    delete[] outputs;
 }
 
 inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **delta, int next_layers_fmapcount)
@@ -74,7 +84,9 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                 {
                      convolution(input[j][0], layers_delta[i][0], nabla[i]->weights[j][0]);
                 }
+            delete output_derivate[i];
         }
+    delete[] output_derivate;
     for(int i = 0; i < next_layers_fmapcount; i++)
         {
             delete delta_helper[i];
@@ -151,8 +163,6 @@ inline Matrice** Convolutional::derivate_layers_output(Matrice **input)
 void Convolutional::flatten()
 {
     ///TODO rewrite this if the feature maps can have different kernel size;
-    this->flattened_output = new Matrice* [1];
-    this->flattened_output[0] = new Matrice(this->map_count * this->output_row * this->output_col, 1);
     int i = 0;
     for(int map_index = 0; map_index < this->map_count; map_index++)
         {
@@ -208,6 +218,8 @@ void Convolutional::set_input(Matrice **input)
 
 inline Matrice** Convolutional::get_output()
 {
+    //print_mtx_list(outputs, this->map_count);
+    //cout << "---------------------------" << endl;
     if(next_layers_type == FULLY_CONNECTED)
         {
             this->flatten();

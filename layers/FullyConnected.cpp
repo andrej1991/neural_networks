@@ -15,6 +15,8 @@ FullyConnected::~FullyConnected()
 {
     delete this->output[0];
     delete[] this->output;
+    delete this->fmap[0];
+    delete[] this->fmap;
 }
 
 inline void FullyConnected::layers_output(Matrice **input)
@@ -38,6 +40,7 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                 }
             output_derivate = this->derivate_layers_output(input);
             delta = hadamart_product(mtx, **output_derivate);
+            delete output_derivate[0];
             delete[] output_derivate;
             return delta;
         case CROSS_ENTROPY_CF:
@@ -56,6 +59,7 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                             delta.data[i][0] = (output_derivate[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
                                                     (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
                         }
+                    delete output_derivate[0];
                     delete[] output_derivate;
                     return delta;
                 }
@@ -126,6 +130,7 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
     delta[0][0] = hadamart_product(multiplied, **output_derivate);
     nabla[0][0].biases[0][0] = delta[0][0];
     nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
+    delete output_derivate[0];
     delete[] output_derivate;
 }
 

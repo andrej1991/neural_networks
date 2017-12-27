@@ -126,7 +126,8 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
         }
     else
         {
-            ;//delete[] delta[0][0];
+            //delete delta[0];
+            ;//delete[] delta;
         }
 }
 
@@ -287,7 +288,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                         {
                             ///TODO this is an errorprone as well
                             output = this->get_output(test_data[j]->input);
-                            //print_mtx(output);
                             if(getmax(output.data) == test_data[j]->required_output.data[0][0])
                                 {
                                     learning_accuracy++;
@@ -326,6 +326,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 1, 10, 3, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 10, 10, 0.1, true, 0, v, 50);
     //this->get_output(v[0]->input);
 }
