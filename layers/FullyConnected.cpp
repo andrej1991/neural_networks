@@ -127,11 +127,13 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
     Matrice multiplied, **output_derivate;
     output_derivate = this->derivate_layers_output(input);
     multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
+    ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
     delta[0][0] = hadamart_product(multiplied, **output_derivate);
     nabla[0][0].biases[0][0] = delta[0][0];
     nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
     delete output_derivate[0];
     delete[] output_derivate;
+    return delta;
 }
 
 inline Matrice** FullyConnected::get_output()
