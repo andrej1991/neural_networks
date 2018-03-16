@@ -36,6 +36,22 @@ Convolutional::~Convolutional()
     delete[] outputs;
 }
 
+void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap)
+{
+    int kernelsize = kernel.get_row() * kernel.get_col();
+    int starting_pos = kernelsize * fmap_id;
+    int endpos = starting_pos + kernelsize;
+    int index = starting_pos;
+    for(int col = 0; col < kernel.get_col(); col++)
+        {
+            for(int row = 0; row < kernel.get_row(); row++)
+                {
+                    kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
+                    index++;
+                }
+        }
+}
+
 inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **delta, int next_layers_fmapcount)
 {
     Matrice **layers_delta = new Matrice* [this->map_count];
@@ -44,9 +60,38 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
     Matrice **delta_helper;
     if(this->next_layers_type == FULLY_CONNECTED)
         {
-            Matrice multiplied;
-            multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
-            delta_helper = this->flattened_to_2D(multiplied);
+            //Matrice multiplied;
+            //multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
+            //delta_helper = this->flattened_to_2D(multiplied);
+            int next_layers_neuroncount = delta[0]->get_row();
+            Matrice **padded_delta = new Matrice* [next_layers_neuroncount];
+            Matrice helper(this->output_row, this->output_col);
+            for(int i = 0; i < next_layers_neuroncount; i++)
+                {
+                    padded_delta[i] = new Matrice;
+                    padded_delta[i][0].data[0][0] = delta[0][0].data[i][0];
+                    padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
+                                                             (this->output_col-1)/2,
+                                                             (this->output_row-1)/2,
+                                                             (this->output_col-1)/2);
+                }
+            delta_helper = new Matrice* [this->map_count];
+            Matrice kernel(this->output_row, this->output_col);
+            for(int i = 0; i < this->map_count; i++)
+                {
+                    delta_helper[i] = new Matrice(this->output_row, this->output_col);
+                    for(int j = 0; j < next_layers_neuroncount; j++)
+                        {
+                            this->get_2D_weights(j, i, kernel, next_layers_fmaps);
+                            convolution(padded_delta[j][0],kernel, helper);
+                            delta_helper[i][0] += helper;
+                        }
+                }
+            for(int i = 0; i < next_layers_neuroncount; i++)
+                {
+                    delete padded_delta[i];
+                }
+            delete[] padded_delta;
         }
     else
         {
@@ -55,10 +100,15 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
             for(int i = 0; i < next_layers_fmapcount; i++)
                 {
                     padded_delta[i] = new Matrice;
-                    padded_delta[i][0] = delta[i][0].zero_padd(next_layers_fmaps[i]->weights[0]->get_row()-1,
-                                                             next_layers_fmaps[i]->weights[0]->get_col()-1,
-                                                             next_layers_fmaps[i]->weights[0]->get_row()-1,
-                                                             next_layers_fmaps[i]->weights[0]->get_col()-1);
+                    padded_delta[i][0] = delta[i][0];
+                    padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+                                                             (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
+                                                             (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+                                                             (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
+                    //padded_delta[i][0] = delta[i][0].zero_padd(next_layers_fmaps[i]->weights[0]->get_row()-1,
+                    //                                         next_layers_fmaps[i]->weights[0]->get_col()-1,
+                    //                                         next_layers_fmaps[i]->weights[0]->get_row()-1,
+                    //                                         next_layers_fmaps[i]->weights[0]->get_col()-1);
                 }
             delta_helper = new Matrice* [this->map_count];
             for(int i = 0; i < this->map_count; i++)
@@ -85,11 +135,12 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                      convolution(input[j][0], layers_delta[i][0], nabla[i]->weights[j][0]);
                 }
             delete output_derivate[i];
+            delete delta_helper[i];
         }
     delete[] output_derivate;
     for(int i = 0; i < next_layers_fmapcount; i++)
         {
-            delete delta_helper[i];
+            //delete delta_helper[i];
             delete delta[i];
         }
     delete[] delta_helper;

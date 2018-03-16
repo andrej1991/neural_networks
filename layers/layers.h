@@ -144,6 +144,7 @@ class Convolutional : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
+    void get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap);
 };
 
 /*class Pooling : public Layer {
