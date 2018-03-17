@@ -52,20 +52,33 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, 
         }
 }
 
+inline void calculate_delta_helper(Matrice *padded_delta, Matrice *delta_helper, Matrice &kernel, Matrice &helper)
+{
+    convolution(padded_delta[0],kernel, helper);
+    delta_helper[0] += helper;
+}
+
+inline void delete_padded_delta(Matrice **padded_delta, int limit)
+{
+    for(int i = 0; i < limit; i++)
+            {
+                delete padded_delta[i];
+            }
+        delete[] padded_delta;
+}
+
 inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **delta, int next_layers_fmapcount)
 {
     Matrice **layers_delta = new Matrice* [this->map_count];
     Matrice **output_derivate;
     output_derivate = this->derivate_layers_output(input);
     Matrice **delta_helper;
-    if(this->next_layers_type == FULLY_CONNECTED)
+    Matrice **padded_delta;
+    Matrice helper(this->output_row, this->output_col);
+    if(this->next_layers_type != CONVOLUTIONAL)
         {
-            //Matrice multiplied;
-            //multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
-            //delta_helper = this->flattened_to_2D(multiplied);
             int next_layers_neuroncount = delta[0]->get_row();
-            Matrice **padded_delta = new Matrice* [next_layers_neuroncount];
-            Matrice helper(this->output_row, this->output_col);
+            padded_delta = new Matrice* [next_layers_neuroncount];
             for(int i = 0; i < next_layers_neuroncount; i++)
                 {
                     padded_delta[i] = new Matrice;
@@ -83,20 +96,14 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                     for(int j = 0; j < next_layers_neuroncount; j++)
                         {
                             this->get_2D_weights(j, i, kernel, next_layers_fmaps);
-                            convolution(padded_delta[j][0],kernel, helper);
-                            delta_helper[i][0] += helper;
+                            calculate_delta_helper(padded_delta[j], delta_helper[i], kernel, helper);
                         }
                 }
-            for(int i = 0; i < next_layers_neuroncount; i++)
-                {
-                    delete padded_delta[i];
-                }
-            delete[] padded_delta;
+            delete_padded_delta(padded_delta, next_layers_neuroncount);
         }
     else
         {
-            Matrice **padded_delta = new Matrice* [next_layers_fmapcount];
-            Matrice helper(this->output_row, this->output_col);
+            padded_delta = new Matrice* [next_layers_fmapcount];
             for(int i = 0; i < next_layers_fmapcount; i++)
                 {
                     padded_delta[i] = new Matrice;
@@ -105,10 +112,6 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                                                              (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
                                                              (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                              (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
-                    //padded_delta[i][0] = delta[i][0].zero_padd(next_layers_fmaps[i]->weights[0]->get_row()-1,
-                    //                                         next_layers_fmaps[i]->weights[0]->get_col()-1,
-                    //                                         next_layers_fmaps[i]->weights[0]->get_row()-1,
-                    //                                         next_layers_fmaps[i]->weights[0]->get_col()-1);
                 }
             delta_helper = new Matrice* [this->map_count];
             for(int i = 0; i < this->map_count; i++)
@@ -116,15 +119,10 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                     delta_helper[i] = new Matrice(this->output_row, this->output_col);
                     for(int j = 0; j < next_layers_fmapcount; j++)
                         {
-                            convolution(padded_delta[j][0],next_layers_fmaps[j]->weights[i][0], helper);
-                            delta_helper[i][0] += helper;
+                            calculate_delta_helper(padded_delta[j], delta_helper[i], next_layers_fmaps[j]->weights[i][0], helper);
                         }
                 }
-            for(int i = 0; i < next_layers_fmapcount; i++)
-                {
-                    delete padded_delta[i];
-                }
-            delete[] padded_delta;
+            delete_padded_delta(padded_delta, next_layers_fmapcount);
         }
     for(int i = 0; i < this->map_count; i++)
         {
@@ -228,7 +226,7 @@ void Convolutional::flatten()
         }
 }
 
-Matrice** Convolutional::flattened_to_2D(Matrice &m)
+/*Matrice** Convolutional::flattened_to_2D(Matrice &m)
 {
     ///TODO rewrite this if the feature maps can have different kernel size;
     Matrice **ret = new Matrice* [this->map_count];
@@ -249,7 +247,7 @@ Matrice** Convolutional::flattened_to_2D(Matrice &m)
                 }
         }
     return ret;
-}
+}*/
 
 inline void Convolutional::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
 {

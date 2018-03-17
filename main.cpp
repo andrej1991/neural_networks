@@ -32,9 +32,9 @@ int main()
         }
     cout << "the training data and the validation data is loaded\n";
     LayerDescriptor *layers[3];
-    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 10);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 10);
-    //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 6, 5, 4);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 4, 6, 4);
+    //layers[2] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 5);
     layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
     //Network n(2, layers, 784);
     Network n(3, layers, 28, 28, 1);
