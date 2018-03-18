@@ -326,6 +326,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    this->stochastic_gradient_descent(d, 10, 10, 0.5, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 10, 10, 0.03, true, 10, v, 50);
     //this->get_output(v[0]->input);
 }

@@ -171,11 +171,12 @@ class Convolutional : public Layer {
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     void flatten();
-    Matrice** flattened_to_2D(Matrice &m);
+    //Matrice** flattened_to_2D(Matrice &m);
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
+    void get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap);
 };
 
 
