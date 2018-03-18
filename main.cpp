@@ -12,10 +12,10 @@ using namespace std;
 int main()
 {
     ifstream input, required_output, validation_input, validation_output;
-    input.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/input.dat", ios::in|ios::binary);
-    required_output.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/required_output.dat", ios::in|ios::binary);
-    validation_input.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/validation_input.dat", ios::in|ios::binary);
-    validation_output.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/validation_output.dat", ios::in|ios::binary);
+    input.open("/home/andrej/hdd/dokumentumok/neural_networks/data/training_data/input.dat", ios::in|ios::binary);
+    required_output.open("/home/andrej/hdd/dokumentumok/neural_networks/data/training_data/required_output.dat", ios::in|ios::binary);
+    validation_input.open("/home/andrej/hdd/dokumentumok/neural_networks/data/training_data/validation_input.dat", ios::in|ios::binary);
+    validation_output.open("/home/andrej/hdd/dokumentumok/neural_networks/data/training_data/validation_output.dat", ios::in|ios::binary);
     cout << "the required files are opened\n";
     MNIST_data *m[50000];
     MNIST_data *validation[10000];
@@ -31,13 +31,14 @@ int main()
             //cout << validation[i]->required_output[0][0];
         }
     cout << "the training data and the validation data is loaded\n";
-    LayerDescriptor *layers[3];
-    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 6, 5, 4);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 4, 6, 4);
+    LayerDescriptor *layers[4];
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 10);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 6, 6, 15);
     //layers[2] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 5);
-    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[3] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
     //Network n(2, layers, 784);
-    Network n(3, layers, 28, 28, 1);
+    Network n(4, layers, 28, 28, 1);
     n.test(m, validation);
     input.close();
     required_output.close();
