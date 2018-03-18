@@ -32,7 +32,6 @@ inline void Softmax::layers_output(Matrice **input)
 
 }
 
-///this function is inherited from the FullyConnected layer
 inline Matrice Softmax::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
     cerr << "not implemented yet!";
