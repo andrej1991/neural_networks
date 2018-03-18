@@ -111,6 +111,38 @@ class FullyConnected : public Layer {
     int get_weights_col();
 };
 
+//class Softmax : public FullyConnected {
+class Softmax : public Layer {
+    Matrice **output;
+    int neuron_count, outputlen;
+    short int layer_type;
+    Neuron neuron;
+    Feature_map **fmap;
+    public:
+    Softmax(int row, int col);
+    ~Softmax();
+    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
+    inline void layers_output(Matrice **input);
+    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
+    inline Matrice** derivate_layers_output(Matrice **input);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
+    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
+    void set_input(Matrice **input);
+    inline Matrice** get_output();
+    inline Feature_map** get_feature_maps();
+    inline short get_layer_type();
+    inline int get_output_len();
+    inline int get_output_row();
+    inline int get_output_col();
+    void set_weights(Matrice *w);
+    void set_biases(Matrice *b);
+    int get_mapcount();
+    int get_mapdepth();
+    int get_weights_row();
+    int get_weights_col();
+};
+
 class Convolutional : public Layer {
     Matrice **outputs, **flattened_output;
     Feature_map **fmap;
@@ -146,42 +178,6 @@ class Convolutional : public Layer {
     int get_weights_col();
 };
 
-/*class Pooling : public Layer {
-    public:
-    //Neuron neuron;
-    Pooling(int row, int col, int neuron_type);
-    ~Pooling();
-    inline void layers_output(double **input, int layer);
-    inline Matrice get_output_error(double **input, double **required_output, int inputlen, int costfunction_type);
-    inline Matrice derivate_layers_output(double **input, int inputlen);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(double **input);
-    inline Matrice& get_output();
-    inline Matrice& get_weights();
-    inline short get_layer_type();
-    inline int get_outputlen();
-};
-
-
-class Softmax : public Layer {
-    public:
-    //Neuron neuron;
-    Softmax(int row, int col, int neuron_type);
-    ~Softmax();
-    inline void layers_output(double **input, int layer);
-    inline Matrice get_output_error(double **input, double **required_output, int inputlen, int costfunction_type);
-    inline Matrice derivate_layers_output(double **input, int inputlen);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(double **input);
-    inline Matrice& get_output();
-    inline Matrice& get_weights();
-    inline short get_layer_type();
-    inline int get_outputlen();
-};*/
 
 class InputLayer : public Layer {
     public:
@@ -212,5 +208,23 @@ class InputLayer : public Layer {
     int get_weights_row();
     int get_weights_col();
 };
+
+/*class Pooling : public Layer {
+    public:
+    //Neuron neuron;
+    Pooling(int row, int col, int neuron_type);
+    ~Pooling();
+    inline void layers_output(double **input, int layer);
+    inline Matrice get_output_error(double **input, double **required_output, int inputlen, int costfunction_type);
+    inline Matrice derivate_layers_output(double **input, int inputlen);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrice *weights, Matrice *biases);
+    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
+    void set_input(double **input);
+    inline Matrice& get_output();
+    inline Matrice& get_weights();
+    inline short get_layer_type();
+    inline int get_outputlen();
+};*/
 
 #endif // LAYERS_H_INCLUDED
