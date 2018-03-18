@@ -1,14 +1,9 @@
 #include "layers.h"
 
 
-Softmax::Softmax(int row, int col)
+Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
 {
-    this->output = new Matrice*[1];
-    this->output[0] = new Matrice(row, 1);
-    this->neuron_count = this->outputlen = row;
     this->layer_type = SOFTMAX;
-    this->fmap = new Feature_map* [1];
-    this->fmap[0] = new Feature_map(row, col, 1, row);
 }
 
 Softmax::~Softmax()
@@ -47,7 +42,9 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
     inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
 }
 
-void Softmax::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+
+///these will be probably inherited from FullyConnected layer
+/*void Softmax::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
     ;
 }
@@ -125,4 +122,4 @@ int Softmax::get_weights_row()
 int Softmax::get_weights_col()
 {
     ;
-}
+}*/
