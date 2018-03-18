@@ -248,14 +248,14 @@ void Network::store(char *filename)
     ;
 }
 
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int epoch_len, double learning_rate, bool monitor_learning_cost,
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
                                             double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     if(minibatch_count < 0)
         {
-            minibatch_count = trainingdata_len / epoch_len;
+            minibatch_count = trainingdata_len / minibatch_len;
         }
-    MNIST_data *minibatches[minibatch_count][epoch_len];
+    MNIST_data *minibatches[minibatch_count][minibatch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
     int break_counter = 0;
@@ -271,7 +271,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         {
             for(int j = 0; j < minibatch_count; j++)
                 {
-                    for(int k = 0; k < epoch_len; k++)
+                    for(int k = 0; k < minibatch_len; k++)
                         {
                             minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
                         }
@@ -279,7 +279,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 
             for(int j = 0; j < minibatch_count; j++)
                 {
-                    this->update_weights_and_biasses(minibatches[j], epoch_len, trainingdata_len, learning_rate, regularization_rate);
+                    this->update_weights_and_biasses(minibatches[j], minibatch_len, trainingdata_len, learning_rate, regularization_rate);
                 }
             if(test_data != NULL)
                 {
