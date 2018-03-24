@@ -32,6 +32,9 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int
                     this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len(),
                                                          layerdesc[i]->neuron_type);
                     break;
+                case SOFTMAX:
+                    this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len());
+                    break;
                 case CONVOLUTIONAL:
                     ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                     this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
@@ -69,7 +72,7 @@ inline void Network::feedforward(Matrice **input)
         }
 }
 
-double Network::cost(Matrice &required_output)
+double Network::cost(Matrice &required_output, int req_outp_indx)
 {
     double helper = 0, result = 0;
     switch(this->costfunction_type)
@@ -90,6 +93,9 @@ double Network::cost(Matrice &required_output)
                                     log(1 - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]);
                 }
             return helper;
+        case LOG_LIKELIHOOD:
+            result = -1 * log(this->layers[this->layers_num - 1]->get_output()[0]->data[req_outp_indx][0]);
+            return result;
         default:
             cerr << "Unknown cost function\n";
             throw exception();
@@ -145,7 +151,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                 {
                     ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
                     int biascnt;
-                    if(this->layers[i]->get_layer_type() == FULLY_CONNECTED)
+                    if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
                         biascnt = this->layers[i]->get_weights_row();
                     else
                         biascnt = 1;
@@ -294,10 +300,11 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                                 }
                             if(monitor_learning_cost)
                                 {
-                                    if(j > 0)
-                                        helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
+                                    //if(j > 0)
+                                    //    helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
                                     helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
-                                    learning_cost += this->cost(helper);
+                                    learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
+                                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
                                 }
                         }
                     cout << "set " << i << ": " << learning_accuracy << " out of: " << test_data_len << endl;

@@ -36,9 +36,12 @@ int main()
     layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 6, 6, 15);
     //layers[2] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 5);
     layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    layers[3] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    //Network n(2, layers, 784);
-    Network n(4, layers, 28, 28, 1);
+    //layers[3] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    //layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
+    //Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD);
+    Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD);
     n.test(m, validation);
     input.close();
     required_output.close();
