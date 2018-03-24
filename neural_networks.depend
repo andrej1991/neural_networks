@@ -258,7 +258,7 @@
 1521402438 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.cpp
 	"layers.h"
 
-1521919690 /home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.h
+1521928219 /home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.h
 	"../neuron.h"
 	"../MNIST_data.h"
 	"../matrice.h"
@@ -329,7 +329,7 @@
 	"random.h"
 	<fstream>
 
-1521925340 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
+1521928664 source:/home/andrej/hdd/dokumentumok/neural_networks/src/network.cpp
 	"network.h"
 	<fstream>
 	<iostream>
@@ -423,7 +423,7 @@
 1514040492 source:/home/andrej/myfiles/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
 	"layers.h"
 
-1521925139 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Softmax.cpp
+1521928219 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Softmax.cpp
 	"layers.h"
 	<math.h>
 
