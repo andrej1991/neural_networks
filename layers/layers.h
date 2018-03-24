@@ -7,7 +7,7 @@
 
 #define QUADRATIC_CF 0
 #define CROSS_ENTROPY_CF 1
-#define LOG_LIKELIHOOD 2
+#define LOG_LIKELIHOOD_CF 2
 
 #define INPUTLAYER -1
 #define FULLY_CONNECTED 0

@@ -258,7 +258,7 @@
 1521402438 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.cpp
 	"layers.h"
 
-1521930637 /home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.h
+1521930835 /home/andrej/hdd/dokumentumok/neural_networks/src/layers/layers.h
 	"../neuron.h"
 	"../MNIST_data.h"
 	"../matrice.h"
@@ -316,7 +316,7 @@
 1521402463 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/Convolutional.cpp
 	"layers.h"
 
-1521930392 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
+1521930637 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/FullyConnected.cpp
 	"layers.h"
 
 1521402438 source:/home/andrej/hdd/dokumentumok/neural_networks/src/layers/inputlayer.cpp

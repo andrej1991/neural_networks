@@ -93,7 +93,7 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
                                     log(1 - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]);
                 }
             return helper;
-        case LOG_LIKELIHOOD:
+        case LOG_LIKELIHOOD_CF:
             result = -1 * log(this->layers[this->layers_num - 1]->get_output()[0]->data[req_outp_indx][0]);
             return result;
         default:

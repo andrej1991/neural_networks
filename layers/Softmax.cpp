@@ -56,7 +56,7 @@ inline Matrice Softmax::get_output_error(Matrice **input, Matrice &required_outp
             delete output_derivate[0];
             delete[] output_derivate;
             return delta;
-        case LOG_LIKELIHOOD:
+        case LOG_LIKELIHOOD_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
                     mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
