@@ -82,6 +82,7 @@ class Layer{
 };
 
 class FullyConnected : public Layer {
+    friend class Softmax;
     Matrice **output;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
@@ -94,31 +95,25 @@ class FullyConnected : public Layer {
     virtual inline void layers_output(Matrice **input);
     virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     virtual inline Matrice** derivate_layers_output(Matrice **input);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(Matrice **input);
-    inline Matrice** get_output();
-    inline Feature_map** get_feature_maps();
-    inline short get_layer_type();
-    inline int get_output_len();
-    inline int get_output_row();
-    inline int get_output_col();
-    void set_weights(Matrice *w);
-    void set_biases(Matrice *b);
-    int get_mapcount();
-    int get_mapdepth();
-    int get_weights_row();
-    int get_weights_col();
+    virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
+    virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
+    virtual inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
+    virtual void set_input(Matrice **input);
+    virtual inline Matrice** get_output();
+    virtual inline Feature_map** get_feature_maps();
+    virtual inline short get_layer_type();
+    virtual inline int get_output_len();
+    virtual inline int get_output_row();
+    virtual inline int get_output_col();
+    virtual void set_weights(Matrice *w);
+    virtual void set_biases(Matrice *b);
+    virtual int get_mapcount();
+    virtual int get_mapdepth();
+    virtual int get_weights_row();
+    virtual int get_weights_col();
 };
 
-//class Softmax : public FullyConnected {
-class Softmax : public Layer {
-    Matrice **output;
-    int neuron_count, outputlen;
-    short int layer_type;
-    Neuron neuron;
-    Feature_map **fmap;
+class Softmax : public FullyConnected {
     public:
     Softmax(int row, int col);
     ~Softmax();
@@ -126,22 +121,6 @@ class Softmax : public Layer {
     inline void layers_output(Matrice **input);
     inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(Matrice **input);
-    inline Matrice** get_output();
-    inline Feature_map** get_feature_maps();
-    inline short get_layer_type();
-    inline int get_output_len();
-    inline int get_output_row();
-    inline int get_output_col();
-    void set_weights(Matrice *w);
-    void set_biases(Matrice *b);
-    int get_mapcount();
-    int get_mapdepth();
-    int get_weights_row();
-    int get_weights_col();
 };
 
 class Convolutional : public Layer {
@@ -172,7 +151,6 @@ class Convolutional : public Layer {
     void set_weights(Matrice *w);
     void set_biases(Matrice *b);
     void flatten();
-    //Matrice** flattened_to_2D(Matrice &m);
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();

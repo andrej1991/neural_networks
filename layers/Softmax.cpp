@@ -2,15 +2,9 @@
 #include <math.h>
 
 
-//Softmax::Softmax(int row, int col): Softmax(row, col, -1)
-Softmax::Softmax(int row, int col)
+Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
 {
-    this->output = new Matrice*[1];
-    this->output[0] = new Matrice(row, 1);
-    this->neuron_count = this->outputlen = row;
     this->layer_type = SOFTMAX;
-    this->fmap = new Feature_map* [1];
-    this->fmap[0] = new Feature_map(row, col, 1, row);
 }
 
 Softmax::~Softmax()
@@ -98,7 +92,7 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
 }
 
 
-///these will be probably inherited from Softmax layer
+///these are inherited from Softmax layer
 /*void Softmax::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
     ;
@@ -178,97 +172,5 @@ int Softmax::get_weights_col()
 {
     ;
 }*/
-void Softmax::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
-{
-    if((layer->get_fmap_count() != 1) + (layer->fmap[0]->get_mapdepth() != 1))
-        {
-            cerr << "the fully connected layer must have only one set of weights!!!\n";
-            throw exception();
-        }
-    int prev_outputlen = this->fmap[0]->get_col();
-    for(int j = 0; j < this->outputlen; j++)
-        {
-            this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
-            for(int k = 0; k < prev_outputlen; k++)
-                {
-                    this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
-                }
-        }
-}
-
-inline void Softmax::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
-{
-    ;
-}
-
-inline void Softmax::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
-{
-    ;
-}
-
-void Softmax::set_input(Matrice **input)
-{
-    cerr << "This function can be called only for the InputLayer!\n";
-    throw exception();
-}
 
 
-inline Matrice** Softmax::get_output()
-{
-    return this->output;
-}
-
-inline Feature_map** Softmax::get_feature_maps()
-{
-    return this->fmap;
-}
-
-inline short Softmax::get_layer_type()
-{
-    return this->layer_type;
-}
-
-inline int Softmax::get_output_row()
-{
-    return this->outputlen;
-}
-
-inline int Softmax::get_output_len()
-{
-    return this->outputlen;
-}
-
-inline int Softmax::get_output_col()
-{
-    return 1;
-}
-
-void Softmax::set_weights(Matrice *w)
-{
-    this->fmap[0]->weights[0][0] = *w;
-}
-
-void Softmax::set_biases(Matrice *b)
-{
-    this->fmap[0]->biases[0][0] = *b;
-}
-
-int Softmax::get_mapcount()
-{
-    return 1;
-}
-
-int Softmax::get_mapdepth()
-{
-    return 1;
-}
-
-int Softmax::get_weights_row()
-{
-    return this->fmap[0]->get_row();
-}
-
-int Softmax::get_weights_col()
-{
-    return this->fmap[0]->get_col();
-}

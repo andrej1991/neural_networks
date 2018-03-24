@@ -33,8 +33,8 @@ int main()
     cout << "the training data and the validation data is loaded\n";
     LayerDescriptor *layers[4];
     layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 100);
-    layers[1] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD);
+    layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    Network n(2, layers, 784, 1, 1, CROSS_ENTROPY_CF);
     //Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD);
     n.test(m, validation);
     input.close();
