@@ -10,42 +10,13 @@
 using namespace std;
 ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false
 Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout):
-                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count)
+                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num)
 {
     try
     {
         this->costfunction_type = costfunction_type;
         this->total_layers_num = layers_num + 1;
-        this->layers_num = layers_num;
-        this->layers = new Layer* [this->total_layers_num];
-        Padding p;
-        if(layerdesc[0]->layer_type == FULLY_CONNECTED)
-            this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
-        else
-            this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL);
-        this->layers += 1;
-        for(int i = 0; i < layers_num; i++)
-            {
-                switch(layerdesc[i]->layer_type)
-                {
-                case FULLY_CONNECTED:
-                    this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len(),
-                                                         layerdesc[i]->neuron_type);
-                    break;
-                case SOFTMAX:
-                    this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len());
-                    break;
-                case CONVOLUTIONAL:
-                    ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
-                    this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
-                                                        this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
-                                                        layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, 1);
-                    break;
-                default:
-                    cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
-                    throw std::exception();
-                }
-            }
+        this->construct_layers(layerdesc);
     }
     catch(bad_alloc &ba)
         {
@@ -61,6 +32,42 @@ Network::~Network()
             delete this->layers[i];
         }
     delete this->layers;
+}
+
+void Network::construct_layers(LayerDescriptor **layerdesc)
+{
+    this->layers = new Layer* [this->total_layers_num];
+    this->layerdsc = new LayerDescriptor* [this->layers_num];
+    Padding p;
+    if(layerdesc[0]->layer_type == FULLY_CONNECTED)
+        this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
+    else
+        this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL);
+    this->layers += 1;
+    for(int i = 0; i < layers_num; i++)
+        {
+            this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count,
+                                                    layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->stride);
+            switch(layerdesc[i]->layer_type)
+            {
+            case FULLY_CONNECTED:
+                this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len(),
+                                                     layerdesc[i]->neuron_type);
+                break;
+            case SOFTMAX:
+                this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len());
+                break;
+            case CONVOLUTIONAL:
+                ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
+                this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
+                                                    this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
+                                                    layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, 1);
+                break;
+            default:
+                cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
+                throw std::exception();
+            }
+        }
 }
 
 inline void Network::feedforward(Matrice **input)
@@ -216,42 +223,32 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
 
 void Network::load(char *filename)
 {
-    /*ifstream inp;
-    inp.open(filename, ios::in);
-    int f_layer, f_row, f_col;
-    double data;
-    Matrice *w, *b;
-    inp.read((char*)&f_layer, 4);
-    for(int i = 0; i < f_layer; i++)
-        {
-            inp.read((char*)&f_row, 4);
-            inp.read((char*)&f_col, 4);
-            w = new Matrice(f_row, f_col);
-            b = new Matrice(f_row, 1);
-            for(int j = 0; j < f_row; j++)
-                {
-                    for(int k = 0; k < f_col; k++)
-                        {
-                            inp.read((char*)&data, sizeof(double));
-                            w->data[j][k] = data;
-                        }
-                }
-            this->layers[i]->set_weights(w);
-            for(int l = 0; l < f_row; l++)
-                {
-                    inp.read((char*)&data, sizeof(double));
-                    b->data[l][0] = data;
-                }
-            this->layers[i]->set_biases(b);
-            delete w;
-            delete b;
-        }
-    inp.close();*/
+    ;
 }
 
 void Network::store(char *filename)
 {
-    ;
+    ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
+    ofstream network_params (filename, ios::out | ios::binary);
+    if(network_params.is_open())
+        {
+            network_params << this->layers_num;
+            for(int i=0; i<this->layers_num; i++)
+                {
+                    network_params << this->layerdsc[i]->layer_type << this->layerdsc[i]->neuron_type << this->layerdsc[i]->neuron_count
+                                   << this->layerdsc[i]->col << this->layerdsc[i]->mapcount << this->layerdsc[i]->stride;
+                }
+            for(int i = -1; i < this->layers_num; i++)
+                {
+                    this->layers[i]->store(network_params);
+                }
+            network_params.close();
+        }
+    else
+        {
+            cerr << "Unable to open the file:" << '"' << filename << '"' << endl;
+            throw exception();
+        }
 }
 
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
@@ -334,6 +331,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-    this->stochastic_gradient_descent(d, 60, 10, 0.1, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 2, 10, 0.1, true, 10, v, 50);
+    //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //this->get_output(v[0]->input);
 }

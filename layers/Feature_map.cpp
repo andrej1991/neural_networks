@@ -77,3 +77,25 @@ int Feature_map::get_mapdepth()
 {
     return this->mapdepth;
 }
+
+void Feature_map::store(std::ofstream &params)
+{
+    for(int i = 0; i < this->mapdepth; i++)
+    for(int j = 0; j < this->weights[i][0].get_row(); j++)
+        {
+            for(int k = 0; k < this->weights[i][0].get_col(); k++)
+                {
+                    params << this->weights[i][0].data[j][k];
+                }
+        }
+    for(int i = 0; i < this->mapdepth; i++)
+        for(int j = 0; j < this->biases[i][0].get_row(); j++)
+            {
+                params << this->biases[i][0].data[j][0];
+            }
+}
+
+void Feature_map::load(std::ifstream &params)
+{
+    ;
+}

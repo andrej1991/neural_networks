@@ -143,3 +143,13 @@ int InputLayer::get_mapdepth()
 {
     1;
 }
+
+void InputLayer::store(std::ofstream &params)
+{
+    ;
+}
+
+void InputLayer::load(std::ifstream &params)
+{
+    ;
+}
