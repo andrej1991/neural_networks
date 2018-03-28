@@ -24,6 +24,48 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int
         }
 }
 
+Network::Network(char *data)
+{
+    ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
+    ///int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1
+    ifstream file (data, ios::in|ios::binary);
+    if(file.is_open())
+        {
+            NetworkVarHelper helper;
+            int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_stride;
+            LayerDescriptor *dsc[this->layers_num];
+            file.read((char*)&helper, sizeof(NetworkVarHelper));
+            this->layers_num = helper.layers_num;
+            this->input_row = helper.input_row;
+            this->input_col = helper.input_col;
+            this->input_channel_count = helper.input_channel_count;
+            this->costfunction_type = helper.costfunction_type;
+            this->dropout = helper.dropout;
+            this->total_layers_num = this->layers_num + 1;
+            for(int i = 0; i < helper.layers_num; i++)
+                {
+                    file.read(reinterpret_cast<char *>(&f_layer_type), sizeof(int));
+                    file.read(reinterpret_cast<char *>(&f_neuron_type), sizeof(int));
+                    file.read(reinterpret_cast<char *>(&f_neuron_count), sizeof(int));
+                    file.read(reinterpret_cast<char *>(&f_col), sizeof(int));
+                    file.read(reinterpret_cast<char *>(&f_mapcount), sizeof(int));
+                    file.read(reinterpret_cast<char *>(&f_stride), sizeof(int));
+                    dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_stride);
+                }
+            this->construct_layers(dsc);
+            for(int i = 0; i < this->layers_num; i++)
+                {
+                    this->layers[i]->load(file);
+                }
+            file.close();
+        }
+    else
+        {
+            cerr << "Unable to open the file:" << '"' << file << '"' << endl;
+            throw exception();
+        }
+}
+
 Network::~Network()
 {
     this->layers -= 1;
@@ -221,22 +263,35 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
     ;
 }
 
-void Network::load(char *filename)
+/*void Network::load(char *filename)
 {
     ;
-}
+}*/
 
 void Network::store(char *filename)
 {
     ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
+    ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
     ofstream network_params (filename, ios::out | ios::binary);
     if(network_params.is_open())
         {
-            network_params << this->layers_num;
+            //network_params << this->layers_num << this->input_row << this->input_col << this->input_channel_count << this->costfunction_type << this->dropout;
+            network_params.write((char*)(&(this->layers_num)), sizeof(int));
+            network_params.write((char*)(&(this->input_row)), sizeof(int));
+            network_params.write((char*)(&(this->input_col )), sizeof(int));
+            network_params.write((char*)(&(this->input_channel_count)), sizeof(int));
+            network_params.write((char*)(&(this->costfunction_type)), sizeof(int));
+            network_params.write((char*)(&(this->dropout)), sizeof(int));
             for(int i=0; i<this->layers_num; i++)
                 {
-                    network_params << this->layerdsc[i]->layer_type << this->layerdsc[i]->neuron_type << this->layerdsc[i]->neuron_count
-                                   << this->layerdsc[i]->col << this->layerdsc[i]->mapcount << this->layerdsc[i]->stride;
+                    //network_params << this->layerdsc[i]->layer_type << this->layerdsc[i]->neuron_type << this->layerdsc[i]->neuron_count
+                    //               << this->layerdsc[i]->col << this->layerdsc[i]->mapcount << this->layerdsc[i]->stride;
+                    network_params.write((char*)(&(this->layerdsc[i]->layer_type)), sizeof(int));
+                    network_params.write((char*)(&(this->layerdsc[i]->neuron_type)), sizeof(int));
+                    network_params.write((char*)(&(this->layerdsc[i]->neuron_count)), sizeof(int));
+                    network_params.write((char*)(&(this->layerdsc[i]->col)), sizeof(int));
+                    network_params.write((char*)(&(this->layerdsc[i]->mapcount)), sizeof(int));
+                    network_params.write((char*)(&(this->layerdsc[i]->stride)), sizeof(int));
                 }
             for(int i = -1; i < this->layers_num; i++)
                 {
@@ -328,10 +383,51 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     rand.close();
 }
 
+void Network::check_accuracy(MNIST_data **test_data)
+{
+    int break_counter = 0;
+    int learning_accuracy, learnig_cost_counter = 0;
+    double learning_cost, previoius_learning_cost = 0;
+    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Matrice output;
+    int test_data_len = 10000;
+    bool monitor_learning_cost = true;
+    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
+        {
+            helper.data[i][0] == 0;
+        }
+    learning_accuracy = learning_cost = 0;
+    for(int j = 0; j < test_data_len; j++)
+        {
+            ///TODO this is an errorprone as well
+            output = this->get_output(test_data[j]->input);
+            if(getmax(output.data) == test_data[j]->required_output.data[0][0])
+                {
+                    learning_accuracy++;
+                }
+            if(monitor_learning_cost)
+                {
+                    //if(j > 0)
+                    //    helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
+                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
+                    learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
+                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
+                }
+        }
+    cout << learning_accuracy << " out of: " << test_data_len << endl;
+    if(monitor_learning_cost)
+        {
+            cout << "total cost: " << learning_cost << endl;
+            if(abs(learning_cost) > abs(previoius_learning_cost))
+                learnig_cost_counter++;
+            previoius_learning_cost = learning_cost;
+        }
+}
+
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-    this->stochastic_gradient_descent(d, 2, 10, 0.1, true, 10, v, 50);
-    //this->store("/home/andrej/myfiles/Asztal/net.bin");
+    this->stochastic_gradient_descent(d, 5, 10, 0.1, true, 10, v, 50);
+    this->store("/home/andrej/myfiles/Asztal/net.bin");
     //this->get_output(v[0]->input);
 }

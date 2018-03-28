@@ -37,6 +37,9 @@ int main()
     Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD_CF);
     //Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD);
     n.test(m, validation);
+    cout << "starting 2nd network\n";
+    Network n2("/home/andrej/myfiles/Asztal/net.bin");
+    n2.check_accuracy(validation);
     input.close();
     required_output.close();
     return 0;

@@ -5,6 +5,11 @@
 #include "matrice.h"
 #include "layers/layers.h"
 
+struct NetworkVarHelper{
+    int layers_num, input_row, input_col, input_channel_count, costfunction_type;
+    bool dropout;
+};
+
 class Network{
     int total_layers_num, layers_num, costfunction_type, input_row, input_col, input_channel_count;
     Layer **layers;
@@ -18,15 +23,16 @@ class Network{
     inline void feedforward(Matrice **input);
     double cost(Matrice &required_output, int req_outp_indx);
     public:
-    void load(char *filename);
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);
     Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int input_channel_count = 1,
             int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false);
+    Network(char *data);
     ~Network();
     void test(MNIST_data **d, MNIST_data **v);
     Matrice get_output(Matrice **input);
+    void check_accuracy(MNIST_data **test_data);
 };
 
 #endif // NETWORK_H_INCLUDED
