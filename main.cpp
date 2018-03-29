@@ -31,12 +31,14 @@ int main()
             //cout << validation[i]->required_output[0][0];
         }
     cout << "the training data and the validation data is loaded\n";
-    LayerDescriptor *layers[4];
-    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 100);
-    layers[1] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD_CF);
-    //Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD);
-    n.test(m, validation);
+    /*LayerDescriptor *layers[4];
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 4);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 4);
+    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
+    //Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD_CF);
+    Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD_CF);
+    n.test(m, validation);*/
     cout << "starting 2nd network\n";
     Network n2("/home/andrej/myfiles/Asztal/net.bin");
     n2.check_accuracy(validation);
