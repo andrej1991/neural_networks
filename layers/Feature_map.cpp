@@ -85,13 +85,13 @@ void Feature_map::store(std::ofstream &params)
         {
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
                 {
-                    params.write((char*)(&(this->weights[i][0].data[j][k])), sizeof(double));
+                    params.write(reinterpret_cast<char *>(&(this->weights[i][0].data[j][k])), sizeof(double));
                 }
         }
     for(int i = 0; i < this->mapdepth; i++)
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
             {
-                params.write((char*)(&(this->biases[i][0].data[j][0])), sizeof(double));
+                params.write(reinterpret_cast<char *>(&(this->biases[i][0].data[j][0])), sizeof(double));
             }
 }
 
@@ -102,12 +102,12 @@ void Feature_map::load(std::ifstream &params)
         {
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
                 {
-                    params.read((char*)(&(this->weights[i][0].data[j][k])), sizeof(double));
+                    params.read(reinterpret_cast<char *>(&(this->weights[i][0].data[j][k])), sizeof(double));
                 }
         }
     for(int i = 0; i < this->mapdepth; i++)
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
             {
-                params.read((char*)(&(this->biases[i][0].data[j][0])), sizeof(double));
+                params.read(reinterpret_cast<char *>(&(this->biases[i][0].data[j][0])), sizeof(double));
             }
 }

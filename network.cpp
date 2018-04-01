@@ -31,18 +31,17 @@ Network::Network(char *data)
     ifstream file (data, ios::in|ios::binary);
     if(file.is_open())
         {
-            NetworkVarHelper helper;
             int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_stride;
+            //LayerDescriptor **dsc = new LayerDescriptor* [this->layers_num];
             LayerDescriptor *dsc[this->layers_num];
-            file.read((char*)&helper, sizeof(NetworkVarHelper));
-            this->layers_num = helper.layers_num;
-            this->input_row = helper.input_row;
-            this->input_col = helper.input_col;
-            this->input_channel_count = helper.input_channel_count;
-            this->costfunction_type = helper.costfunction_type;
-            this->dropout = helper.dropout;
+            file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
+            file.read(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
+            file.read(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
+            file.read(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
+            file.read(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
+            file.read(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
             this->total_layers_num = this->layers_num + 1;
-            for(int i = 0; i < helper.layers_num; i++)
+            for(int i = 0; i < this->layers_num; i++)
                 {
                     file.read(reinterpret_cast<char *>(&f_layer_type), sizeof(int));
                     file.read(reinterpret_cast<char *>(&f_neuron_type), sizeof(int));
@@ -94,11 +93,11 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL);
     this->layers += 1;
     for(int i = 0; i < layers_num; i++)
+    {
+        this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count,
+                                                layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->stride);
+        switch(layerdesc[i]->layer_type)
         {
-            this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count,
-                                                    layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->stride);
-            switch(layerdesc[i]->layer_type)
-            {
             case FULLY_CONNECTED:
                 this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len(),
                                                      layerdesc[i]->neuron_type);
@@ -115,8 +114,8 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
             default:
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
-            }
         }
+    }
 }
 
 inline void Network::feedforward(Matrice **input)
@@ -161,9 +160,7 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
 
 inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **nabla)
 {
-    ///TODO modfy this function based on multiple input features...
     ///currently the final layer has to be a clasification layer
-    ///TODO make some check if the final layer has only one output vector
     this->feedforward(trainig_data->input);
     Matrice **delta = new Matrice* [1];
     delta[0] = new Matrice;
@@ -270,11 +267,6 @@ inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bck
     ;
 }
 
-/*void Network::load(char *filename)
-{
-    ;
-}*/
-
 void Network::store(char *filename)
 {
     ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
@@ -282,23 +274,20 @@ void Network::store(char *filename)
     ofstream network_params (filename, ios::out | ios::binary);
     if(network_params.is_open())
         {
-            //network_params << this->layers_num << this->input_row << this->input_col << this->input_channel_count << this->costfunction_type << this->dropout;
-            network_params.write((char*)(&(this->layers_num)), sizeof(int));
-            network_params.write((char*)(&(this->input_row)), sizeof(int));
-            network_params.write((char*)(&(this->input_col )), sizeof(int));
-            network_params.write((char*)(&(this->input_channel_count)), sizeof(int));
-            network_params.write((char*)(&(this->costfunction_type)), sizeof(int));
-            network_params.write((char*)(&(this->dropout)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
             for(int i=0; i<this->layers_num; i++)
                 {
-                    //network_params << this->layerdsc[i]->layer_type << this->layerdsc[i]->neuron_type << this->layerdsc[i]->neuron_count
-                    //               << this->layerdsc[i]->col << this->layerdsc[i]->mapcount << this->layerdsc[i]->stride;
-                    network_params.write((char*)(&(this->layerdsc[i]->layer_type)), sizeof(int));
-                    network_params.write((char*)(&(this->layerdsc[i]->neuron_type)), sizeof(int));
-                    network_params.write((char*)(&(this->layerdsc[i]->neuron_count)), sizeof(int));
-                    network_params.write((char*)(&(this->layerdsc[i]->col)), sizeof(int));
-                    network_params.write((char*)(&(this->layerdsc[i]->mapcount)), sizeof(int));
-                    network_params.write((char*)(&(this->layerdsc[i]->stride)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_type)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->col)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->mapcount)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->stride)), sizeof(int));
                 }
             for(int i = -1; i < this->layers_num; i++)
                 {
@@ -397,7 +386,7 @@ void Network::check_accuracy(MNIST_data **test_data)
     double learning_cost, previoius_learning_cost = 0;
     Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Matrice output;
-    int test_data_len = 10000;
+    int test_data_len = 1;
     bool monitor_learning_cost = true;
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
         {

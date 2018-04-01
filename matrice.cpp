@@ -1,23 +1,23 @@
 #include "matrice.h"
-Matrice::Matrice(int row,int col) : data(NULL)
+Matrice::Matrice(int r,int c) : data(NULL)
 {
-    if(row > 0)
-        this->row = row;
+    if(r > 0)
+        this->row = r;
     else
         this->row = 1;
-    if(col>0)
-        this->col = col;
+    if(c > 0)
+        this->col = c;
     else
         this->col = 1;
     try
         {
-            data = new double* [row];
-            for(int i = 0; i < row; i++)
+            this->data = new double* [r];
+            for(int i = 0; i < r; i++)
                 {
-                    data[i] = new double [col];
-                    for(int j = 0; j < col; j++)
+                    this->data[i] = new double [c];
+                    for(int j = 0; j < c; j++)
                         {
-                            data[i][j] = 0;
+                            this->data[i][j] = 0;
                         }
                 }
         }
