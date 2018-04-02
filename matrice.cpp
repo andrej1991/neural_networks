@@ -1,11 +1,11 @@
 #include "matrice.h"
 Matrice::Matrice(int r,int c) : data(NULL)
 {
-    if(r > 0)
+    if(r >= 0)
         this->row = r;
     else
         this->row = 1;
-    if(c > 0)
+    if(c >= 0)
         this->col = c;
     else
         this->col = 1;
