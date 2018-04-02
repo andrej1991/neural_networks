@@ -386,7 +386,7 @@ void Network::check_accuracy(MNIST_data **test_data)
     double learning_cost, previoius_learning_cost = 0;
     Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Matrice output;
-    int test_data_len = 1;
+    int test_data_len = 10000;
     bool monitor_learning_cost = true;
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
         {
