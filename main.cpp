@@ -12,10 +12,10 @@ using namespace std;
 int main()
 {
     ifstream input, required_output, validation_input, validation_output;
-    input.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/input.dat", ios::in|ios::binary);
-    required_output.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/required_output.dat", ios::in|ios::binary);
-    validation_input.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/validation_input.dat", ios::in|ios::binary);
-    validation_output.open("/home/andrej/myfiles/dokumentumok/neural_networks/data/training_data/validation_output.dat", ios::in|ios::binary);
+    input.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/input.dat", ios::in|ios::binary);
+    required_output.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/required_output.dat", ios::in|ios::binary);
+    validation_input.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/validation_input.dat", ios::in|ios::binary);
+    validation_output.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/validation_output.dat", ios::in|ios::binary);
     cout << "the required files are opened\n";
     MNIST_data *m[50000];
     MNIST_data *validation[10000];

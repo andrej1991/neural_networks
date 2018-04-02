@@ -431,3 +431,51 @@
 	"layers.h"
 	<math.h>
 
+1521402438 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/layers/layers.cpp
+	"layers.h"
+
+1522701364 /home/andrej/hdd/Dokumentumok/neural_networks/src/layers/layers.h
+	"../neuron.h"
+	"../MNIST_data.h"
+	"../matrice.h"
+
+1521402438 /home/andrej/hdd/Dokumentumok/neural_networks/src/neuron.h
+	"matrice.h"
+
+1522701364 /home/andrej/hdd/Dokumentumok/neural_networks/src/matrice.h
+	<iostream>
+	<stdio.h>
+
+1521402438 /home/andrej/hdd/Dokumentumok/neural_networks/src/MNIST_data.h
+	<fstream>
+	"matrice.h"
+
+1521402438 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/layers/layerdescriptor.cpp
+	"layers.h"
+
+1485898994 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/additional.cpp
+	"additional.h"
+
+1485898994 /home/andrej/hdd/Dokumentumok/neural_networks/src/additional.h
+
+1522270411 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/layers/Softmax.cpp
+	"layers.h"
+	<math.h>
+
+1521402438 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/MNIST_data.cpp
+	<iostream>
+	<fstream>
+	"MNIST_data.h"
+
+1521402438 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/neuron.cpp
+	"neuron.h"
+	<math.h>
+	<iostream>
+
+1485898994 source:/home/andrej/hdd/Dokumentumok/neural_networks/src/random.cpp
+	"random.h"
+	<fstream>
+
+1485898994 /home/andrej/hdd/Dokumentumok/neural_networks/src/random.h
+	<fstream>
+
