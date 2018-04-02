@@ -226,28 +226,6 @@ void Convolutional::flatten()
         }
 }
 
-/*Matrice** Convolutional::flattened_to_2D(Matrice &m)
-{
-    ///TODO rewrite this if the feature maps can have different kernel size;
-    Matrice **ret = new Matrice* [this->map_count];
-    for(int j = 0; j < this->map_count; j++)
-        {
-            ret[j] = new Matrice(this->output_row, this->output_col);
-        }
-    int i = 0;
-    for(int map_index = 0; map_index < this->map_count; map_index++)
-        {
-            for(int col = 0; col < this->output_col; col++)
-                {
-                    for(int row = 0; row < this->output_row; row++)
-                        {
-                            ret[map_index]->data[row][col] = this->flattened_output[0]->data[i][0];
-                            i++;
-                        }
-                }
-        }
-    return ret;
-}*/
 
 inline void Convolutional::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
 {
@@ -331,4 +309,19 @@ int Convolutional::get_weights_row()
 int Convolutional::get_weights_col()
 {
     return this->kernel_col;
+}
+
+void Convolutional::store(std::ofstream &params)
+{
+    for(int i = 0; i < this->map_count; i++)
+        {
+            this->fmap[i]->store(params);
+        }
+}
+void Convolutional::load(std::ifstream &params)
+{
+    for(int i = 0; i < this->map_count; i++)
+        {
+            this->fmap[i]->load(params);
+        }
 }

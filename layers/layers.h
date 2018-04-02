@@ -1,6 +1,8 @@
 #ifndef LAYERS_H_INCLUDED
 #define LAYERS_H_INCLUDED
 
+#include <iostream>
+
 #include "../neuron.h"
 #include "../MNIST_data.h"
 #include "../matrice.h"
@@ -36,6 +38,8 @@ class Feature_map{
     int get_col();
     int get_row();
     int get_mapdepth();
+    void store(std::ofstream &params);
+    void load(std::ifstream &params);
     ~Feature_map();
 };
 
@@ -79,6 +83,9 @@ class Layer{
     virtual int get_mapdepth() = 0;
     virtual int get_weights_row() = 0;
     virtual int get_weights_col() = 0;
+    virtual void store(std::ofstream &params) = 0;
+    virtual void load(std::ifstream &params) = 0;
+
 };
 
 class FullyConnected : public Layer {
@@ -111,6 +118,8 @@ class FullyConnected : public Layer {
     virtual int get_mapdepth();
     virtual int get_weights_row();
     virtual int get_weights_col();
+    virtual void store(std::ofstream &params);
+    virtual void load(std::ifstream &params);
 };
 
 class Softmax : public FullyConnected {
@@ -156,6 +165,8 @@ class Convolutional : public Layer {
     int get_weights_row();
     int get_weights_col();
     void get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap);
+    void store(std::ofstream &params);
+    void load(std::ifstream &params);
 };
 
 
@@ -187,6 +198,8 @@ class InputLayer : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
+    void store(std::ofstream &params);
+    void load(std::ifstream &params);
 };
 
 /*class Pooling : public Layer {

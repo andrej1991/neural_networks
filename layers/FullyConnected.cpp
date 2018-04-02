@@ -195,3 +195,13 @@ int FullyConnected::get_weights_col()
 {
     return this->fmap[0]->get_col();
 }
+
+void FullyConnected::store(std::ofstream &params)
+{
+    this->fmap[0]->store(params);
+}
+
+void FullyConnected::load(std::ifstream &params)
+{
+    this->fmap[0]->load(params);
+}
