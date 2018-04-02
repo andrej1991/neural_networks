@@ -258,12 +258,11 @@ Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
     return ret;
 }
 
-void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
+void cross_correlation(Matrice &input, Matrice &kernel, Matrice &output, int stride)
 {
     double helper;
     int r, c;
     r = c = 0;
-    Matrice rotated_kernel = kernel.rot180();
     int vertical_step = (input.row - kernel.row) / stride + 1;
     int horizontal_step = (input.col - kernel.col) / stride + 1;
     for(int i = 0; i < vertical_step; i += stride)
@@ -275,7 +274,32 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
                         {
                             for(int l = 0; l < kernel.col; l++)
                                 {
-                                    helper += rotated_kernel.data[k][l] * input.data[i + k][j + l];
+                                    helper += kernel.data[k][l] * input.data[i + k][j + l];
+                                }
+                        }
+                    output.data[r][c] = helper;
+                    c++;
+                }
+            r++;
+            c = 0;
+        }
+}
+
+void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
+{
+    double helper;
+    int r, c;
+    r = c = 0;
+    for(int i = kernel.row-1; i < input.row; i += stride)
+        {
+            for(int j = kernel.col-1; j < input.col; j += stride)
+                {
+                    helper = 0;
+                    for(int k = kernel.row-1; k >= 0; k--)
+                        {
+                            for(int l = kernel.col-1; l >= 0; l--)
+                                {
+                                    helper += kernel.data[k][l] * input.data[i - k][j - l];
                                 }
                         }
                     output.data[r][c] = helper;
