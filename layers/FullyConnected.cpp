@@ -21,8 +21,8 @@ FullyConnected::~FullyConnected()
 
 inline void FullyConnected::layers_output(Matrice **input)
 {
-    Matrice inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
-    inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
+    Matrice inputparam(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
+    inputparam += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     this->output[0][0] = this->neuron.neuron(inputparam);
 }
 
@@ -56,7 +56,7 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                     output_derivate = this->derivate_layers_output(input);
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            delta.data[i][0] = (output_derivate[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
+                            delta.data[i][0] = (output_derivate[0][0].data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
                                                     (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
                         }
                     delete output_derivate[0];
@@ -75,25 +75,25 @@ inline Matrice** FullyConnected::derivate_layers_output(Matrice **input)
     mtx = new Matrice* [1];
     mtx[0] = new Matrice;
     Matrice inputparam;
-    inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
+    inputparam = (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     mtx[0][0] = this->neuron.neuron_derivate(inputparam);
     return mtx;
 }
 
 void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
-    if((layer->get_fmap_count() != 1) + (layer->fmap[0]->get_mapdepth() != 1))
+    if((layer[0].get_fmap_count() != 1) + (layer[0].fmap[0][0].get_mapdepth() != 1))
         {
             cerr << "the fully connected layer must have only one set of weights!!!\n";
             throw exception();
         }
-    int prev_outputlen = this->fmap[0]->get_col();
+    int prev_outputlen = this->fmap[0][0].get_col();
     for(int j = 0; j < this->outputlen; j++)
         {
-            this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
+            this->fmap[0][0].biases[0][0].data[j][0] -= learning_rate * layer[0].fmap[0][0].biases[0][0].data[j][0];
             for(int k = 0; k < prev_outputlen; k++)
                 {
-                    this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
+                    this->fmap[0][0].weights[0][0].data[j][k] = regularization_rate * this->fmap[0][0].weights[0][0].data[j][k] - learning_rate * layer[0].fmap[0][0].weights[0][0].data[j][k];
                 }
         }
 }
@@ -126,7 +126,7 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
         }
     Matrice multiplied, **output_derivate;
     output_derivate = this->derivate_layers_output(input);
-    multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
+    multiplied = (next_layers_fmaps[0][0].weights[0][0].transpose()) * delta[0][0];
     ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
     delta[0][0] = hadamart_product(multiplied, **output_derivate);
     nabla[0][0].biases[0][0] = delta[0][0];
@@ -168,12 +168,12 @@ inline int FullyConnected::get_output_col()
 
 void FullyConnected::set_weights(Matrice *w)
 {
-    this->fmap[0]->weights[0][0] = *w;
+    this->fmap[0][0].weights[0][0] = *w;
 }
 
 void FullyConnected::set_biases(Matrice *b)
 {
-    this->fmap[0]->biases[0][0] = *b;
+    this->fmap[0][0].biases[0][0] = *b;
 }
 
 int FullyConnected::get_mapcount()
@@ -188,20 +188,20 @@ int FullyConnected::get_mapdepth()
 
 int FullyConnected::get_weights_row()
 {
-    return this->fmap[0]->get_row();
+    return this->fmap[0][0].get_row();
 }
 
 int FullyConnected::get_weights_col()
 {
-    return this->fmap[0]->get_col();
+    return this->fmap[0][0].get_col();
 }
 
 void FullyConnected::store(std::ofstream &params)
 {
-    this->fmap[0]->store(params);
+    this->fmap[0][0].store(params);
 }
 
 void FullyConnected::load(std::ifstream &params)
 {
-    this->fmap[0]->load(params);
+    this->fmap[0][0].load(params);
 }

@@ -28,11 +28,11 @@ void Layers_features::operator+= (Layers_features &layer)
 {
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
         {
-            int mapdepth = this->fmap[map_index]->get_mapdepth();
+            int mapdepth = this->fmap[map_index][0].get_mapdepth();
             for(int i = 0; i < mapdepth; i++)
                 {
-                    this->fmap[map_index]->weights[i][0] += layer.fmap[map_index]->weights[i][0];
-                    this->fmap[map_index]->biases[i][0] += layer.fmap[map_index]->biases[i][0];
+                    this->fmap[map_index][0].weights[i][0] += layer.fmap[map_index][0].weights[i][0];
+                    this->fmap[map_index][0].biases[i][0] += layer.fmap[map_index][0].biases[i][0];
                 }
         }
 }

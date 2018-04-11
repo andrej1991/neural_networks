@@ -46,7 +46,7 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, 
         {
             for(int row = 0; row < kernel.get_row(); row++)
                 {
-                    kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
+                    kernel.data[row][col] = next_layers_fmap[0][0].weights[0][0].data[neuron_id][index];
                     index++;
                 }
         }
@@ -77,7 +77,7 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
     Matrice helper(this->output_row, this->output_col);
     if(this->next_layers_type != CONVOLUTIONAL)
         {
-            int next_layers_neuroncount = delta[0]->get_row();
+            int next_layers_neuroncount = delta[0][0].get_row();
             padded_delta = new Matrice* [next_layers_neuroncount];
             for(int i = 0; i < next_layers_neuroncount; i++)
                 {
@@ -108,10 +108,10 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                 {
                     padded_delta[i] = new Matrice;
                     padded_delta[i][0] = delta[i][0];
-                    padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-                                                             (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
-                                                             (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-                                                             (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
+                    padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i][0].weights[0][0].get_row()-1)/2,
+                                                             (next_layers_fmaps[i][0].weights[0][0].get_col()-1)/2,
+                                                             (next_layers_fmaps[i][0].weights[0][0].get_row()-1)/2,
+                                                             (next_layers_fmaps[i][0].weights[0][0].get_col()-1)/2);
                 }
             delta_helper = new Matrice* [this->map_count];
             for(int i = 0; i < this->map_count; i++)
@@ -119,7 +119,7 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                     delta_helper[i] = new Matrice(this->output_row, this->output_col);
                     for(int j = 0; j < next_layers_fmapcount; j++)
                         {
-                            calculate_delta_helper(padded_delta[j], delta_helper[i], next_layers_fmaps[j]->weights[i][0], helper);
+                            calculate_delta_helper(padded_delta[j], delta_helper[i], next_layers_fmaps[j][0].weights[i][0], helper);
                         }
                 }
             delete_padded_delta(padded_delta, next_layers_fmapcount);
@@ -128,9 +128,9 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
         {
             layers_delta[i] = new Matrice;
             layers_delta[i][0] = hadamart_product(delta_helper[i][0], output_derivate[i][0]);
-            for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
+            for(int j = 0; j < this->fmap[i][0].get_mapdepth(); j++)
                 {
-                     convolution(input[j][0], layers_delta[i][0], nabla[i]->weights[j][0]);
+                     convolution(input[j][0], layers_delta[i][0], nabla[i][0].weights[j][0]);
                 }
             delete output_derivate[i];
             delete delta_helper[i];
@@ -150,15 +150,15 @@ void Convolutional::update_weights_and_biasses(double learning_rate, double regu
 {
     for(int i = 0; i < this->map_count; i++)
         {
-            for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
+            for(int j = 0; j < this->fmap[i][0].get_mapdepth(); j++)
                 {
                     for(int row = 0; row < this->kernel_row; row++)
                         {
                             for(int col = 0; col < this->kernel_col; col++)
                                 {
-                                    this->fmap[i]->weights[j]->data[row][col] =
-                                                    regularization_rate * this->fmap[i]->weights[j]->data[row][col] -
-                                                    learning_rate * layer->fmap[i]->weights[j]->data[row][col];
+                                    this->fmap[i][0].weights[j][0].data[row][col] =
+                                                    regularization_rate * this->fmap[i][0].weights[j][0].data[row][col] -
+                                                    learning_rate * layer[0].fmap[i][0].weights[j][0].data[row][col];
                                 }
                         }
                 }
@@ -167,12 +167,12 @@ void Convolutional::update_weights_and_biasses(double learning_rate, double regu
 
 inline void Convolutional::fulldepth_conv(Matrice &helper, Matrice &convolved, Matrice **input, int map_index)
 {
-    for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
+    for(int channel_index = 0; channel_index < this->fmap[map_index][0].get_mapdepth(); channel_index++)
         {
-            convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->stride);
+            convolution(input[channel_index][0], this->fmap[map_index][0].weights[channel_index][0], convolved, this->stride);
             helper += convolved;
         }
-    helper+=this->fmap[map_index]->biases[0][0].data[0][0];
+    helper+=this->fmap[map_index][0].biases[0][0].data[0][0];
 }
 
 inline void Convolutional::layers_output(Matrice **input)
@@ -219,7 +219,7 @@ void Convolutional::flatten()
                 {
                     for(int row = 0; row < this->output_row; row++)
                         {
-                            this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
+                            this->flattened_output[0]->data[i][0] = this->outputs[map_index][0].data[row][col];
                             i++;
                         }
                 }
@@ -298,7 +298,7 @@ int Convolutional::get_mapcount()
 
 int Convolutional::get_mapdepth()
 {
-    return this->fmap[0]->get_mapdepth();
+    return this->fmap[0][0].get_mapdepth();
 }
 
 int Convolutional::get_weights_row()
@@ -315,13 +315,13 @@ void Convolutional::store(std::ofstream &params)
 {
     for(int i = 0; i < this->map_count; i++)
         {
-            this->fmap[i]->store(params);
+            this->fmap[i][0].store(params);
         }
 }
 void Convolutional::load(std::ifstream &params)
 {
     for(int i = 0; i < this->map_count; i++)
         {
-            this->fmap[i]->load(params);
+            this->fmap[i][0].load(params);
         }
 }

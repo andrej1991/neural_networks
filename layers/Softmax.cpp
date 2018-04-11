@@ -23,11 +23,11 @@ inline Matrice** Softmax::backpropagate(Matrice **input, Feature_map** next_laye
 
 inline void Softmax::layers_output(Matrice **input)
 {
-    Matrice weighted_input(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
-    Matrice output_helper(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
+    Matrice weighted_input(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
+    Matrice output_helper(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
     double nominator = 0;
     double helper;
-    weighted_input += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
+    weighted_input += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     for(int i = 0; i < this->outputlen; i++)
         {
             output_helper.data[i][0] = exp(weighted_input.data[i][0]);
@@ -35,7 +35,7 @@ inline void Softmax::layers_output(Matrice **input)
         }
     for(int i = 0; i < this->outputlen; i++)
         {
-            this->output[0]->data[i][0] = output_helper.data[i][0] / nominator;
+            this->output[0][0].data[i][0] = output_helper.data[i][0] / nominator;
         }
 }
 
@@ -80,11 +80,11 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
                 {
                     if(row == col)
                         {
-                            mtx[0]->data[row][col] = this->output[0]->data[row][0] * (1 - this->output[0]->data[col][0]);
+                            mtx[0][0].data[row][col] = this->output[0][0].data[row][0] * (1 - this->output[0][0].data[col][0]);
                         }
                     else
                         {
-                            mtx[0]->data[row][col] = -1 * this->output[0]->data[row][0] * this->output[0]->data[col][0];
+                            mtx[0][0].data[row][col] = -1 * this->output[0][0].data[row][0] * this->output[0][0].data[col][0];
                         }
                 }
         }
