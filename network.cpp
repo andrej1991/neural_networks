@@ -423,7 +423,7 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-    this->stochastic_gradient_descent(d, 2, 10, 0.1, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 2, 10, 0.03, true, 10, v, 50);
     this->store("/home/andrej/myfiles/Asztal/net.bin");
     //this->get_output(v[0]->input);
 }

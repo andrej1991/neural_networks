@@ -36,11 +36,72 @@ inline Matrice Neuron::sigmoid_derivate(Matrice &inputs)
 
 inline Matrice Neuron::relu(Matrice &inputs)
 {
-    ;
+    int row = inputs.get_row();
+    int col = inputs.get_col();
+    Matrice output(row, col);
+    for(int i = 0; i < row; i++)
+        {
+            for(int j = 0; j < col; j++)
+                {
+                    if(inputs.data[i][j] > 0)
+                        output.data[i][j] = inputs.data[i][j];
+                    else
+                        output.data[i][j] = 0;
+                }
+        }
+    return output;
 }
 inline Matrice Neuron::relu_derivate(Matrice &inputs)
 {
-    ;
+    int row = inputs.get_row();
+    int col = inputs.get_col();
+    Matrice output(row, col);
+    for(int i = 0; i < row; i++)
+        {
+            for(int j = 0; j < col; j++)
+                {
+                    if(inputs.data[i][j] > 0)
+                        output.data[i][j] = 1;
+                    else
+                        output.data[i][j] = 0;
+                }
+        }
+    return output;
+}
+
+inline Matrice Neuron::leaky_relu(Matrice &inputs)
+{
+    int row = inputs.get_row();
+    int col = inputs.get_col();
+    Matrice output(row, col);
+    for(int i = 0; i < row; i++)
+        {
+            for(int j = 0; j < col; j++)
+                {
+                    if(inputs.data[i][j] > 0)
+                        output.data[i][j] = inputs.data[i][j];
+                    else
+                        output.data[i][j] = 0.001*inputs.data[i][j];
+                }
+        }
+    return output;
+}
+inline Matrice Neuron::leaky_relu_derivate(Matrice &inputs)
+{
+    int row = inputs.get_row();
+    int col = inputs.get_col();
+    Matrice output(row, col);
+    for(int i = 0; i < row; i++)
+        {
+            for(int j = 0; j < col; j++)
+                {
+                    if(inputs.data[i][j] > 0)
+                        output.data[i][j] = 1;
+                    else
+                        output.data[i][j] = 0.001;
+                }
+        }
+    return output;
 }
 
 Matrice Neuron::neuron(Matrice &inputs)
@@ -51,6 +112,8 @@ Matrice Neuron::neuron(Matrice &inputs)
         return this->sigmoid(inputs);
     case RELU:
         return this->relu(inputs);
+    case LEAKY_RELU:
+        return this->leaky_relu(inputs);
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();
@@ -65,6 +128,8 @@ Matrice Neuron::neuron_derivate(Matrice &inputs)
         return this->sigmoid_derivate(inputs);
     case RELU:
         return this->relu_derivate(inputs);
+    case LEAKY_RELU:
+        return this->leaky_relu_derivate(inputs);
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();
