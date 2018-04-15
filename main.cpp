@@ -38,10 +38,11 @@ int main()
     layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
     //Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD_CF);
     Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD_CF);
+    //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    //layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    //Network n(2, layers, 784, 1, 1, QUADRATIC_CF);
     n.test(m, validation);
     input.close();
     required_output.close();
-    Network n2("/home/andrej/myfiles/Asztal/net.bin");
-    n2.check_accuracy(validation);
     return 0;
 }

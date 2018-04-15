@@ -46,7 +46,7 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, 
         {
             for(int row = 0; row < kernel.get_row(); row++)
                 {
-                    kernel.data[row][col] = next_layers_fmap[0][0].weights[0][0].data[neuron_id][index];
+                    kernel[row][col] = (next_layers_fmap[0][0].weights[0][0])[neuron_id][index];
                     index++;
                 }
         }
@@ -82,7 +82,7 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
             for(int i = 0; i < next_layers_neuroncount; i++)
                 {
                     padded_delta[i] = new Matrice;
-                    padded_delta[i][0].data[0][0] = delta[0][0].data[i][0];
+                    (padded_delta[i][0])[0][0] = (delta[0][0])[i][0];
                     padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
                                                              (this->output_col-1)/2,
                                                              (this->output_row-1)/2,
@@ -156,9 +156,9 @@ void Convolutional::update_weights_and_biasses(double learning_rate, double regu
                         {
                             for(int col = 0; col < this->kernel_col; col++)
                                 {
-                                    this->fmap[i][0].weights[j][0].data[row][col] =
-                                                    regularization_rate * this->fmap[i][0].weights[j][0].data[row][col] -
-                                                    learning_rate * layer[0].fmap[i][0].weights[j][0].data[row][col];
+                                    (this->fmap[i][0].weights[j][0])[row][col] =
+                                                    regularization_rate * (this->fmap[i][0].weights[j][0])[row][col] -
+                                                    learning_rate * (layer[0].fmap[i][0].weights[j][0])[row][col];
                                 }
                         }
                 }
@@ -172,7 +172,7 @@ inline void Convolutional::fulldepth_conv(Matrice &helper, Matrice &convolved, M
             convolution(input[channel_index][0], this->fmap[map_index][0].weights[channel_index][0], convolved, this->stride);
             helper += convolved;
         }
-    helper+=this->fmap[map_index][0].biases[0][0].data[0][0];
+    helper+=(this->fmap[map_index][0].biases[0][0])[0][0];
 }
 
 inline void Convolutional::layers_output(Matrice **input)
@@ -219,7 +219,7 @@ void Convolutional::flatten()
                 {
                     for(int row = 0; row < this->output_row; row++)
                         {
-                            this->flattened_output[0]->data[i][0] = this->outputs[map_index][0].data[row][col];
+                            (this->flattened_output[0][0])[i][0] = (this->outputs[map_index][0])[row][col];
                             i++;
                         }
                 }

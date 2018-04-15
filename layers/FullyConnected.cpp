@@ -36,7 +36,7 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
         case QUADRATIC_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                    mtx[i][0] = (this->output[0][0])[i][0] - required_output[i][0];
                 }
             output_derivate = this->derivate_layers_output(input);
             delta = hadamart_product(mtx, **output_derivate);
@@ -49,15 +49,15 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                 case SIGMOID:
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                            mtx[i][0] = (this->output[0][0])[i][0] - required_output[i][0];
                         }
                     return mtx;
                 default:
                     output_derivate = this->derivate_layers_output(input);
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            delta.data[i][0] = (output_derivate[0][0].data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
-                                                    (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
+                            delta[i][0] = ((output_derivate[0][0])[i][0] * ((this->output[0][0])[i][0] - required_output[i][0])) /
+                                                    ((this->output[0][0])[i][0] * (1 - (this->output[0][0])[i][0]));
                         }
                     delete output_derivate[0];
                     delete[] output_derivate;
@@ -90,10 +90,10 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
     int prev_outputlen = this->fmap[0][0].get_col();
     for(int j = 0; j < this->outputlen; j++)
         {
-            this->fmap[0][0].biases[0][0].data[j][0] -= learning_rate * layer[0].fmap[0][0].biases[0][0].data[j][0];
+            (this->fmap[0][0].biases[0][0])[j][0] -= learning_rate * (layer[0].fmap[0][0].biases[0][0])[j][0];
             for(int k = 0; k < prev_outputlen; k++)
                 {
-                    this->fmap[0][0].weights[0][0].data[j][k] = regularization_rate * this->fmap[0][0].weights[0][0].data[j][k] - learning_rate * layer[0].fmap[0][0].weights[0][0].data[j][k];
+                    (this->fmap[0][0].weights[0][0])[j][k] = regularization_rate * (this->fmap[0][0].weights[0][0])[j][k] - learning_rate * (layer[0].fmap[0][0].weights[0][0])[j][k];
                 }
         }
 }

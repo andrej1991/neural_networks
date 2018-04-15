@@ -16,7 +16,7 @@ class Matrice
     inline void destruct();
     inline void equality(const Matrice &mtx);
     public:
-    double **data;
+    double *data;
     Matrice(int row = 1,int col = 1);
     ~Matrice();
     Matrice(const Matrice& mtx);
@@ -25,6 +25,8 @@ class Matrice
     void operator+= (const Matrice& mtx);
     void operator+= (double d);
     Matrice operator+ (const Matrice &mtx);
+    double* operator[] (int row);
+    const double* operator[] (int row) const;
     //Matrice operator- (const Matrice& mtx);
     //Matrice operator-(double** mtx);
     friend Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2);

@@ -30,12 +30,12 @@ inline void Softmax::layers_output(Matrice **input)
     weighted_input += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     for(int i = 0; i < this->outputlen; i++)
         {
-            output_helper.data[i][0] = exp(weighted_input.data[i][0]);
-            nominator += output_helper.data[i][0];
+            output_helper[i][0] = exp(weighted_input[i][0]);
+            nominator += output_helper[i][0];
         }
     for(int i = 0; i < this->outputlen; i++)
         {
-            this->output[0][0].data[i][0] = output_helper.data[i][0] / nominator;
+            (this->output[0][0])[i][0] = output_helper[i][0] / nominator;
         }
 }
 
@@ -49,7 +49,7 @@ inline Matrice Softmax::get_output_error(Matrice **input, Matrice &required_outp
         case QUADRATIC_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                    mtx[i][0] = (this->output[0][0])[i][0] - required_output[i][0];
                 }
             output_derivate = this->derivate_layers_output(input);
             delta = output_derivate[0][0] * mtx;
@@ -59,7 +59,7 @@ inline Matrice Softmax::get_output_error(Matrice **input, Matrice &required_outp
         case LOG_LIKELIHOOD_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                    mtx[i][0] = (this->output[0][0])[i][0] - required_output[i][0];
                 }
             return mtx;
         default:
@@ -80,11 +80,11 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
                 {
                     if(row == col)
                         {
-                            mtx[0][0].data[row][col] = this->output[0][0].data[row][0] * (1 - this->output[0][0].data[col][0]);
+                            (mtx[0][0])[row][col] = (this->output[0][0])[row][0] * (1 - (this->output[0][0])[col][0]);
                         }
                     else
                         {
-                            mtx[0][0].data[row][col] = -1 * this->output[0][0].data[row][0] * this->output[0][0].data[col][0];
+                            (mtx[0][0])[row][col] = -1 * (this->output[0][0])[row][0] * (this->output[0][0])[col][0];
                         }
                 }
         }

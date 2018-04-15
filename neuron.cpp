@@ -13,7 +13,7 @@ inline Matrice Neuron::sigmoid(Matrice &inputs)
         {
             for(int j = 0; j < col; j++)
                 {
-                    ret.data[i][j] = 1 / (1 + exp(-1 * inputs.data[i][j]));
+                    ret[i][j] = 1 / (1 + exp(-1 * inputs[i][j]));
                 }
         }
     return ret;
@@ -28,7 +28,7 @@ inline Matrice Neuron::sigmoid_derivate(Matrice &inputs)
         {
             for(int j = 0; j < col; j++)
                 {
-                    s.data[i][j] = s.data[i][j] * (1 - s.data[i][j]);
+                    s[i][j] = s[i][j] * (1 - s[i][j]);
                 }
         }
     return s;
@@ -43,10 +43,10 @@ inline Matrice Neuron::relu(Matrice &inputs)
         {
             for(int j = 0; j < col; j++)
                 {
-                    if(inputs.data[i][j] > 0)
-                        output.data[i][j] = inputs.data[i][j];
+                    if(inputs[i][j] > 0)
+                        output[i][j] = inputs[i][j];
                     else
-                        output.data[i][j] = 0;
+                        output[i][j] = 0;
                 }
         }
     return output;
@@ -60,10 +60,10 @@ inline Matrice Neuron::relu_derivate(Matrice &inputs)
         {
             for(int j = 0; j < col; j++)
                 {
-                    if(inputs.data[i][j] > 0)
-                        output.data[i][j] = 1;
+                    if(inputs[i][j] > 0)
+                        output[i][j] = 1;
                     else
-                        output.data[i][j] = 0;
+                        output[i][j] = 0;
                 }
         }
     return output;
@@ -78,10 +78,10 @@ inline Matrice Neuron::leaky_relu(Matrice &inputs)
         {
             for(int j = 0; j < col; j++)
                 {
-                    if(inputs.data[i][j] > 0)
-                        output.data[i][j] = inputs.data[i][j];
+                    if(inputs[i][j] > 0)
+                        output[i][j] = inputs[i][j];
                     else
-                        output.data[i][j] = 0.001*inputs.data[i][j];
+                        output[i][j] = 0.001*inputs[i][j];
                 }
         }
     return output;
@@ -95,10 +95,10 @@ inline Matrice Neuron::leaky_relu_derivate(Matrice &inputs)
         {
             for(int j = 0; j < col; j++)
                 {
-                    if(inputs.data[i][j] > 0)
-                        output.data[i][j] = 1;
+                    if(inputs[i][j] > 0)
+                        output[i][j] = 1;
                     else
-                        output.data[i][j] = 0.001;
+                        output[i][j] = 0.001;
                 }
         }
     return output;

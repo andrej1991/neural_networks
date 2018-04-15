@@ -11,15 +11,10 @@ Matrice::Matrice(int r,int c) : data(NULL)
         this->col = 1;
     try
         {
-            this->data = new double* [r];
-            for(int i = 0; i < r; i++)
-                {
-                    this->data[i] = new double [c];
-                    for(int j = 0; j < c; j++)
-                        {
-                            this->data[i][j] = 0;
-                        }
-                }
+            this->data = new double [r*c];
+            for(int i = 0; i < r*c; i++)
+                this->data[i] = 0;
+
         }
     catch(bad_alloc& ba)
         {
@@ -32,10 +27,6 @@ inline void Matrice::destruct()
 {
     if(this->data != NULL)
         {
-            for(int i = 0; i < this->row; i++)
-                {
-                    delete this->data[i];
-                }
             delete[] this->data;
             this->data = NULL;
         }
@@ -47,19 +38,17 @@ inline void Matrice::equality(const Matrice &mtx)
     col = mtx.col;
     try
        {
-            data = new double*[row];
-            for(int i = 0; i < row; i++)
-                data[i] = new double [col];
+            data = new double[this->row * this->col];
+
        }
     catch(bad_alloc& ba)
         {
             cerr << "Matrice::copyconstructor: bad_alloc caught: " << ba.what() << endl;
             throw;
         }
-    for(int i = 0; i < row; i++)
+    for(int i = 0; i < row*col; i++)
     {
-        for(int j = 0; j < col; j++)
-            data[i][j] = mtx.data[i][j];
+        this->data[i] = mtx.data[i];
     }
 }
 
@@ -100,9 +89,9 @@ Matrice Matrice::operator* (const Matrice& other)
                         {
                             for(int i = 0; i < col; i++)
                                 {
-                                    c += data[k][i] * other.data[i][l];
+                                    c += data[k*col+i] * other[i][l];
                                 }
-                            mtx.data[k][l] = c;
+                            mtx[k][l] = c;
                             c = 0;
                         }
                 }
@@ -117,23 +106,17 @@ void Matrice::operator+=(const Matrice& mtx)
             std::cerr << "the matrices cannot be added!\n";
             throw std::exception();
         }
-    for(int i = 0; i < this->row; i++)
+    for(int i = 0; i < this->row * this->col; i++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    this->data[i][j] += mtx.data[i][j];
-                }
+            this->data[i] += mtx.data[i];
         }
 }
 
 void Matrice::operator+=(double d)
 {
-    for(int i = 0; i < this->row; i++)
+    for(int i = 0; i < this->row * this->col; i++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    this->data[i][j] += d;
-                }
+            this->data[i] += d;
         }
 }
 
@@ -145,14 +128,21 @@ Matrice Matrice::operator+(const Matrice &mtx)
             throw std::exception();
         }
     Matrice sum(this->row, this->col);
-    for(int i = 0; i < this->row; i++)
+    for(int i = 0; i < this->row * this->col; i++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    sum.data[i][j] = this->data[i][j] + mtx.data[i][j];
-                }
+            sum.data[i] = this->data[i] + mtx.data[i];
         }
     return sum;
+}
+
+double* Matrice::operator[](int r)
+{
+    return this->data + (this->col * r);
+}
+
+const double* Matrice::operator[](int r) const
+{
+    return this->data + (this->col * r);
 }
 
 /*Matrice Matrice::operator-(const Matrice& mtx)
@@ -167,7 +157,7 @@ Matrice Matrice::operator+(const Matrice &mtx)
         {
             for(int j = 0; j < this->col; j++)
                 {
-                    difference.data[i][j] = this->data[i][j] - mtx.data[i][j];
+                    difference[i][j] = this->data[i][j] - mtx[i][j];
                 }
         }
     return dufference;
@@ -180,7 +170,7 @@ Matrice Matrice::operator-(double** mtx)
         {
             for(int j = 0; j < this->col; j++)
                 {
-                    difference.data[i][j] = this->data[i][j] - mtx[i][j];
+                    difference[i][j] = this->data[i][j] - mtx[i][j];
                 }
         }
 }*/
@@ -202,7 +192,7 @@ Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2)
             Matrice result(mtx1.row, mtx1.col);
             for(int i = 0; i < mtx1.row; i++)
                 for(int j = 0; j < mtx1.col; j++)
-                    result.data[i][j] = mtx1.data[i][j] * mtx2.data[i][j];
+                    result[i][j] = mtx1[i][j] * mtx2[i][j];
             return result;
         }
     else
@@ -219,13 +209,13 @@ Matrice Matrice::transpose()
         {
             for(int  j= 0; j < this->col; j++)
                 {
-                    tr_mtx.data[j][i]=this->data[i][j];
+                    tr_mtx[j][i]=this->data[i*col+ j];
                 }
         }
     return tr_mtx;
 }
 
-Matrice Matrice::rot180()
+Matrice Matrice::rot180()///?????????????????
 {
     Matrice ret(this->row, this->col);
     int i2 = 0;
@@ -234,16 +224,16 @@ Matrice Matrice::rot180()
         {
             for(int j = this->col - 1; j >= 0; j--)
                 {
-                    ret.data[i][j] = this->data[i2][j2];
-                    j2++;
+                    ret[i][j] = this->data[i2*this->col+j2];
+                    i2++;
                 }
             i2++;
-            j2 = 0;
+            j2=0;
         }
     return ret;
 }
 
-Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
+Matrice Matrice::zero_padd(int top, int right, int bottom, int left)///??????????????
 {
     int padded_row = this->row + top + bottom;
     int padded_col = this->col + left + right;
@@ -252,7 +242,7 @@ Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
         {
             for(int j = 0; j < this->col; j++)
                 {
-                    ret.data[top + i][left + j] = this->data[i][j];
+                    ret[top + i][left + j] = this->data[i*this->col + j];
                 }
         }
     return ret;
@@ -274,10 +264,10 @@ void cross_correlation(Matrice &input, Matrice &kernel, Matrice &output, int str
                         {
                             for(int l = 0; l < kernel.col; l++)
                                 {
-                                    helper += kernel.data[k][l] * input.data[i + k][j + l];
+                                    helper += kernel[k][l] * input[i + k][j + l];
                                 }
                         }
-                    output.data[r][c] = helper;
+                    output[r][c] = helper;
                     c++;
                 }
             r++;
@@ -299,10 +289,10 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
                         {
                             for(int l = kernel.col-1; l >= 0; l--)
                                 {
-                                    helper += kernel.data[k][l] * input.data[i - k][j - l];
+                                    helper += kernel[k][l] * input[i - k][j - l];
                                 }
                         }
-                    output.data[r][c] = helper;
+                    output[r][c] = helper;
                     c++;
                 }
             r++;
@@ -312,9 +302,8 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
 
 void Matrice::zero()
 {
-    for(int i = 0; i < this->row; i++)
-        for(int j = 0; j < this->col; j++)
-            this->data[i][j] = 0;
+    for(int i = 0; i < (this->row*this->col); i++)
+            this->data[i] = 0;
 }
 
 void print_mtx_list(Matrice **mtx, int list_len)
@@ -327,7 +316,7 @@ void print_mtx_list(Matrice **mtx, int list_len)
             cout << "[";
             for(int k = 0; k < mtx[i][0].col; k++)
             {
-                cout << mtx[i][0].data[j][k] << "; ";
+                cout << mtx[i][0][j][k] << "; ";
             }
             cout << "]\n";
         }
@@ -344,7 +333,7 @@ void print_mtx(Matrice &mtx)
         cout << "[";
         for(int k = 0; k < mtx.col; k++)
         {
-            cout << mtx.data[j][k] << "; ";
+            cout << mtx[j][k] << "; ";
         }
         cout << "]\n";
     }

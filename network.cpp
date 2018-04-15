@@ -136,7 +136,7 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
             /// 1/2 * ||y(x) - a||^2
             for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_len(); i++)
                 {
-                    helper = required_output.data[i][0] - this->layers[this->layers_num - 1][0].get_output()[0][0].data[i][0];
+                    helper = required_output[i][0] - (this->layers[this->layers_num - 1][0].get_output()[0][0])[i][0];
                     result += helper * helper;
                 }
             return (1/2) * result;
@@ -144,12 +144,12 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
             ///y(x)ln a + (1 - y(x))ln(1 - a)
             for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_len(); i++)
                 {
-                    helper += required_output.data[i][0] * log(this->layers[this->layers_num - 1][0].get_output()[0][0].data[i][0]) + (1 - required_output.data[i][0]) *
-                                    log(1 - this->layers[this->layers_num - 1][0].get_output()[0][0].data[i][0]);
+                    helper += required_output[i][0] * log((this->layers[this->layers_num - 1][0].get_output()[0][0])[i][0]) + (1 - required_output[i][0]) *
+                                    log(1 - (this->layers[this->layers_num - 1][0].get_output()[0][0])[i][0]);
                 }
             return helper;
         case LOG_LIKELIHOOD_CF:
-            result = -1 * log(this->layers[this->layers_num - 1][0].get_output()[0][0].data[req_outp_indx][0]);
+            result = -1 * log((this->layers[this->layers_num - 1][0].get_output()[0][0])[req_outp_indx][0]);
             return result;
         default:
             cerr << "Unknown cost function\n";
@@ -318,7 +318,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     Matrice helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
     for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_row(); i++)
         {
-            helper.data[i][0] == 0;
+            helper[i][0] == 0;
         }
     Matrice output;
     for(int i = 0; i < epochs; i++)
@@ -342,17 +342,17 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                         {
                             ///TODO this is an errorprone as well
                             output = this->get_output(test_data[j][0].input);
-                            if(getmax(output.data) == test_data[j][0].required_output.data[0][0])
+                            if(getmax(output.data) == (test_data[j][0].required_output)[0][0])
                                 {
                                     learning_accuracy++;
                                 }
                             if(monitor_learning_cost)
                                 {
                                     //if(j > 0)
-                                    //    helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
-                                    helper.data[(int)test_data[j][0].required_output.data[0][0]][0] = 1;
-                                    learning_cost += this->cost(helper, test_data[j][0].required_output.data[0][0]);
-                                    helper.data[(int)test_data[j][0].required_output.data[0][0]][0] = 0;
+                                    //    helper[(int)test_data[j - 1]->required_output[0][0]][0] = 0;
+                                    helper[(int)test_data[j][0].required_output[0][0]][0] = 1;
+                                    learning_cost += this->cost(helper, test_data[j][0].required_output[0][0]);
+                                    helper[(int)test_data[j][0].required_output[0][0]][0] = 0;
                                 }
                         }
                     cout << "set " << i << ": " << learning_accuracy << " out of: " << test_data_len << endl;
@@ -390,24 +390,24 @@ void Network::check_accuracy(MNIST_data **test_data)
     bool monitor_learning_cost = true;
     for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_row(); i++)
         {
-            helper.data[i][0] == 0;
+            helper[i][0] == 0;
         }
     learning_accuracy = learning_cost = 0;
     for(int j = 0; j < test_data_len; j++)
         {
             ///TODO this is an errorprone as well
             output = this->get_output(test_data[j][0].input);
-            if(getmax(output.data) == test_data[j][0].required_output.data[0][0])
+            if(getmax(output.data) == test_data[j][0].required_output[0][0])
                 {
                     learning_accuracy++;
                 }
             if(monitor_learning_cost)
                 {
                     //if(j > 0)
-                    //    helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
-                    helper.data[(int)test_data[j][0].required_output.data[0][0]][0] = 1;
-                    learning_cost += this->cost(helper, test_data[j][0].required_output.data[0][0]);
-                    helper.data[(int)test_data[j][0].required_output.data[0][0]][0] = 0;
+                    //    helper[(int)test_data[j - 1]->required_output[0][0]][0] = 0;
+                    helper[(int)test_data[j][0].required_output[0][0]][0] = 1;
+                    learning_cost += this->cost(helper, test_data[j][0].required_output[0][0]);
+                    helper[(int)test_data[j][0].required_output[0][0]][0] = 0;
                 }
         }
     cout << learning_accuracy << " out of: " << test_data_len << endl;
