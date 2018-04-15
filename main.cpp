@@ -37,7 +37,7 @@ int main()
     layers[2] = new LayerDescriptor(FULLY_CONNECTED, RELU, 30);
     layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
     //Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD_CF);
-    Network n(4, layers, 28, 28, 1, LOG_LIKELIHOOD_CF);
+    Network n(4, layers, 28, 28, 1, QUADRATIC_CF);
     //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
     //layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
     //Network n(2, layers, 784, 1, 1, QUADRATIC_CF);
