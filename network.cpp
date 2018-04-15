@@ -139,7 +139,7 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
                     helper = required_output.data[i][0] - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0];
                     result += helper * helper;
                 }
-            return (1/2) * result;
+            return 0.5 * result;
         case CROSS_ENTROPY_CF:
             ///y(x)ln a + (1 - y(x))ln(1 - a)
             for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_len(); i++)
