@@ -11,7 +11,7 @@ using namespace std;
 
 int main()
 {
-    ifstream input, required_output, validation_input, validation_output;
+    /*ifstream input, required_output, validation_input, validation_output;
     input.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/input.dat", ios::in|ios::binary);
     required_output.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/required_output.dat", ios::in|ios::binary);
     validation_input.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/validation_input.dat", ios::in|ios::binary);
@@ -43,6 +43,19 @@ int main()
     //Network n(2, layers, 784, 1, 1, QUADRATIC_CF);
     n.test(m, validation);
     input.close();
-    required_output.close();
+    required_output.close();*/
+    Matrice A(4,6), B(6,8), C(4,8);
+    for(int i = 0; i < A.get_col()*A.get_row(); i++)
+    {
+        A.data[i] = i;
+    }
+    for(int i = 0; i < B.get_col()*B.get_row(); i++)
+    {
+        B.data[i] = i;
+    }
+    C = A*B;
+    print_mtx(A);
+    print_mtx(B);
+    print_mtx(C);
     return 0;
 }
