@@ -67,30 +67,11 @@ inline void MatrixData::equality(const MatrixData &mtx)
         cerr << "MatrixData::copyconstructor: bad_alloc caught: " << ba.what() << endl;
         throw;
     }
-    this->cl_mem_inuse = false;///mtx.cl_mem_inuse;
-    if(this->cl_mem_inuse)
+    this->cl_mem_inuse = false;
+    for(int i = 0; i < row*col; i++)
     {
-        ///TODO hadle the memory copy from opencl device
-        /*cl_uint errorcode;
-        cl_command_queue command_queue = clCreateCommandQueue(mtx.context_of_cl_mem_obj, deviceIds[0], 0, &errorcode);
-        if(errorcode != CL_SUCCESS)
-        {
-            cerr << "unable to create OpenCL command queue\n";
-            throw exception();
-        }
-        errorcode = clEnqueueReadBuffer(command_queue, mtx.cl_mem_obj, CL_TRUE, 0, mtx.row * mtx.col * sizeof(float), this->data, 1, &event, NULL);
-        this->cl_mem_obj = clCreateBuffer(mtx.context_of_cl_mem_obj, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->row * this->col * sizeof(float), this->data, &errorcode);
-        this->context_of_cl_mem_obj = mtx.context_of_cl_mem_obj;
-        clReleaseCommandQueue(command_queue);*/
+        this->data[i] = mtx.data[i];
     }
-    else
-    {
-        for(int i = 0; i < row*col; i++)
-        {
-            this->data[i] = mtx.data[i];
-        }
-    }
-    this->cl_mem_inuse = mtx.cl_mem_inuse;
 }
 
 MatrixData::~MatrixData()
@@ -123,9 +104,13 @@ const float* MatrixData::operator[](int r) const
     return this->data + (this->col * r);
 }
 
-void MatrixData::create_opencl_buffer(cl_context *context)
+void MatrixData::copy_to_opencl_buffer(cl_context *context)
 {
     cl_int errorcode;
+    if(this->cl_mem_inuse)
+    {
+        clReleaseMemObject(this->cl_mem_obj);
+    }
     this->cl_mem_obj = clCreateBuffer(*context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->row * this->col * sizeof(float), this->data, &errorcode);
     if(errorcode != CL_SUCCESS)
     {

@@ -1,0 +1,2 @@
+In case of returning with MatrixData or using the operator= for MatrixData be carefull of syncronizing the opencl memory object with the hosts memory before!
+

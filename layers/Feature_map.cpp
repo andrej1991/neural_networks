@@ -16,8 +16,8 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
         this->weights[i] = new MatrixData(row, col);
         this->biases[i] = new MatrixData(biascount, 1);
     }
-    this->initialize_weights();
-    this->initialize_biases();
+    this->initialize_weights(&(env->context));
+    this->initialize_biases(&(env->context));
     if(env != NULL)
     {
         this->mtxop = new MatrixOperations(&(env->context), env->deviceIds);
@@ -39,22 +39,24 @@ Feature_map::~Feature_map()
         delete this->mtxop;
 }
 
-void Feature_map::initialize_biases()
+void Feature_map::initialize_biases(cl_context *context)
 {
     std::ifstream random;
     random.open("/dev/urandom", std::ios::in);
     short int val;
     for(int i = 0; i < this->mapdepth; i++)
+    {
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
-            {
-                random.read((char*)(&val), 2);
-                (this->biases[i][0])[j][0] = val;
-                (this->biases[i][0])[j][0] /= 63000;
-            }
+        {
+            random.read((char*)(&val), 2);
+            (this->biases[i][0])[j][0] = val/65000;
+        }
+        this->biases[i][0].copy_to_opencl_buffer(context);
+    }
     random.close();
 }
 
-void Feature_map::initialize_weights()
+void Feature_map::initialize_weights(cl_context *context)
 {
     std::ifstream random;
     random.open("/dev/urandom", std::ios::in);
@@ -65,8 +67,7 @@ void Feature_map::initialize_weights()
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
                 {
                     random.read((char*)(&val), 2);
-                    (this->weights[i][0])[j][k] = val;
-                    (this->weights[i][0])[j][k] /= 63000;
+                    (this->weights[i][0])[j][k] = val/65000;
                 }
         }
     random.close();

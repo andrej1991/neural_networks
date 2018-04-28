@@ -6,13 +6,13 @@ LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_cou
             row(neuron_count), col(col), mapcount(mapcount) {}
 
 
-Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt):
+Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt, OpenclSetup *env):
             fmap_count(mapcount)
 {
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
         {
-            this->fmap[i] = new Feature_map(row, col, depth, biascnt, NULL);
+            this->fmap[i] = new Feature_map(row, col, depth, biascnt, env);
         }
 }
 

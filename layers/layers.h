@@ -30,8 +30,8 @@ class LayerDescriptor{
 };
 
 class Feature_map{
-    void initialize_biases();
-    void initialize_weights();
+    void initialize_biases(cl_context *context);
+    void initialize_weights(cl_context *context);
     int row, col, mapdepth;
     public:
     MatrixOperations *mtxop;
@@ -49,7 +49,7 @@ class Layers_features{
     int fmap_count;
     public:
     Feature_map **fmap;
-    Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+    Layers_features(int mapcount, int row, int col, int depth, int biascnt, OpenclSetup *env=NULL);
     ~Layers_features();
     void operator+=(Layers_features &layer);
     int get_fmap_count();
@@ -67,6 +67,7 @@ class Layer{
     virtual ~Layer();
     virtual inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount) = 0;
     virtual inline void layers_output(MatrixData **input) = 0;
+    virtual void sync_memory() = 0;
     virtual inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type) = 0;
     virtual inline MatrixData** derivate_layers_output(MatrixData **input) = 0;
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
@@ -98,10 +99,11 @@ class FullyConnected : public Layer {
     Neuron neuron;
     Feature_map **fmap;
     public:
-    FullyConnected(int row, int prev_row, int neuron_type);
+    FullyConnected(int row, int prev_row, int neuron_type, OpenclSetup *env);
     ~FullyConnected();
     virtual inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
     virtual inline void layers_output(MatrixData **input);
+    virtual void sync_memory();
     virtual inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
     virtual inline MatrixData** derivate_layers_output(MatrixData **input);
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
@@ -126,7 +128,7 @@ class FullyConnected : public Layer {
 
 /*class Softmax : public FullyConnected {
     public:
-    Softmax(int row, int col);
+    Softmax(int row, int col, OpenclSetup *env);
     ~Softmax();
     inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(MatrixData **input);
@@ -143,10 +145,11 @@ class Convolutional : public Layer {
     Neuron neuron;
     inline void fulldepth_conv(MatrixData &helper, MatrixData &convolved, MatrixData **input, int map_index);
     public:
-    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
+    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, OpenclSetup *env, int stride = 1);
     ~Convolutional();
     inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(MatrixData **input);
+    void sync_memory();
     inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
     inline MatrixData** derivate_layers_output(MatrixData **input);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
@@ -173,15 +176,17 @@ class Convolutional : public Layer {
 
 
 class InputLayer : public Layer {
+    OpenclSetup *env;
     public:
     short int layer_type, next_layers_type;
     int outputlen, row, col, input_channel_count;
     MatrixData **outputs;
     Padding padd;
-    InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
+    InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type, OpenclSetup *env);
     ~InputLayer();
     inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(MatrixData **input);
+    void sync_memory();
     inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
     inline MatrixData** derivate_layers_output(MatrixData **input);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
@@ -207,7 +212,7 @@ class InputLayer : public Layer {
 /*class Pooling : public Layer {
     public:
     //Neuron neuron;
-    Pooling(int row, int col, int neuron_type);
+    Pooling(int row, int col, int neuron_type, OpenclSetup *env);
     ~Pooling();
     inline void layers_output(double **input, int layer);
     inline Matrice get_output_error(double **input, double **required_output, int inputlen, int costfunction_type);

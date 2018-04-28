@@ -1,8 +1,8 @@
 #include "layers.h"
 
-InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type):
+InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type, OpenclSetup *env):
     next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), input_channel_count(input_channel_count),
-    row(row), col(col)
+    row(row), col(col), env(env)
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
@@ -25,6 +25,11 @@ InputLayer::~InputLayer()
 inline void InputLayer::layers_output(MatrixData **input)
 {
     this->set_input(input);
+}
+
+void InputLayer::sync_memory()
+{
+    ;
 }
 
 inline MatrixData InputLayer::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
@@ -55,13 +60,14 @@ inline void InputLayer::add_back_removed_neurons(MatrixData **w_bckup, MatrixDat
 void InputLayer::set_input(MatrixData **input)
 {
     ///TODO modify this function to work with FC layer and convolutional layer
-    if(this->next_layers_type == SIGMOID)
-        {
+    /*if(this->next_layers_type == FULLY_CONNECTED)
+        {*/
             for (int i = 0; i < this->input_channel_count; i++)
                 {
                     this->outputs[i][0] = input[i][0];
+                    this->outputs[i][0].copy_to_opencl_buffer(&(this->env->context));
                 }
-        }
+        /*}
     else if(this->next_layers_type == CONVOLUTIONAL)
         {
             for(int l = 0; l < this->input_channel_count; l++)
@@ -76,7 +82,7 @@ void InputLayer::set_input(MatrixData **input)
                                 }
                         }
                 }
-        }
+        }*/
 }
 
 inline MatrixData** InputLayer::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount)

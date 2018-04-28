@@ -10,11 +10,11 @@
 using namespace std;
 ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false
 Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout):
-                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num)
+                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num),
+                costfunction_type(costfunction_type), openclenv()
 {
     try
     {
-        this->costfunction_type = costfunction_type;
         this->total_layers_num = layers_num + 1;
         this->construct_layers(layerdesc);
     }
@@ -88,9 +88,9 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     this->layerdsc = new LayerDescriptor* [this->layers_num];
     Padding p;
     if(layerdesc[0][0].layer_type == FULLY_CONNECTED)
-        this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
+        this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED, &openclenv);
     else
-        this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL);
+        this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL, &openclenv);
     this->layers += 1;
     for(int i = 0; i < layers_num; i++)
     {
@@ -130,6 +130,7 @@ inline void Network::feedforward(MatrixData **input)
 double Network::cost(MatrixData &required_output, int req_outp_indx)
 {
     double helper = 0, result = 0;
+    this->layers[this->layers_num - 1][0].sync_memory();
     switch(this->costfunction_type)
         {
         case QUADRATIC_CF:
@@ -171,12 +172,10 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
-            Feature_map **test = this->layers[i + 1][0].get_feature_maps();
             delta = this->layers[i][0].backpropagate(this->layers[i - 1][0].get_output(),
                                            this->layers[i + 1][0].get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1][0].get_fmap_count());
         }
-    //print_mtx(delta[3][0]);
     if(this->layers[0][0].get_mapcount() > 1)
         {
             for(int i = 0; i < this->layers[0][0].get_mapcount(); i++)
@@ -212,12 +211,14 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                                                    this->layers[i][0].get_weights_row(),
                                                    this->layers[i][0].get_weights_col(),
                                                    this->layers[i][0].get_mapdepth(),
-                                                   biascnt);
+                                                   biascnt,
+                                                   &(this->openclenv));
                     deltanabla[i] = new Layers_features(this->layers[i][0].get_mapcount(),
                                                         this->layers[i][0].get_weights_row(),
                                                         this->layers[i][0].get_weights_col(),
                                                         this->layers[i][0].get_mapdepth(),
-                                                        biascnt);
+                                                        biascnt,
+                                                        &(this->openclenv));
                 }
         }
     catch(bad_alloc& ba)
@@ -230,7 +231,7 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             this->backpropagate(training_data[i], deltanabla);
             for(int j = 0; j < this->layers_num; j++)
                 {
-                    *nabla[j] += *deltanabla[j];
+                    nabla[j][0] += deltanabla[j][0];
                 }
         }
     double lr = learning_rate / training_data_len;
@@ -253,6 +254,7 @@ MatrixData Network::get_output(MatrixData **input)
 {
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input);
+    this->layers[this->layers_num - 1][0].sync_memory();
     MatrixData ret = *(this->layers[this->layers_num - 1][0].get_output()[0]);
     return ret;
 }

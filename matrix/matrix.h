@@ -18,7 +18,7 @@ class MatrixData{
     inline void equality(const MatrixData &mtx);
     float* operator[](int r);
     const float* operator[](int r) const;
-    void create_opencl_buffer(cl_context *context);
+    void copy_to_opencl_buffer(cl_context *context);
     int get_row();
     int get_col();
 };
