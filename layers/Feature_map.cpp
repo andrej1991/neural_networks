@@ -1,6 +1,7 @@
 #include "layers.h"
+#include "../opencl_setup.h"
 
-Feature_map::Feature_map(int row, int col, int depth, int biascnt):
+Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *env):
                 mapdepth(depth), row(row), col(col)
 {
     this->weights = new MatrixData* [depth];
@@ -11,12 +12,18 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt):
     else
         biascount = 1;
     for(int i = 0; i < depth; i++)
-        {
-            this->weights[i] = new MatrixData(row, col);
-            this->biases[i] = new MatrixData(biascount, 1);
-        }
+    {
+        this->weights[i] = new MatrixData(row, col);
+        this->biases[i] = new MatrixData(biascount, 1);
+    }
     this->initialize_weights();
     this->initialize_biases();
+    if(env != NULL)
+    {
+        this->mtxop = new MatrixOperations(&(env->context), env->deviceIds);
+    }
+    else
+        this->mtxop = NULL;
 }
 
 Feature_map::~Feature_map()
@@ -28,12 +35,14 @@ Feature_map::~Feature_map()
         }
     delete[] this->weights;
     delete[] this->biases;
+    if(this->mtxop != NULL)
+        delete this->mtxop;
 }
 
 void Feature_map::initialize_biases()
 {
-    ifstream random;
-    random.open("/dev/urandom", ios::in);
+    std::ifstream random;
+    random.open("/dev/urandom", std::ios::in);
     short int val;
     for(int i = 0; i < this->mapdepth; i++)
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
@@ -47,8 +56,8 @@ void Feature_map::initialize_biases()
 
 void Feature_map::initialize_weights()
 {
-    ifstream random;
-    random.open("/dev/urandom", ios::in);
+    std::ifstream random;
+    random.open("/dev/urandom", std::ios::in);
     short int val;
     for(int i = 0; i < this->mapdepth; i++)
     for(int j = 0; j < this->weights[i][0].get_row(); j++)

@@ -6,13 +6,13 @@ LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_cou
             row(neuron_count), col(col), mapcount(mapcount) {}
 
 
-Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt, OpenclSetup &env):
+Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt):
             fmap_count(mapcount)
 {
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
         {
-            this->fmap[i] = new Feature_map(row, col, depth, env, biascnt);
+            this->fmap[i] = new Feature_map(row, col, depth, biascnt, NULL);
         }
 }
 
@@ -28,14 +28,22 @@ Layers_features::~Layers_features()
 void Layers_features::operator+= (Layers_features &layer)
 {
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index][0].get_mapdepth();
+        cl_event events[2*mapdepth];
+        for(int i = 0; i < mapdepth; i++)
         {
-            int mapdepth = this->fmap[map_index][0].get_mapdepth();
-            for(int i = 0; i < mapdepth; i++)
-                {
-                    this->fmap[map_index][0].weights[i][0] += layer.fmap[map_index][0].weights[i][0];
-                    this->fmap[map_index][0].biases[i][0] += layer.fmap[map_index][0].biases[i][0];
-                }
+            layer.fmap[map_index][0].mtxop[0].add_matrices(this->fmap[map_index][0].weights[i][0],
+                                                           layer.fmap[map_index][0].weights[i][0],
+                                                           this->fmap[map_index][0].weights[i][0],
+                                                           0, NULL, &events[2*i]);
+            layer.fmap[map_index][0].mtxop[0].add_matrices(this->fmap[map_index][0].biases[i][0],
+                                                           layer.fmap[map_index][0].biases[i][0],
+                                                           this->fmap[map_index][0].biases[i][0],
+                                                           0, NULL, &events[2*i+1]);
         }
+         clWaitForEvents(2*mapdepth, events);
+    }
 }
 
 int Layers_features::get_fmap_count()

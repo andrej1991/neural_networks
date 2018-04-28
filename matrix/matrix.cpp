@@ -1,16 +1,19 @@
-#include "matrix.h"
 #include <CL/cl.h>
+#include <iostream>
+#include "matrix.h"
+#include "../opencl_setup.h"
+
+using namespace std;
 
 cl_program MatrixOperations::multiply_program;
 cl_program MatrixOperations::matrice_add_program;
 cl_program MatrixOperations::scalar_add_program;
 cl_program MatrixOperations::hadamart_program;
 cl_program MatrixOperations::transpose_program;
-cl_program MatrixOperations::rot180_program;
-cl_program MatrixOperations::zeropadd_program;
 cl_program MatrixOperations::convolution_program;
 cl_program MatrixOperations::fullconv_program;
 cl_program MatrixOperations::sameconv_program;
+int MatrixOperations::instance_count=0;
 
 
 MatrixData::MatrixData(int r,int c) : data(NULL)
@@ -32,7 +35,7 @@ MatrixData::MatrixData(int r,int c) : data(NULL)
     }
     catch(bad_alloc& ba)
     {
-        cerr << "MatrixData::constructor: bad_alloc caught: " << ba.what() << endl;
+        std::cerr << "MatrixData::constructor: bad_alloc caught: " << ba.what() << std::endl;
         throw;
     }
     this->cl_mem_inuse = false;
@@ -146,6 +149,9 @@ int MatrixData::get_col()
 
 MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
 {
+    if(MatrixOperations::instance_count == 0)
+        this->load_matrice_operations_programs(context, deviceIds);
+    instance_count++;
     cl_int errorcode;
     this->command_queue = clCreateCommandQueue(*context, deviceIds[0], 0, &errorcode);
     if(errorcode != CL_SUCCESS)
@@ -213,7 +219,6 @@ MatrixOperations::~MatrixOperations()
     clReleaseKernel(this->convolution_kernel);
     clReleaseKernel(this->fullconv_kernel);
     clReleaseKernel(this->sameconv_kernel);
-    clReleaseKernel(this->sigmoid_kernel);
     clReleaseProgram(this->matrice_add_program);
     clReleaseProgram(this->scalar_add_program);
     clReleaseProgram(this->transpose_program);
@@ -222,13 +227,24 @@ MatrixOperations::~MatrixOperations()
     clReleaseProgram(this->convolution_program);
     clReleaseProgram(this->fullconv_program);
     clReleaseProgram(this->sameconv_program);
-    clReleaseProgram(this->sigmoid_program);
     clFlush(this->command_queue);
     clFinish(this->command_queue);
     clReleaseCommandQueue(this->command_queue);
+    MatrixOperations::instance_count--;
+    if(MatrixOperations::instance_count == 0)
+    {
+        clReleaseProgram(MatrixOperations::multiply_program);
+        clReleaseProgram(MatrixOperations::matrice_add_program);
+        clReleaseProgram(MatrixOperations::scalar_add_program);
+        clReleaseProgram(MatrixOperations::hadamart_program);
+        clReleaseProgram(MatrixOperations::transpose_program);
+        clReleaseProgram(MatrixOperations::convolution_program);
+        clReleaseProgram(MatrixOperations::fullconv_program);
+        clReleaseProgram(MatrixOperations::sameconv_program);
+    }
 }
 
-void MatrixOperations::add_matrices(matrice_data &a, matrice_data &b, matrice_data &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::add_matrices(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     if((a.row != b.row) || (a.col != b.col) || (a.row != c.row) || (a.col != c.col))
     {
@@ -244,7 +260,7 @@ void MatrixOperations::add_matrices(matrice_data &a, matrice_data &b, matrice_da
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::scalar_add(matrice_data &a, float b, matrice_data &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::scalar_add(MatrixData &a, float b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     if((a.row != c.row) || (a.col != c.col))
     {
@@ -260,7 +276,7 @@ void MatrixOperations::scalar_add(matrice_data &a, float b, matrice_data &c,int 
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->scalar_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::transpose(matrice_data &a, matrice_data &b, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::transpose(MatrixData &a, MatrixData &b, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     if((a.row != b.col) || (a.col != b.row))
     {
@@ -275,7 +291,7 @@ void MatrixOperations::transpose(matrice_data &a, matrice_data &b, int num_event
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->transpose_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::multiply(matrice_data &a, matrice_data &b, matrice_data &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     if((a.row != c.row) || (a.col != b.row) || (b.col != c.col))
     {
@@ -295,7 +311,7 @@ void MatrixOperations::multiply(matrice_data &a, matrice_data &b, matrice_data &
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::hadamart(matrice_data &a, matrice_data &b, matrice_data &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     if((a.row != b.row) || (a.col != b.col) || (a.row != c.row) || (a.col != c.col))
     {
@@ -311,7 +327,7 @@ void MatrixOperations::hadamart(matrice_data &a, matrice_data &b, matrice_data &
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->hadamart_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::convolution(matrice_data &input, matrice_data &kernel, matrice_data &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::convolution(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     ///TODO some error checking
     cl_int errorcode;
@@ -326,7 +342,7 @@ void MatrixOperations::convolution(matrice_data &input, matrice_data &kernel, ma
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->convolution_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::fullconv(matrice_data &input, matrice_data &kernel, matrice_data &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::fullconv(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     ///TODO some error checking
     cl_int errorcode;
@@ -342,7 +358,7 @@ void MatrixOperations::fullconv(matrice_data &input, matrice_data &kernel, matri
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->fullconv_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::sameconv(matrice_data &input, matrice_data &kernel, matrice_data &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::sameconv(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     ///TODO some error checking
     cl_int errorcode;
@@ -388,4 +404,17 @@ void print_mtx(MatrixData &mtx)
         cout << "]\n";
     }
     cout << "]\n";
+}
+
+
+void MatrixOperations::load_matrice_operations_programs(cl_context *context, cl_device_id *deviceIds)
+{
+    MatrixOperations::matrice_add_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::scalar_add_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::transpose_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::multiply_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::hadamart_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::convolution_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::fullconv_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::sameconv_program = load_program("opencl_kernels.cl",context, deviceIds);
 }

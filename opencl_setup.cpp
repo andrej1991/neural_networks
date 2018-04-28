@@ -1,4 +1,8 @@
 #include "opencl_setup.h"
+#include <iostream>
+#include <fstream>
+
+using namespace std;
 
 OpenclSetup::OpenclSetup()
 {
@@ -95,4 +99,22 @@ void* OpenclSetup::get_opencl_device_info(cl_device_id device, cl_device_info pa
         throw exception();
     }
     return info;
+}
+
+cl_program load_program(char* kernel_source, cl_context *context, cl_device_id *deviceIds)
+{
+    cl_int errorcode;
+    ifstream srcFile (kernel_source, ifstream::in);
+    string srcProg(istreambuf_iterator<char>(srcFile),(istreambuf_iterator<char>()));
+    const char * src = srcProg.c_str();
+    size_t length = srcProg.length();
+
+    cl_program program = clCreateProgramWithSource(*context, 1, &src, &length, &errorcode);
+    errorcode |= clBuildProgram(program, 1, deviceIds, NULL, NULL, NULL);
+    if(errorcode != CL_SUCCESS)
+        {
+            cerr << "unable to create OpenCL program\n";
+            throw exception();
+        }
+    return program;
 }

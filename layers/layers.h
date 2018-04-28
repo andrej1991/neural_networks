@@ -34,8 +34,9 @@ class Feature_map{
     void initialize_weights();
     int row, col, mapdepth;
     public:
+    MatrixOperations *mtxop;
     MatrixData **weights, **biases;
-    Feature_map(int row, int col, int mapdepth, OpenclSetup &env, int biascnt = -1);
+    Feature_map(int row, int col, int mapdepth, int biascnt = -1, OpenclSetup *env=NULL);
     int get_col();
     int get_row();
     int get_mapdepth();
@@ -48,7 +49,7 @@ class Layers_features{
     int fmap_count;
     public:
     Feature_map **fmap;
-    Layers_features(int mapcount, int row, int col, int depth, int biascnt, OpenclSetup &env);
+    Layers_features(int mapcount, int row, int col, int depth, int biascnt);
     ~Layers_features();
     void operator+=(Layers_features &layer);
     int get_fmap_count();

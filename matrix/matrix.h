@@ -9,6 +9,7 @@ class MatrixData{
     bool cl_mem_inuse;
     float *data;
     cl_mem cl_mem_obj;
+    cl_context context_of_cl_mem_obj;
     MatrixData(int row=1, int col=1);
     ~MatrixData();
     MatrixData(const MatrixData& mtx);
@@ -17,21 +18,20 @@ class MatrixData{
     inline void equality(const MatrixData &mtx);
     float* operator[](int r);
     const float* operator[](int r) const;
-    MatrixData operator* (const MatrixData& other);
-    void create_opencl_buffer(cl_context context);
-    MatrixData zero_padd(int top, int right, int bottom, int left);
+    void create_opencl_buffer(cl_context *context);
+    int get_row();
+    int get_col();
 };
 
 
 class MatrixOperations{
+    static int instance_count;
     public:
     static cl_program multiply_program;
     static cl_program matrice_add_program;
     static cl_program scalar_add_program;
     static cl_program hadamart_program;
     static cl_program transpose_program;
-    static cl_program rot180_program;
-    static cl_program zeropadd_program;
     static cl_program convolution_program;
     static cl_program fullconv_program;
     static cl_program sameconv_program;
@@ -52,6 +52,7 @@ class MatrixOperations{
 
     MatrixOperations(cl_context *context, cl_device_id *deviceIds);
     ~MatrixOperations();
+    void load_matrice_operations_programs(cl_context *context, cl_device_id *deviceIds);
     void add_matrices(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void scalar_add(MatrixData &a, float b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);

@@ -55,8 +55,8 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="main.cpp" />
-		<Unit filename="matrice.cpp" />
-		<Unit filename="matrice.h">
+		<Unit filename="matrix/matrix.cpp" />
+		<Unit filename="matrix/matrix.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="network.cpp">
@@ -67,6 +67,10 @@
 		</Unit>
 		<Unit filename="neuron.cpp" />
 		<Unit filename="neuron.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="opencl_setup.cpp" />
+		<Unit filename="opencl_setup.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="random.cpp" />

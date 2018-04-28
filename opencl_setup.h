@@ -22,5 +22,6 @@ class OpenclSetup{
     void* get_opencl_device_info(cl_device_id device, cl_device_info param_name, size_t &retsize);
 };
 
+cl_program load_program(char* kernel_source, cl_context *context, cl_device_id *deviceIds);
 
 #endif // OPENCL_SETUP_H_INCLUDED

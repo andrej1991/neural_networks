@@ -2,7 +2,7 @@
 #include <fstream>
 #include "MNIST_data.h"
 #include "network.h"
-#include "matrice.h"
+#include "matrix/matrix.h"
 #include "random.h"
 #include <iosfwd>
 

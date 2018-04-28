@@ -2,7 +2,7 @@
 #define NETWORK_H_INCLUDED
 #include "neuron.h"
 #include "MNIST_data.h"
-#include "matrice.h"
+#include "matrix/matrix.h"
 #include "layers/layers.h"
 #include "opencl_setup.h"
 
@@ -24,7 +24,7 @@ class Network{
     inline void feedforward(MatrixData **input);
     double cost(MatrixData &required_output, int req_outp_indx);
     public:
-    OpenclSetup openclenv();
+    OpenclSetup openclenv;
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);
