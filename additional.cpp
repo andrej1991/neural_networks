@@ -1,6 +1,6 @@
 #include "additional.h"
 
-int getmax(double *d)
+int getmax(float *d)
 {
     double Max = d[0];
     int index = 0;

@@ -1,6 +1,6 @@
 #include "layers.h"
 
-FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
+/*FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     neuron(neuron_type)
 {
     this->output = new Matrice*[1];
@@ -204,4 +204,4 @@ void FullyConnected::store(std::ofstream &params)
 void FullyConnected::load(std::ifstream &params)
 {
     this->fmap[0][0].load(params);
-}
+}*/

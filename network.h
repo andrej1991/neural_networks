@@ -4,6 +4,7 @@
 #include "MNIST_data.h"
 #include "matrice.h"
 #include "layers/layers.h"
+#include "opencl_setup.h"
 
 struct NetworkVarHelper{
     int layers_num, input_row, input_col, input_channel_count, costfunction_type;
@@ -18,11 +19,12 @@ class Network{
     void construct_layers(LayerDescriptor **desc);
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
     void update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    inline void feedforward(Matrice **input);
-    double cost(Matrice &required_output, int req_outp_indx);
+    inline void remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes);
+    inline void feedforward(MatrixData **input);
+    double cost(MatrixData &required_output, int req_outp_indx);
     public:
+    OpenclSetup openclenv();
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);
@@ -31,7 +33,7 @@ class Network{
     Network(char *data);
     ~Network();
     void test(MNIST_data **d, MNIST_data **v);
-    Matrice get_output(Matrice **input);
+    MatrixData get_output(MatrixData **input);
     void check_accuracy(MNIST_data **test_data);
 };
 

@@ -4,7 +4,7 @@
 
 Neuron::Neuron(int neuron_type) : neuron_type(neuron_type) {}
 
-inline Matrice Neuron::sigmoid(Matrice &inputs)
+/*inline Matrice Neuron::sigmoid(Matrice &inputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
@@ -134,7 +134,7 @@ Matrice Neuron::neuron_derivate(Matrice &inputs)
         std::cerr << "Unknown neuron type;";
         throw std::exception();
     }
-}
+}*/
 
 
 

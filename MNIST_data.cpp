@@ -8,10 +8,10 @@ using namespace std;
 MNIST_data::MNIST_data(int input_vector_row, int input_vector_col, int output_vector_size, int feature_depth):
     input_vector_row(input_vector_row), input_vector_col(input_vector_col), output_vector_size(output_vector_size), feature_depth(feature_depth), required_output(output_vector_size, 1)
 {
-    this->input = new Matrice* [feature_depth];
+    this->input = new MatrixData* [feature_depth];
     for(int i = 0; i < feature_depth; i++)
         {
-            input[i] = new Matrice(input_vector_row, input_vector_col);
+            input[i] = new MatrixData(input_vector_row, input_vector_col);
         }
 }
 
@@ -35,14 +35,14 @@ void MNIST_data::load_data(std::ifstream &input, std::ifstream &required_output)
                 {
                     for(int j = 0; j < this->input_vector_col; j++)
                         {
-                            (this->input[k][0])[i][j] = inp[i * this->input_vector_col + j];
+                            (this->input[k][0])[i][j] = (float)inp[i * this->input_vector_col + j];
                         }
                 }
         }
     required_output.read((char*)req, this->output_vector_size  * sizeof(double));
     for(int i = 0; i < this->output_vector_size; i++)
         {
-            this->required_output[i][0] = req[i];
+            this->required_output[i][0] = (float)req[i];
         }
     delete[] inp;
     delete[] req;

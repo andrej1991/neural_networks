@@ -1,17 +1,18 @@
 #include "layers.h"
+#include "../opencl_setup.h"
 
 LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col, int mapcount, int stride):
             layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), stride(stride),
             row(neuron_count), col(col), mapcount(mapcount) {}
 
 
-Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt):
+Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt, OpenclSetup &env):
             fmap_count(mapcount)
 {
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
         {
-            this->fmap[i] = new Feature_map(row, col, depth, biascnt);
+            this->fmap[i] = new Feature_map(row, col, depth, env, biascnt);
         }
 }
 

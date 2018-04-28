@@ -99,10 +99,10 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         switch(layerdesc[i][0].layer_type)
         {
             case FULLY_CONNECTED:
-                this->layers[i] = new FullyConnected(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(),
-                                                     layerdesc[i][0].neuron_type);
+                //this->layers[i] = new FullyConnected(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(),
+                //                                     layerdesc[i][0].neuron_type);
                 break;
-            case SOFTMAX:
+            /*case SOFTMAX:
                 this->layers[i] = new Softmax(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len());
                 break;
             case CONVOLUTIONAL:
@@ -110,7 +110,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 this->layers[i] = new Convolutional(this->layers[i - 1][0].get_output_row(), this->layers[i - 1][0].get_output_col(),
                                                     this->layers[i - 1][0].get_mapcount(), layerdesc[i][0].row, layerdesc[i][0].col,
                                                     layerdesc[i][0].mapcount, SIGMOID, layerdesc[i + 1][0].layer_type, p, 1);
-                break;
+                break;*/
             default:
                 cerr << "Unknown layer type: " << layerdesc[i][0].layer_type << "\n";
                 throw std::exception();
@@ -118,7 +118,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     }
 }
 
-inline void Network::feedforward(Matrice **input)
+inline void Network::feedforward(MatrixData **input)
 {
     this->layers[-1][0].set_input(input);
     for(int i = 0; i < this->layers_num; i++)
@@ -127,7 +127,7 @@ inline void Network::feedforward(Matrice **input)
         }
 }
 
-double Network::cost(Matrice &required_output, int req_outp_indx)
+double Network::cost(MatrixData &required_output, int req_outp_indx)
 {
     double helper = 0, result = 0;
     switch(this->costfunction_type)
@@ -162,12 +162,12 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
 {
     ///currently the final layer has to be a clasification layer
     this->feedforward(trainig_data[0].input);
-    Matrice **delta = new Matrice* [1];
-    delta[0] = new Matrice;
+    MatrixData **delta = new MatrixData* [1];
+    delta[0] = new MatrixData;
     delta[0][0] = this->layers[layers_num - 1][0].get_output_error(this->layers[layers_num - 2][0].get_output(),
                                                     trainig_data[0].required_output, this->costfunction_type);
     nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
-    nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2][0].get_output()[0][0].transpose();
+    ///nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2][0].get_output()[0][0].transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
@@ -193,7 +193,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
 {
     Layers_features **nabla, **deltanabla;
-    //Matrice **b_bck, **w_bck;
+    //MatrixData **b_bck, **w_bck;
     int *layer_bck, **ind;
     //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
     try
@@ -249,20 +249,20 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     delete[] deltanabla;
 }
 
-Matrice Network::get_output(Matrice **input)
+MatrixData Network::get_output(MatrixData **input)
 {
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input);
-    Matrice ret = *(this->layers[this->layers_num - 1][0].get_output()[0]);
+    MatrixData ret = *(this->layers[this->layers_num - 1][0].get_output()[0]);
     return ret;
 }
 
-inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+inline void Network::remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes)
 {
     ;
 }
 
-inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+inline void Network::add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
 }
@@ -315,12 +315,12 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     int break_counter = 0;
     int learning_accuracy, learnig_cost_counter = 0;
     double learning_cost, previoius_learning_cost = 0;
-    Matrice helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
+    MatrixData helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
     for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_row(); i++)
         {
             helper[i][0] == 0;
         }
-    Matrice output;
+    MatrixData output;
     for(int i = 0; i < epochs; i++)
         {
             for(int j = 0; j < minibatch_count; j++)
@@ -384,8 +384,8 @@ void Network::check_accuracy(MNIST_data **test_data)
     int break_counter = 0;
     int learning_accuracy, learnig_cost_counter = 0;
     double learning_cost, previoius_learning_cost = 0;
-    Matrice helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
-    Matrice output;
+    MatrixData helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
+    MatrixData output;
     int test_data_len = 10000;
     bool monitor_learning_cost = true;
     for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_row(); i++)

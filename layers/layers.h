@@ -5,7 +5,8 @@
 
 #include "../neuron.h"
 #include "../MNIST_data.h"
-#include "../matrice.h"
+#include "../matrix/matrix.h"
+#include "../opencl_setup.h"
 
 #define QUADRATIC_CF 0
 #define CROSS_ENTROPY_CF 1
@@ -33,8 +34,8 @@ class Feature_map{
     void initialize_weights();
     int row, col, mapdepth;
     public:
-    Matrice **weights, **biases;
-    Feature_map(int row, int col, int mapdepth, int biascnt = -1);
+    MatrixData **weights, **biases;
+    Feature_map(int row, int col, int mapdepth, OpenclSetup &env, int biascnt = -1);
     int get_col();
     int get_row();
     int get_mapdepth();
@@ -47,7 +48,7 @@ class Layers_features{
     int fmap_count;
     public:
     Feature_map **fmap;
-    Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+    Layers_features(int mapcount, int row, int col, int depth, int biascnt, OpenclSetup &env);
     ~Layers_features();
     void operator+=(Layers_features &layer);
     int get_fmap_count();
@@ -63,22 +64,22 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount) = 0;
-    virtual inline void layers_output(Matrice **input) = 0;
-    virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type) = 0;
-    virtual inline Matrice** derivate_layers_output(Matrice **input) = 0;
+    virtual inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount) = 0;
+    virtual inline void layers_output(MatrixData **input) = 0;
+    virtual inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type) = 0;
+    virtual inline MatrixData** derivate_layers_output(MatrixData **input) = 0;
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
-    virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes) = 0;
-    virtual inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes) = 0;
-    virtual void set_input(Matrice **input) = 0;
-    virtual inline Matrice** get_output() = 0;
+    virtual inline void remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes) = 0;
+    virtual inline void add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes) = 0;
+    virtual void set_input(MatrixData **input) = 0;
+    virtual inline MatrixData** get_output() = 0;
     virtual inline Feature_map** get_feature_maps() = 0;
     virtual inline short get_layer_type() = 0;
     virtual inline int get_output_len() = 0;
     virtual inline int get_output_row() = 0;
     virtual inline int get_output_col() = 0;
-    virtual void set_weights(Matrice *w) = 0;
-    virtual void set_biases(Matrice *b) = 0;
+    virtual void set_weights(MatrixData *w) = 0;
+    virtual void set_biases(MatrixData *b) = 0;
     virtual int get_mapcount() = 0;
     virtual int get_mapdepth() = 0;
     virtual int get_weights_row() = 0;
@@ -90,7 +91,7 @@ class Layer{
 
 class FullyConnected : public Layer {
     friend class Softmax;
-    Matrice **output;
+    MatrixData **output;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
@@ -98,22 +99,22 @@ class FullyConnected : public Layer {
     public:
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
-    virtual inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
-    virtual inline void layers_output(Matrice **input);
-    virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
-    virtual inline Matrice** derivate_layers_output(Matrice **input);
+    virtual inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
+    virtual inline void layers_output(MatrixData **input);
+    virtual inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
+    virtual inline MatrixData** derivate_layers_output(MatrixData **input);
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    virtual inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    virtual void set_input(Matrice **input);
-    virtual inline Matrice** get_output();
+    virtual inline void remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes);
+    virtual inline void add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes);
+    virtual void set_input(MatrixData **input);
+    virtual inline MatrixData** get_output();
     virtual inline Feature_map** get_feature_maps();
     virtual inline short get_layer_type();
     virtual inline int get_output_len();
     virtual inline int get_output_row();
     virtual inline int get_output_col();
-    virtual void set_weights(Matrice *w);
-    virtual void set_biases(Matrice *b);
+    virtual void set_weights(MatrixData *w);
+    virtual void set_biases(MatrixData *b);
     virtual int get_mapcount();
     virtual int get_mapdepth();
     virtual int get_weights_row();
@@ -122,78 +123,78 @@ class FullyConnected : public Layer {
     virtual void load(std::ifstream &params);
 };
 
-class Softmax : public FullyConnected {
+/*class Softmax : public FullyConnected {
     public:
     Softmax(int row, int col);
     ~Softmax();
-    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
-    inline void layers_output(Matrice **input);
-    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
-    inline Matrice** derivate_layers_output(Matrice **input);
+    inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
+    inline void layers_output(MatrixData **input);
+    inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
+    inline MatrixData** derivate_layers_output(MatrixData **input);
 };
 
 class Convolutional : public Layer {
-    Matrice **outputs, **flattened_output;
+    MatrixData **outputs, **flattened_output;
     Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
-    inline void fulldepth_conv(Matrice &helper, Matrice &convolved, Matrice **input, int map_index);
+    inline void fulldepth_conv(MatrixData &helper, MatrixData &convolved, MatrixData **input, int map_index);
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
     ~Convolutional();
-    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
-    inline void layers_output(Matrice **input);
-    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
-    inline Matrice** derivate_layers_output(Matrice **input);
+    inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
+    inline void layers_output(MatrixData **input);
+    inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
+    inline MatrixData** derivate_layers_output(MatrixData **input);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(Matrice **input);
-    inline Matrice** get_output();
+    inline void remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes);
+    void set_input(MatrixData **input);
+    inline MatrixData** get_output();
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();
     inline int get_output_row();
     inline int get_output_col();
-    void set_weights(Matrice *w);
-    void set_biases(Matrice *b);
+    void set_weights(MatrixData *w);
+    void set_biases(MatrixData *b);
     void flatten();
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
-    void get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap);
+    void get_2D_weights(int neuron_id, int fmap_id, MatrixData &kernel, Feature_map **next_layers_fmap);
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-};
+};*/
 
 
 class InputLayer : public Layer {
     public:
     short int layer_type, next_layers_type;
     int outputlen, row, col, input_channel_count;
-    Matrice **outputs;
+    MatrixData **outputs;
     Padding padd;
     InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
-    inline void layers_output(Matrice **input);
-    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
-    inline Matrice** derivate_layers_output(Matrice **input);
+    inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
+    inline void layers_output(MatrixData **input);
+    inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
+    inline MatrixData** derivate_layers_output(MatrixData **input);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(Matrice **input);
-    inline Matrice** get_output();
+    inline void remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes);
+    void set_input(MatrixData **input);
+    inline MatrixData** get_output();
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();
     inline int get_output_row();
     inline int get_output_col();
-    void set_weights(Matrice *w);
-    void set_biases(Matrice *b);
+    void set_weights(MatrixData *w);
+    void set_biases(MatrixData *b);
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();

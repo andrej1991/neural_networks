@@ -6,10 +6,10 @@ InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_typ
 {
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
-    this->outputs = new Matrice* [input_channel_count];
+    this->outputs = new MatrixData* [input_channel_count];
     for(int i = 0; i < input_channel_count; i++)
         {
-            outputs[i] = new Matrice(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
+            outputs[i] = new MatrixData(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
         }
 }
 
@@ -22,17 +22,17 @@ InputLayer::~InputLayer()
     delete[] this->outputs;
 }
 
-inline void InputLayer::layers_output(Matrice **input)
+inline void InputLayer::layers_output(MatrixData **input)
 {
     this->set_input(input);
 }
 
-inline Matrice InputLayer::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline MatrixData InputLayer::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
 {
     ;
 }
 
-inline Matrice** InputLayer::derivate_layers_output(Matrice **input)
+inline MatrixData** InputLayer::derivate_layers_output(MatrixData **input)
 {
     ;
 }
@@ -42,17 +42,17 @@ void InputLayer::update_weights_and_biasses(double learning_rate, double regular
     ;
 }
 
-inline void InputLayer::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+inline void InputLayer::remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes)
 {
     ;
 }
 
-inline void InputLayer::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+inline void InputLayer::add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
 }
 
-void InputLayer::set_input(Matrice **input)
+void InputLayer::set_input(MatrixData **input)
 {
     ///TODO modify this function to work with FC layer and convolutional layer
     if(this->next_layers_type == SIGMOID)
@@ -79,12 +79,12 @@ void InputLayer::set_input(Matrice **input)
         }
 }
 
-inline Matrice** InputLayer::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount)
+inline MatrixData** InputLayer::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount)
 {
     ;
 }
 
-inline Matrice** InputLayer::get_output()
+inline MatrixData** InputLayer::get_output()
 {
     return this->outputs;
 }
@@ -114,12 +114,12 @@ inline int InputLayer::get_output_col()
     return this->col;
 }
 
-void InputLayer::set_weights(Matrice *w)
+void InputLayer::set_weights(MatrixData *w)
 {
     ;
 }
 
-void InputLayer::set_biases(Matrice *b)
+void InputLayer::set_biases(MatrixData *b)
 {
     ;
 }

@@ -2,7 +2,7 @@
 #include <math.h>
 
 
-Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
+/*Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
 {
     this->layer_type = SOFTMAX;
 }
@@ -13,7 +13,7 @@ Softmax::~Softmax()
     delete[] this->output;
     delete this->fmap[0];
     delete[] this->fmap;*/
-}
+/*}
 
 inline Matrice** Softmax::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount)
 {
