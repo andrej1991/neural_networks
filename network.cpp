@@ -24,7 +24,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int
         }
 }
 
-Network::Network(char *data)
+Network::Network(char *data): openclenv()
 {
     ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
     ///int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1
@@ -99,8 +99,8 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         switch(layerdesc[i][0].layer_type)
         {
             case FULLY_CONNECTED:
-                //this->layers[i] = new FullyConnected(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(),
-                //                                     layerdesc[i][0].neuron_type);
+                this->layers[i] = new FullyConnected(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(),
+                                                     layerdesc[i][0].neuron_type, &(this->openclenv));
                 break;
             /*case SOFTMAX:
                 this->layers[i] = new Softmax(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len());
@@ -169,6 +169,12 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
                                                     trainig_data[0].required_output, this->costfunction_type);
     nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
     ///nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2][0].get_output()[0][0].transpose();
+    MatrixData **helper = this->layers[this->layers_num - 2][0].get_output();
+    MatrixData transposed(helper[0][0].get_col(), helper[0][0].get_row());
+    cl_event event[2];
+    nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].transpose(helper[0][0], transposed, 0, NULL, &event[0]);
+    nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].multiply(delta[0][0], transposed, nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0], 1, &event[0], &event[1]);
+    clWaitForEvents(1, &event[1]);
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
@@ -425,7 +431,7 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-    this->stochastic_gradient_descent(d, 2, 10, 0.03, true, 10, v, 50);
-    this->store("/home/andrej/myfiles/Asztal/net.bin");
-    //this->get_output(v[0]->input);
+    //this->stochastic_gradient_descent(d, 2, 10, 0.03, true, 10, v, 50);
+    //this->store("/home/andrej/myfiles/Asztal/net.bin");
+    this->get_output(v[0]->input);
 }

@@ -1,6 +1,6 @@
 #ifndef NETWORK_H_INCLUDED
 #define NETWORK_H_INCLUDED
-#include "neuron.h"
+#include "neuron/neuron.h"
 #include "MNIST_data.h"
 #include "matrix/matrix.h"
 #include "layers/layers.h"

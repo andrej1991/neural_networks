@@ -11,6 +11,9 @@ using namespace std;
 #define InputRow 784
 #define InputCol 1
 
+#include "opencl_setup.h"
+#include "neuron/neuron.h"
+
 
 int main()
 {
@@ -34,19 +37,14 @@ int main()
             //cout << validation[i]->required_output[0][0];
         }
     cout << "the training data and the validation data is loaded\n";
-    /*LayerDescriptor *layers[4];
-    layers[0] = new LayerDescriptor(CONVOLUTIONAL, RELU, 5, 5, 7);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, RELU, 5, 5, 7);
-    layers[2] = new LayerDescriptor(FULLY_CONNECTED, RELU, 30);
-    layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    //Network n(2, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
-    Network n(4, layers, InputRow, InputCol, 1, QUADRATIC_CF);
-    //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    //layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    //Network n(2, layers, InputRow, InputCol, 1, QUADRATIC_CF);
-    n.test(m, validation);
+    OpenclSetup *env = new OpenclSetup();
+    Neuron neuron(env, SIGMOID);
+    /*LayerDescriptor *layers[1];
+    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    Network n(1, layers, InputRow, InputCol, 1, QUADRATIC_CF);
+    n.test(m, validation);*/
     input.close();
-    required_output.close();*/
+    required_output.close();
     cout << "Hello world\n";
     return 0;
 }

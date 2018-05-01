@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "../neuron.h"
+#include "../neuron/neuron.h"
 #include "../MNIST_data.h"
 #include "../matrix/matrix.h"
 #include "../opencl_setup.h"
@@ -93,6 +93,7 @@ class Layer{
 
 class FullyConnected : public Layer {
     friend class Softmax;
+    OpenclSetup *env;
     MatrixData **output;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;

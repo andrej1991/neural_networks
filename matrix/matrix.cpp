@@ -204,14 +204,6 @@ MatrixOperations::~MatrixOperations()
     clReleaseKernel(this->convolution_kernel);
     clReleaseKernel(this->fullconv_kernel);
     clReleaseKernel(this->sameconv_kernel);
-    clReleaseProgram(this->matrice_add_program);
-    clReleaseProgram(this->scalar_add_program);
-    clReleaseProgram(this->transpose_program);
-    clReleaseProgram(this->multiply_program);
-    clReleaseProgram(this->hadamart_program);
-    clReleaseProgram(this->convolution_program);
-    clReleaseProgram(this->fullconv_program);
-    clReleaseProgram(this->sameconv_program);
     clFlush(this->command_queue);
     clFinish(this->command_queue);
     clReleaseCommandQueue(this->command_queue);
@@ -245,7 +237,7 @@ void MatrixOperations::add_matrices(MatrixData &a, MatrixData &b, MatrixData &c,
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
-void MatrixOperations::scalar_add(MatrixData &a, float b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::scalar_add(MatrixData &a, float b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     if((a.row != c.row) || (a.col != c.col))
     {

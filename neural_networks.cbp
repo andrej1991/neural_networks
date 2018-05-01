@@ -65,8 +65,8 @@
 		<Unit filename="network.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="neuron.cpp" />
-		<Unit filename="neuron.h">
+		<Unit filename="neuron/neuron.cpp" />
+		<Unit filename="neuron/neuron.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="opencl_setup.cpp" />

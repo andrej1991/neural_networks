@@ -62,14 +62,17 @@ void Feature_map::initialize_weights(cl_context *context)
     random.open("/dev/urandom", std::ios::in);
     short int val;
     for(int i = 0; i < this->mapdepth; i++)
-    for(int j = 0; j < this->weights[i][0].get_row(); j++)
+    {
+        for(int j = 0; j < this->weights[i][0].get_row(); j++)
         {
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
-                {
-                    random.read((char*)(&val), 2);
-                    (this->weights[i][0])[j][k] = val/65000;
-                }
+            {
+                random.read((char*)(&val), 2);
+                (this->weights[i][0])[j][k] = val/65000;
+            }
         }
+        this->weights[i][0].copy_to_opencl_buffer(context);
+    }
     random.close();
 }
 

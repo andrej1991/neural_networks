@@ -1,14 +1,21 @@
 #include "layers.h"
 
-/*FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
-    neuron(neuron_type)
+using namespace std;
+
+FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSetup *env):
+    neuron(env, neuron_type), env(env)
 {
-    this->output = new Matrice*[1];
-    this->output[0] = new Matrice(row, 1);
+    this->output = new MatrixData*[1];
+    this->output[0] = new MatrixData(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
-    this->fmap[0] = new Feature_map(row, prev_row, 1, row);
+    if(env == NULL)
+    {
+        cerr << "Invalid value for OpenclSetup in FullyConnected layers constructor!\n";
+        throw exception();
+    }
+    this->fmap[0] = new Feature_map(row, prev_row, 1, row, env);
 }
 
 FullyConnected::~FullyConnected()
@@ -19,18 +26,29 @@ FullyConnected::~FullyConnected()
     delete[] this->fmap;
 }
 
-inline void FullyConnected::layers_output(Matrice **input)
+inline void FullyConnected::layers_output(MatrixData **input)
 {
-    Matrice inputparam(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
-    inputparam += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
+    MatrixData inputparam(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
+    ///inputparam += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
+    cl_event event[2];
+    this->fmap[0][0].mtxop[0].multiply(this->fmap[0][0].weights[0][0], input[0][0], inputparam, 0, NULL, &event[0]);
+    this->fmap[0][0].mtxop[0].add_matrices(inputparam, this->fmap[0][0].biases[0][0], inputparam, 1, &event[0], &event[1]);
+    clWaitForEvents(1, &event[1]);
     this->output[0][0] = this->neuron.neuron(inputparam);
+    this->output[0][0].copy_to_opencl_buffer(&(env->context));
 }
 
-inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+void FullyConnected::sync_memory()
 {
-    Matrice mtx(this->outputlen, 1);
-    Matrice delta(this->outputlen, 1);
-    Matrice **output_derivate;
+    ;
+}
+
+inline MatrixData FullyConnected::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
+{
+    ///TODO create extra cernels for costfunction!!!
+    MatrixData mtx(this->outputlen, 1);
+    MatrixData delta(this->outputlen, 1);
+    MatrixData **output_derivate;
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
@@ -39,7 +57,8 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
                     mtx[i][0] = (this->output[0][0])[i][0] - required_output[i][0];
                 }
             output_derivate = this->derivate_layers_output(input);
-            delta = hadamart_product(mtx, **output_derivate);
+            ///delta = hadamart_product(mtx, **output_derivate);
+            this->fmap[0][0].mtxop[0].hadamart(mtx, output_derivate[0][0], delta);
             delete output_derivate[0];
             delete[] output_derivate;
             return delta;
@@ -69,13 +88,17 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
         };
 }
 
-inline Matrice** FullyConnected::derivate_layers_output(Matrice **input)
+inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
 {
-    Matrice **mtx;
-    mtx = new Matrice* [1];
-    mtx[0] = new Matrice;
-    Matrice inputparam;
-    inputparam = (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
+    MatrixData **mtx;
+    mtx = new MatrixData* [1];
+    mtx[0] = new MatrixData;
+    MatrixData inputparam(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
+    cl_event event[2];
+    this->fmap[0][0].mtxop[0].multiply(this->fmap[0][0].weights[0][0], input[0][0], inputparam, 0, NULL, &event[0]);
+    this->fmap[0][0].mtxop[0].add_matrices(inputparam, this->fmap[0][0].biases[0][0], inputparam, 1, &event[0], &event[1]);
+    clWaitForEvents(1, &event[1]);
+    ///inputparam = (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     mtx[0][0] = this->neuron.neuron_derivate(inputparam);
     return mtx;
 }
@@ -98,25 +121,25 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
         }
 }
 
-inline void FullyConnected::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+inline void FullyConnected::remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes)
 {
     ;
 }
 
-inline void FullyConnected::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+inline void FullyConnected::add_back_removed_neurons(MatrixData **w_bckup, MatrixData **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
 }
 
-void FullyConnected::set_input(Matrice **input)
+void FullyConnected::set_input(MatrixData **input)
 {
     cerr << "This function can be called only for the InputLayer!\n";
     throw exception();
 }
 
 
-inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
-                                          Matrice **delta, int next_layers_fmapcount)
+inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
+                                          MatrixData **delta, int next_layers_fmapcount)
 {
     ///TODO think through this function from mathematical perspective!!!
     if(next_layers_fmapcount != 1)
@@ -124,19 +147,26 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
             cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
             throw exception();
         }
-    Matrice multiplied, **output_derivate;
+    MatrixData multiplied(next_layers_fmaps[0][0].weights[0][0].get_col(), delta[0][0].get_col()), **output_derivate;
+    MatrixData transposed(next_layers_fmaps[0][0].weights[0][0].get_col(), next_layers_fmaps[0][0].weights[0][0].get_row());
+    cl_event event[4];
     output_derivate = this->derivate_layers_output(input);
-    multiplied = (next_layers_fmaps[0][0].weights[0][0].transpose()) * delta[0][0];
-    ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
-    delta[0][0] = hadamart_product(multiplied, **output_derivate);
+    ///multiplied = (next_layers_fmaps[0][0].weights[0][0].transpose()) * delta[0][0];
+    this->fmap[0][0].mtxop[0].transpose(next_layers_fmaps[0][0].weights[0][0], transposed, 0, NULL, &event[0]);
+    this->fmap[0][0].mtxop[0].multiply(transposed, delta[0][0], multiplied, 1, &event[0], &event[1]);
+    ///delta[0][0] = hadamart_product(multiplied, **output_derivate);
+    this->fmap[0][0].mtxop[0].hadamart(multiplied, output_derivate[0][0], delta[0][0], 1, &event[1], &event[2]);
     nabla[0][0].biases[0][0] = delta[0][0];
-    nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
+    ///nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
+    MatrixData transposed2(input[0][0].get_col(), input[0][0].get_row());
+    this->fmap[0][0].mtxop[0].transpose(input[0][0], transposed2, 0, NULL, &event[3]);
+    this->fmap[0][0].mtxop[0].multiply(delta[0][0], transposed2, nabla[0][0].weights[0][0], 1, &event[3]);
     delete output_derivate[0];
     delete[] output_derivate;
     return delta;
 }
 
-inline Matrice** FullyConnected::get_output()
+inline MatrixData** FullyConnected::get_output()
 {
     return this->output;
 }
@@ -166,12 +196,12 @@ inline int FullyConnected::get_output_col()
     return 1;
 }
 
-void FullyConnected::set_weights(Matrice *w)
+void FullyConnected::set_weights(MatrixData *w)
 {
     this->fmap[0][0].weights[0][0] = *w;
 }
 
-void FullyConnected::set_biases(Matrice *b)
+void FullyConnected::set_biases(MatrixData *b)
 {
     this->fmap[0][0].biases[0][0] = *b;
 }
@@ -204,4 +234,4 @@ void FullyConnected::store(std::ofstream &params)
 void FullyConnected::load(std::ifstream &params)
 {
     this->fmap[0][0].load(params);
-}*/
+}
