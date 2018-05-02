@@ -6,7 +6,6 @@ using namespace std;
 
 OpenclSetup::OpenclSetup()
 {
-    cout << "openclenv is instantiated\n";
     cl_int errorcode;
     this->platformid = this->get_opencl_platforms(this->platformnum);
     cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (cl_context_properties)platformid[0], 0, 0};

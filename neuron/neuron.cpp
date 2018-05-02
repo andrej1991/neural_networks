@@ -61,6 +61,7 @@ inline MatrixData Neuron::sigmoid(MatrixData &inputs, int num_events, cl_event *
     int row = inputs.get_row();
     int col = inputs.get_col();
     MatrixData ret(row, col);
+    ret.copy_to_opencl_buffer(&(env->context));
     cl_int errorcode;
     size_t global_item_size = row*col;
     size_t local_item_size = col;
@@ -78,6 +79,7 @@ inline MatrixData Neuron::sigmoid_derivate(MatrixData &inputs, int num_events, c
     int row = inputs.get_row();
     int col = inputs.get_col();
     MatrixData ret(row, col);
+    ret.copy_to_opencl_buffer(&(env->context));
     cl_int errorcode;
     size_t global_item_size = row*col;
     size_t local_item_size = col;
