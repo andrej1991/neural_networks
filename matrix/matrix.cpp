@@ -386,12 +386,12 @@ void print_mtx(MatrixData &mtx)
 
 void MatrixOperations::load_matrice_operations_programs(cl_context *context, cl_device_id *deviceIds)
 {
-    MatrixOperations::matrice_add_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::scalar_add_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::transpose_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::multiply_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::hadamart_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::convolution_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::fullconv_program = load_program("opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::sameconv_program = load_program("opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::matrice_add_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::scalar_add_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::transpose_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::multiply_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::hadamart_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::convolution_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::fullconv_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::sameconv_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
 }

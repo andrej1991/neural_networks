@@ -5,13 +5,12 @@
 using namespace std;
 
 int Neuron::instance_count = 0;
-/*cl_program Neuron::sigmoid_program;
-cl_program Neuron::sigmoid_derivate_program;*/
+cl_program Neuron::sigmoid_program;
+cl_program Neuron::sigmoid_derivate_program;
 
 Neuron::Neuron(OpenclSetup *env, int neuron_type) : neuron_type(neuron_type), env(env)
 {
-    cout << "instantiating Neuron\n";
-    //if(Neuron::instance_count == 0)
+    if(Neuron::instance_count == 0)
         this->load_neuron_operations_programs(&(env->context), env->deviceIds);
     instance_count++;
     cl_int errorcode;
@@ -21,18 +20,18 @@ Neuron::Neuron(OpenclSetup *env, int neuron_type) : neuron_type(neuron_type), en
         std::cerr << "unable to create OpenCL command queue\n";
         throw exception();
     }
-    this->sigmoid_kernel = clCreateKernel(this->sigmoid_program, "sigmoid", &errorcode);
+    this->sigmoid_kernel = clCreateKernel(Neuron::sigmoid_program, "sigmoid", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         std::cerr << "unable to create OpenCL Neuron::sigmoid_program kernel\n";
         throw exception();
     }
-    /*this->sigmoid_derivate_kernel = clCreateKernel(this->sigmoid_derivate_program, "sigmoid_derivative", &errorcode);
+    this->sigmoid_derivate_kernel = clCreateKernel(Neuron::sigmoid_derivate_program, "sigmoid_derivative", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         std::cerr << "unable to create OpenCL Neuron::sigmoid_derivate_program kernel\n";
         throw exception();
-    }*/
+    }
 }
 
 Neuron::~Neuron()
@@ -45,17 +44,16 @@ Neuron::~Neuron()
     Neuron::instance_count--;
     if(Neuron::instance_count == 0)
     {
-        clReleaseProgram(this->sigmoid_program);
-        clReleaseProgram(this->sigmoid_derivate_program);
+        clReleaseProgram(Neuron::sigmoid_program);
+        clReleaseProgram(Neuron::sigmoid_derivate_program);
 
     }
 }
 
 void Neuron::load_neuron_operations_programs(cl_context *context, cl_device_id *deviceIds)
 {
-    cout << "loading neuron programs\n";
-    this->sigmoid_program = load_program("neuron_kernels.cl",context, deviceIds);;
-    this->sigmoid_derivate_program = load_program("neuron_kernels.cl",context, deviceIds);;
+    Neuron::sigmoid_program = load_program("neuron/neuron_kernels.cl",context, deviceIds);;
+    Neuron::sigmoid_derivate_program = load_program("neuron/neuron_kernels.cl",context, deviceIds);;
 }
 
 inline MatrixData Neuron::sigmoid(MatrixData &inputs, int num_events, cl_event *wait_for_events)

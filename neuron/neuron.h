@@ -10,8 +10,8 @@
 
 class Neuron{
     static int instance_count;
-    cl_program sigmoid_program;
-    cl_program sigmoid_derivate_program;
+    static cl_program sigmoid_program;
+    static cl_program sigmoid_derivate_program;
     cl_kernel sigmoid_kernel;
     cl_kernel sigmoid_derivate_kernel;
     cl_command_queue command_queue;

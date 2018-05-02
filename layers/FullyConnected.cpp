@@ -33,8 +33,8 @@ inline void FullyConnected::layers_output(MatrixData **input)
     cl_event event[2];
     this->fmap[0][0].mtxop[0].multiply(this->fmap[0][0].weights[0][0], input[0][0], inputparam, 0, NULL, &event[0]);
     this->fmap[0][0].mtxop[0].add_matrices(inputparam, this->fmap[0][0].biases[0][0], inputparam, 1, &event[0], &event[1]);
-    clWaitForEvents(1, &event[1]);
-    this->output[0][0] = this->neuron.neuron(inputparam);
+    //clWaitForEvents(1, &event[1]);
+    this->output[0][0] = this->neuron.neuron(inputparam, 1, &event[1]);
     this->output[0][0].copy_to_opencl_buffer(&(env->context));
 }
 

@@ -88,9 +88,9 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     this->layerdsc = new LayerDescriptor* [this->layers_num];
     Padding p;
     if(layerdesc[0][0].layer_type == FULLY_CONNECTED)
-        this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED, &openclenv);
+        this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED, &(this->openclenv));
     else
-        this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL, &openclenv);
+        this->layers[0] = new InputLayer(input_row, input_col, input_channel_count, SIGMOID, p, CONVOLUTIONAL, &(this->openclenv));
     this->layers += 1;
     for(int i = 0; i < layers_num; i++)
     {
