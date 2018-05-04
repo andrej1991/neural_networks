@@ -13,6 +13,7 @@ cl_program MatrixOperations::transpose_program;
 cl_program MatrixOperations::convolution_program;
 cl_program MatrixOperations::fullconv_program;
 cl_program MatrixOperations::sameconv_program;
+cl_program MatrixOperations::multiply_with_transpose_program;
 int MatrixOperations::instance_count=0;
 
 
@@ -192,6 +193,12 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL MatrixOperations::sameconv_program kernel\n";
         throw exception();
     }
+    this->multiply_with_transpose_kernel = clCreateKernel(MatrixOperations::multiply_with_transpose_program, "multiply_with_transpose", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL MatrixOperations::multiply_with_transpose_program kernel\n";
+        throw exception();
+    }
 }
 
 MatrixOperations::~MatrixOperations()
@@ -204,6 +211,7 @@ MatrixOperations::~MatrixOperations()
     clReleaseKernel(this->convolution_kernel);
     clReleaseKernel(this->fullconv_kernel);
     clReleaseKernel(this->sameconv_kernel);
+    clReleaseKernel(this->multiply_with_transpose_kernel);
     clFlush(this->command_queue);
     clFinish(this->command_queue);
     clReleaseCommandQueue(this->command_queue);
@@ -218,6 +226,7 @@ MatrixOperations::~MatrixOperations()
         clReleaseProgram(MatrixOperations::convolution_program);
         clReleaseProgram(MatrixOperations::fullconv_program);
         clReleaseProgram(MatrixOperations::sameconv_program);
+        clReleaseProgram(MatrixOperations::multiply_with_transpose_program);
     }
 }
 
@@ -286,6 +295,26 @@ void MatrixOperations::multiply(MatrixData &a, MatrixData &b, MatrixData &c, int
     const size_t local[2] = { 2,4 };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+}
+
+void MatrixOperations::multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+{
+    if((a.row != c.row) || (a.col != b.col) || (b.row != c.col))
+    {
+        cerr << "The multiplication is aborted because the matrices are not in the required size.\n";
+        throw exception();
+    }
+    cl_int errorcode;
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 0, sizeof(int), (void*)&a.row);
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 1, sizeof(int), (void*)&b.col);
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 2, sizeof(int), (void*)&b.row);
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+
+    const size_t local[2] = { 2,4 };///TODO handle the local size
+    const size_t global[2] = { (size_t)c.row, (size_t)c.col };
+    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->multiply_with_transpose_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
 }
 
 void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -394,4 +423,5 @@ void MatrixOperations::load_matrice_operations_programs(cl_context *context, cl_
     MatrixOperations::convolution_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
     MatrixOperations::fullconv_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
     MatrixOperations::sameconv_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::multiply_with_transpose_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
 }

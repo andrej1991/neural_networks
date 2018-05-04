@@ -35,18 +35,16 @@ class MatrixOperations{
     static cl_program convolution_program;
     static cl_program fullconv_program;
     static cl_program sameconv_program;
-    static cl_program sigmoid_program;
+    static cl_program multiply_with_transpose_program;
     cl_kernel multiply_kernel;
     cl_kernel matrice_add_kernel;
     cl_kernel scalar_add_kernel;
     cl_kernel hadamart_kernel;
     cl_kernel transpose_kernel;
-    cl_kernel rot180_kernel;
-    cl_kernel zeropadd_kernel;
     cl_kernel convolution_kernel;
     cl_kernel fullconv_kernel;
     cl_kernel sameconv_kernel;
-    cl_kernel sigmoid_kernel;
+    cl_kernel multiply_with_transpose_kernel;
 
     cl_command_queue command_queue;
 
@@ -55,6 +53,7 @@ class MatrixOperations{
     void load_matrice_operations_programs(cl_context *context, cl_device_id *deviceIds);
     void add_matrices(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
+    void multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event);
     void scalar_add(MatrixData &a, float b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void transpose(MatrixData &a, MatrixData &b, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);

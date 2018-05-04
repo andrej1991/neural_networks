@@ -14,21 +14,32 @@ __kernel void scalar_matrice_add(__global const float *A, __global const float *
 }
 
 __kernel void multiply(const int Arow, const int Bcol, const int Brow,
-                      const __global float* A,
-                      const __global float* B,
-                      __global float* C) {
-    
-    // Thread identifiers
-    const int globalRow = get_global_id(0); // Row ID of C (0..M)
-    const int globalCol = get_global_id(1); // Col ID of C (0..N)
+                      const __global float* A, const __global float* B, __global float* C)
+{
+
+    const int globalRow = get_global_id(0);
+    const int globalCol = get_global_id(1);
  
-    // Compute a single element (loop over K)
     float acc = 0.0f;
     for (int k=0; k<Brow; k++) {
         acc += A[globalRow*Brow + k] * B[k*Bcol + globalCol];
     }
  
-    // Store the result*/
+    C[globalRow*Bcol + globalCol] = acc;
+}
+
+__kernel void multiply_with_transpose(const int Arow, const int Bcol, const int Brow,
+                      const __global float* A, const __global float* B, __global float* C)
+{
+    
+    const int globalRow = get_global_id(0);
+    const int globalCol = get_global_id(1);
+ 
+    float acc = 0.0f;
+    for (int k=0; k<Brow; k++) {
+        acc += A[globalRow*Brow + k] * B[globalRow*Brow + k];
+    }
+ 
     C[globalRow*Bcol + globalCol] = acc;
 }
 
@@ -49,11 +60,9 @@ __kernel void convolution(const int KernRow, const int KernCol, const int InpCol
                       const __global float* kern,
                       __global float* outp) {
     
-    // Thread identifiers
     const int globalRow = get_global_id(0);
     const int globalCol = get_global_id(1);
  
-    // Compute a single element (loop over K)
     float acc = 0.0f;
     int krow = KernRow-1;
     int kcol = KernCol-1;
@@ -65,7 +74,6 @@ __kernel void convolution(const int KernRow, const int KernCol, const int InpCol
         }
     }
  
-    // Store the result*/
     outp[globalRow*OutpCol + globalCol] = acc;
 }
 
@@ -74,11 +82,9 @@ __kernel void fullconv(const int KernRow, const int KernCol, const int InpCol, c
                       const __global float* kern,
                       __global float* outp) {
     
-    // Thread identifiers
     const int globalRow = get_global_id(0);
     const int globalCol = get_global_id(1);
  
-    // Compute a single element (loop over K)
     float acc = 0.0f;
     int krow = KernRow-1;
     int kcol = KernCol-1;
@@ -91,7 +97,6 @@ __kernel void fullconv(const int KernRow, const int KernCol, const int InpCol, c
         }
     }
  
-    // Store the result*/
     outp[globalRow*OutpCol + globalCol] = acc;
 }
 
@@ -100,13 +105,11 @@ __kernel void sameconv(const int KernRow, const int KernCol, const int DataCol,
                       const __global float* kern,
                       __global float* outp) {
     
-    // Thread identifiers
     const int globalRow = get_global_id(0);
     const int globalCol = get_global_id(1);
     const int outpRow = get_global_size(0);
     const int outpCol = get_global_size(1);
  
-    // Compute a single element (loop over K)
     float acc = 0.0f;
     int krow = KernRow-1;
     int kcol = KernCol-1;
@@ -121,7 +124,6 @@ __kernel void sameconv(const int KernRow, const int KernCol, const int DataCol,
         }
     }
  
-    // Store the result*/
     outp[globalRow*DataCol + globalCol] = acc;
 }
 
