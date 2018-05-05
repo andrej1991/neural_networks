@@ -56,39 +56,36 @@ void Neuron::load_neuron_operations_programs(cl_context *context, cl_device_id *
     Neuron::sigmoid_derivate_program = load_program("neuron/neuron_kernels.cl",context, deviceIds);;
 }
 
-inline MatrixData Neuron::sigmoid(MatrixData &inputs, int num_events, cl_event *wait_for_events)
+inline void Neuron::sigmoid(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    MatrixData ret(row, col);
-    ret.copy_to_opencl_buffer(&(env->context));
     cl_int errorcode;
     size_t global_item_size = row*col;
     size_t local_item_size = col;
     cl_event event;
+    const cl_event *e = &event;
     errorcode = clSetKernelArg(this->sigmoid_kernel, 0, sizeof(cl_mem), (void *)&(inputs.cl_mem_obj));
-    errorcode = clSetKernelArg(this->sigmoid_kernel, 0, sizeof(cl_mem), (void *)&(ret.cl_mem_obj));
+    errorcode = clSetKernelArg(this->sigmoid_kernel, 1, sizeof(cl_mem), (void *)&(outputs.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sigmoid_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, &event);
-    errorcode = clEnqueueReadBuffer(this->command_queue, ret.cl_mem_obj, CL_TRUE, 0, row*col * sizeof(float), ret.data, 1, &event, NULL);
-    return ret;
+    clFinish(this->command_queue);
+    //errorcode = clWaitForEvents(1, &event);
 }
 
-inline MatrixData Neuron::sigmoid_derivate(MatrixData &inputs, int num_events, cl_event *wait_for_events)
+inline void Neuron::sigmoid_derivate(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
 {
-    MatrixData s = sigmoid(inputs);
     int row = inputs.get_row();
     int col = inputs.get_col();
-    MatrixData ret(row, col);
-    ret.copy_to_opencl_buffer(&(env->context));
+    MatrixData s(row, col);
+    this->sigmoid(inputs, s);
     cl_int errorcode;
     size_t global_item_size = row*col;
     size_t local_item_size = col;
     cl_event event;
     errorcode = clSetKernelArg(this->sigmoid_derivate_kernel, 0, sizeof(cl_mem), (void *)&(inputs.cl_mem_obj));
-    errorcode = clSetKernelArg(this->sigmoid_derivate_kernel, 0, sizeof(cl_mem), (void *)&(ret.cl_mem_obj));
+    errorcode = clSetKernelArg(this->sigmoid_derivate_kernel, 1, sizeof(cl_mem), (void *)&(outputs.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sigmoid_derivate_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, &event);
-    errorcode = clEnqueueReadBuffer(this->command_queue, ret.cl_mem_obj, CL_TRUE, 0, row*col * sizeof(float), ret.data, 1, &event, NULL);
-    return ret;
+    clFinish(this->command_queue);
 }
 
 /*inline MatrixData Neuron::relu(MatrixData &inputs)
@@ -161,32 +158,38 @@ inline MatrixData Neuron::leaky_relu_derivate(MatrixData &inputs)
     return output;
 }*/
 
-MatrixData Neuron::neuron(MatrixData &inputs, int num_events, cl_event *wait_for_events)
+void Neuron::activation(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
 {
     switch(this->neuron_type)
     {
     case SIGMOID:
-        return this->sigmoid(inputs, num_events, wait_for_events);
+        this->sigmoid(inputs, outputs, num_events, wait_for_events);
+        break;
     /*case RELU:
-        return this->relu(inputs);
+        this->relu(inputs);
+        break;
     case LEAKY_RELU:
-        return this->leaky_relu(inputs);*/
+        this->leaky_relu(inputs);
+        break;*/
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();
     }
 }
 
-MatrixData Neuron::neuron_derivate(MatrixData &inputs, int num_events, cl_event *wait_for_events)
+void Neuron::activation_derivate(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
 {
     switch(this->neuron_type)
     {
     case SIGMOID:
-        return this->sigmoid_derivate(inputs, num_events, wait_for_events);
+        this->sigmoid_derivate(inputs, outputs, num_events, wait_for_events);
+        break;
     /*case RELU:
-        return this->relu_derivate(inputs);
+        this->relu_derivate(inputs);
+        break;
     case LEAKY_RELU:
-        return this->leaky_relu_derivate(inputs);*/
+        this->leaky_relu_derivate(inputs);
+        break;*/
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();

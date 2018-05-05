@@ -36,7 +36,7 @@ class Feature_map{
     public:
     MatrixOperations *mtxop;
     MatrixData **weights, **biases;
-    Feature_map(int row, int col, int mapdepth, int biascnt = -1, OpenclSetup *env=NULL);
+    Feature_map(int row, int col, int mapdepth, int biascnt = -1, OpenclSetup *env=NULL, bool initialization_needed=true);
     int get_col();
     int get_row();
     int get_mapdepth();
@@ -99,6 +99,10 @@ class FullyConnected : public Layer {
     short int layer_type;
     Neuron neuron;
     Feature_map **fmap;
+    cl_program update_weights_program;
+    cl_program update_biases_program;
+    cl_kernel update_weights_kernel;
+    cl_kernel update_biases_kernel;
     public:
     FullyConnected(int row, int prev_row, int neuron_type, OpenclSetup *env);
     ~FullyConnected();

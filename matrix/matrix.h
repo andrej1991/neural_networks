@@ -37,7 +37,9 @@ class MatrixOperations{
     static cl_program sameconv_program;
     static cl_program multiply_with_transpose_program;
     cl_kernel multiply_kernel;
+    cl_kernel transpose_and_multiply_kernel;
     cl_kernel matrice_add_kernel;
+    cl_kernel matrice_substract_kernel;
     cl_kernel scalar_add_kernel;
     cl_kernel hadamart_kernel;
     cl_kernel transpose_kernel;
@@ -52,8 +54,10 @@ class MatrixOperations{
     ~MatrixOperations();
     void load_matrice_operations_programs(cl_context *context, cl_device_id *deviceIds);
     void add_matrices(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
+    void substract_matrices(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
-    void multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event);
+    void transpose_and_multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
+    void multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void scalar_add(MatrixData &a, float b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void transpose(MatrixData &a, MatrixData &b, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
@@ -62,5 +66,8 @@ class MatrixOperations{
     void sameconv(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void sigmoid(MatrixData &input, MatrixData &output, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
 };
+
+void print_mtx_list(MatrixData **mtx, int list_len);
+void print_mtx(MatrixData &mtx);
 
 #endif // MATRIX_H_INCLUDED

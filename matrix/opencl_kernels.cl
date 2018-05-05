@@ -43,10 +43,31 @@ __kernel void multiply_with_transpose(const int Arow, const int Bcol, const int 
     C[globalRow*Bcol + globalCol] = acc;
 }
 
+__kernel void transpose_ant_multiply(const int Arow, const int Bcol, const int Brow,
+                      const __global float* A, const __global float* B, __global float* C)
+{
+
+    const int globalRow = get_global_id(0);
+    const int globalCol = get_global_id(1);
+ 
+    float acc = 0.0f;
+    for (int k=0; k<Brow; k++) {
+        acc += A[k*Bcol + globalCol] * B[k*Bcol + globalCol];
+    }
+ 
+    C[globalRow*Bcol + globalCol] = acc;
+}
+
 __kernel void add(__global const float *A, __global const float *B, __global float *C) 
 {
     int i = get_global_id(0);
     C[i] = A[i] + B[i];
+}
+
+__kernel void substract(__global const float *A, __global const float *B, __global float *C) 
+{
+    int i = get_global_id(0);
+    C[i] = A[i] - B[i];
 }
 
 __kernel void hadamart_product(__global const float *A, __global const float *B, __global float *C) 

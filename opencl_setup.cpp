@@ -114,6 +114,12 @@ cl_program load_program(char* kernel_source, cl_context *context, cl_device_id *
     if(errorcode != CL_SUCCESS)
         {
             cerr << "unable to create OpenCL program\n";
+            size_t log_size;
+            clGetProgramBuildInfo(program, deviceIds[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+            char *log = (char *) malloc(log_size);
+            clGetProgramBuildInfo(program, deviceIds[0], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+            cout << log << endl;
+
             throw exception();
         }
     return program;

@@ -12,7 +12,7 @@ Layers_features::Layers_features(int mapcount, int row, int col, int depth, int 
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
         {
-            this->fmap[i] = new Feature_map(row, col, depth, biascnt, env);
+            this->fmap[i] = new Feature_map(row, col, depth, biascnt, env, false);
         }
 }
 
@@ -36,13 +36,14 @@ void Layers_features::operator+= (Layers_features &layer)
             layer.fmap[map_index][0].mtxop[0].add_matrices(this->fmap[map_index][0].weights[i][0],
                                                            layer.fmap[map_index][0].weights[i][0],
                                                            this->fmap[map_index][0].weights[i][0],
-                                                           0, NULL, &events[2*i]);
+                                                           0, NULL, NULL);
             layer.fmap[map_index][0].mtxop[0].add_matrices(this->fmap[map_index][0].biases[i][0],
                                                            layer.fmap[map_index][0].biases[i][0],
                                                            this->fmap[map_index][0].biases[i][0],
-                                                           0, NULL, &events[2*i+1]);
+                                                           0, NULL, NULL);
         }
-         clWaitForEvents(2*mapdepth, events);
+         //clWaitForEvents(2*mapdepth, events);
+         clFinish(layer.fmap[map_index][0].mtxop[0].command_queue);
     }
 }
 

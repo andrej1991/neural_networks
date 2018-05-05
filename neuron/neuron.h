@@ -17,18 +17,18 @@ class Neuron{
     cl_command_queue command_queue;
     int neuron_type;
     OpenclSetup *env;
-    inline MatrixData sigmoid(MatrixData &input, int num_events=0, cl_event *wait_for_events=NULL);
-    inline MatrixData sigmoid_derivate(MatrixData &input, int num_events=0, cl_event *wait_for_events=NULL);
-    /*inline MatrixData relu(MatrixData &input);
-    inline MatrixData leaky_relu(MatrixData &input);
-    inline MatrixData relu_derivate(MatrixData &input);
-    inline MatrixData leaky_relu_derivate(MatrixData &input);*/
+    inline void sigmoid(MatrixData &input, MatrixData &output, int num_events=0, cl_event *wait_for_events=NULL);
+    inline void sigmoid_derivate(MatrixData &input, MatrixData &output, int num_events=0, cl_event *wait_for_events=NULL);
+    /*inline MatrixData relu(MatrixData &input, MatrixData &output);
+    inline MatrixData leaky_relu(MatrixData &input, MatrixData &output);
+    inline MatrixData relu_derivate(MatrixData &input, MatrixData &output);
+    inline MatrixData leaky_relu_derivate(MatrixData &input, MatrixData &output);*/
     void load_neuron_operations_programs(cl_context *context, cl_device_id *deviceIds);
     public:
     Neuron(OpenclSetup *env, int neuron_type = SIGMOID);
     ~Neuron();
-    MatrixData neuron(MatrixData &inputs, int num_events=0, cl_event *wait_for_events=NULL);
-    MatrixData neuron_derivate(MatrixData &inputs, int num_events=0, cl_event *wait_for_events=NULL);
+    void activation(MatrixData &inputs, MatrixData &outputs, int num_events=0, cl_event *wait_for_events=NULL);
+    void activation_derivate(MatrixData &inputs, MatrixData &outputs, int num_events=0, cl_event *wait_for_events=NULL);
     void test();
 };
 

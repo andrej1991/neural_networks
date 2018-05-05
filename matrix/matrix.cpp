@@ -151,6 +151,12 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL MatrixOperations::matrice_add_program kernel\n";
         throw exception();
     }
+    this->matrice_substract_kernel = clCreateKernel(MatrixOperations::matrice_add_program, "add", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL MatrixOperations::matrice_substract_program kernel\n";
+        throw exception();
+    }
     this->scalar_add_kernel = clCreateKernel(MatrixOperations::scalar_add_program, "scalar_matrice_add", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
@@ -199,6 +205,12 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL MatrixOperations::multiply_with_transpose_program kernel\n";
         throw exception();
     }
+    this->transpose_and_multiply_kernel = clCreateKernel(MatrixOperations::multiply_with_transpose_program, "multiply_with_transpose", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL MatrixOperations::transpose_and_multiply_program kernel\n";
+        throw exception();
+    }
 }
 
 MatrixOperations::~MatrixOperations()
@@ -244,6 +256,22 @@ void MatrixOperations::add_matrices(MatrixData &a, MatrixData &b, MatrixData &c,
     errorcode = clSetKernelArg(this->matrice_add_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
     errorcode = clSetKernelArg(this->matrice_add_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+}
+
+void MatrixOperations::substract_matrices(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
+{
+    if((a.row != b.row) || (a.col != b.col) || (a.row != c.row) || (a.col != c.col))
+    {
+        cerr << "The addition is aborted because the matrices are not in the same size.\n";
+        throw exception();
+    }
+    cl_int errorcode;
+    size_t global_item_size = a.row*a.col;
+    size_t local_item_size = a.row;
+    errorcode = clSetKernelArg(this->matrice_substract_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode = clSetKernelArg(this->matrice_substract_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode = clSetKernelArg(this->matrice_substract_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->matrice_substract_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
 void MatrixOperations::scalar_add(MatrixData &a, float b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -315,6 +343,26 @@ void MatrixOperations::multiply_with_transpose(MatrixData &a, MatrixData &b, Mat
     const size_t local[2] = { 2,4 };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->multiply_with_transpose_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+}
+
+void MatrixOperations::transpose_and_multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+{
+    if((a.col != c.row) || (a.row != b.row) || (b.col != c.col))
+    {
+        cerr << "The multiplication is aborted because the matrices are not in the required size.\n";
+        throw exception();
+    }
+    cl_int errorcode;
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 0, sizeof(int), (void*)&a.row);
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 1, sizeof(int), (void*)&b.col);
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 2, sizeof(int), (void*)&b.row);
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+
+    const size_t local[2] = { 2,4 };///TODO handle the local size
+    const size_t global[2] = { (size_t)c.row, (size_t)c.col };
+    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->transpose_and_multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
 }
 
 void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)

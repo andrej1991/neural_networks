@@ -1,7 +1,7 @@
 #include "layers.h"
 #include "../opencl_setup.h"
 
-Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *env):
+Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *env, bool initialization_needed):
                 mapdepth(depth), row(row), col(col)
 {
     this->weights = new MatrixData* [depth];
@@ -16,11 +16,14 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
         this->weights[i] = new MatrixData(row, col);
         this->biases[i] = new MatrixData(biascount, 1);
     }
-    this->initialize_weights(&(env->context));
-    this->initialize_biases(&(env->context));
     if(env != NULL)
     {
         this->mtxop = new MatrixOperations(&(env->context), env->deviceIds);
+        if(initialization_needed)
+        {
+            this->initialize_weights(&(env->context));
+            this->initialize_biases(&(env->context));
+        }
     }
     else
         this->mtxop = NULL;
@@ -49,7 +52,7 @@ void Feature_map::initialize_biases(cl_context *context)
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
         {
             random.read((char*)(&val), 2);
-            (this->biases[i][0])[j][0] = val/65000;
+            (this->biases[i][0])[j][0] = (float)val/65000;
         }
         this->biases[i][0].copy_to_opencl_buffer(context);
     }
@@ -68,7 +71,7 @@ void Feature_map::initialize_weights(cl_context *context)
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
             {
                 random.read((char*)(&val), 2);
-                (this->weights[i][0])[j][k] = val/65000;
+                (this->weights[i][0])[j][k] = (float)val/65000;
             }
         }
         this->weights[i][0].copy_to_opencl_buffer(context);
