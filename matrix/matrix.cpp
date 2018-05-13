@@ -55,11 +55,11 @@ inline void MatrixData::destruct()
 
 inline void MatrixData::equality(const MatrixData &mtx)
 {
-    row = mtx.row;
-    col = mtx.col;
+    this->row = mtx.row;
+    this->col = mtx.col;
     try
     {
-        data = new float[this->row * this->col];
+        data = new float[(this->row) * (this->col)];
 
     }
     catch(bad_alloc& ba)
@@ -67,7 +67,7 @@ inline void MatrixData::equality(const MatrixData &mtx)
         cerr << "MatrixData::copyconstructor: bad_alloc caught: " << ba.what() << endl;
         throw;
     }
-    for(int i = 0; i < row*col; i++)
+    for(int i = 0; i < (this->row) * (this->col); i++)
     {
         this->data[i] = mtx.data[i];
     }
@@ -83,10 +83,11 @@ MatrixData::~MatrixData()
     }
 }
 
-MatrixData::MatrixData (const MatrixData& mtx)
+MatrixData::MatrixData(const MatrixData& mtx)
 {
-    this->destruct();
     this->equality(mtx);
+    this->cl_mem_inuse = false;
+    this->is_cl_memcontent_valid = false;
 
 }
 MatrixData& MatrixData::operator= (const MatrixData& mtx)
@@ -124,7 +125,6 @@ void MatrixData::copy_to_opencl_buffer(cl_context *context, cl_command_queue* co
         {
             clReleaseMemObject(this->cl_mem_obj);
         }
-        cout << "creating opencl buffer\n";
         this->cl_mem_obj = clCreateBuffer(*context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->row * this->col * sizeof(float), this->data, &errorcode);
         if(errorcode != CL_SUCCESS)
         {
@@ -244,6 +244,7 @@ MatrixOperations::~MatrixOperations()
     clReleaseKernel(this->fullconv_kernel);
     clReleaseKernel(this->sameconv_kernel);
     clReleaseKernel(this->multiply_with_transpose_kernel);
+    clReleaseKernel(this->zero_kernel);
     clFlush(this->command_queue);
     clFinish(this->command_queue);
     clReleaseCommandQueue(this->command_queue);
@@ -329,7 +330,7 @@ void MatrixOperations::zero(MatrixData &a, int num_events, cl_event *wait_for_ev
 {
     cl_int errorcode;
     size_t global_item_size = a.row*a.col;
-    size_t local_item_size = a.col;
+    size_t local_item_size = a.row;
     errorcode = clSetKernelArg(this->zero_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->zero_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }

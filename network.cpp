@@ -115,7 +115,6 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 throw std::exception();
         }
     }
-    cout << "layer construction is done\n\n\n\n\n\n";
 }
 
 inline void Network::feedforward(MatrixData **input)
@@ -241,10 +240,10 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             for(int j=0; j<this->nabla[i][0].get_fmap_count();j++)
             {
                 ///TODO handle the mapdepth!!!
-                /*this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
+                this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
                 this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);
                 this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
-                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);*/;
+                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);
             }
             clFinish(this->deltanabla[i][0].fmap[0][0].mtxop[0].command_queue);
         }
@@ -278,7 +277,7 @@ MatrixData Network::get_output(MatrixData **input)
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input);
     this->layers[this->layers_num - 1][0].sync_memory();
-    MatrixData ret = *(this->layers[this->layers_num - 1][0].get_output()[0]);
+    MatrixData ret = this->layers[this->layers_num - 1][0].get_output()[0][0];
     return ret;
 }
 
