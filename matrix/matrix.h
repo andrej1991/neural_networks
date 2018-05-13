@@ -6,19 +6,20 @@
 class MatrixData{
     public:
     int row, col;
-    bool cl_mem_inuse;
+    static int instancecount;
+    bool cl_mem_inuse, is_cl_memcontent_valid;
     float *data;
     cl_mem cl_mem_obj;
     cl_context context_of_cl_mem_obj;
     MatrixData(int row=1, int col=1);
     ~MatrixData();
     MatrixData(const MatrixData& mtx);
-    MatrixData operator= (const MatrixData& mtx);
+    MatrixData& operator= (const MatrixData& mtx);
     inline void destruct();
     inline void equality(const MatrixData &mtx);
     float* operator[](int r);
     const float* operator[](int r) const;
-    void copy_to_opencl_buffer(cl_context *context);
+    void copy_to_opencl_buffer(cl_context *context, cl_command_queue *q=NULL);
     int get_row();
     int get_col();
 };
@@ -47,6 +48,7 @@ class MatrixOperations{
     cl_kernel fullconv_kernel;
     cl_kernel sameconv_kernel;
     cl_kernel multiply_with_transpose_kernel;
+    cl_kernel zero_kernel;
 
     cl_command_queue command_queue;
 
@@ -57,6 +59,7 @@ class MatrixOperations{
     void substract_matrices(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void transpose_and_multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
+    void zero(MatrixData &a, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void scalar_add(MatrixData &a, float b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void transpose(MatrixData &a, MatrixData &b, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);

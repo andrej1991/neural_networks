@@ -1,15 +1,20 @@
 #include "layers.h"
 
+using namespace std;
+
 InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type, OpenclSetup *env):
     next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), input_channel_count(input_channel_count),
     row(row), col(col), env(env)
 {
-    this->outputlen = row;
+    this->outputlen = row*col;
+    cl_int errorcode;
+    this->q = clCreateCommandQueue(env->context, env->deviceIds[0], 0, &errorcode);
     this->layer_type = INPUTLAYER;
     this->outputs = new MatrixData* [input_channel_count];
     for(int i = 0; i < input_channel_count; i++)
         {
             outputs[i] = new MatrixData(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
+            outputs[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
         }
 }
 
@@ -32,7 +37,7 @@ void InputLayer::sync_memory()
     ;
 }
 
-inline MatrixData InputLayer::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
+inline MatrixData** InputLayer::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
 {
     ;
 }
@@ -59,13 +64,22 @@ inline void InputLayer::add_back_removed_neurons(MatrixData **w_bckup, MatrixDat
 
 void InputLayer::set_input(MatrixData **input)
 {
+    //std::cout << "starting to set the input\n";
     ///TODO modify this function to work with FC layer and convolutional layer
     /*if(this->next_layers_type == FULLY_CONNECTED)
         {*/
-            for (int i = 0; i < this->input_channel_count; i++)
+            for(int l = 0; l < this->input_channel_count; l++)
                 {
-                    this->outputs[i][0] = input[i][0];
-                    this->outputs[i][0].copy_to_opencl_buffer(&(this->env->context));
+                    //int debug1 = this->outputs[l]->get_col();
+                    //int debug2 = this->outputs[l]->get_row();
+                    for(int i = 0; i < this->row; i++)
+                        {
+                            for(int j = 0; j < this->col; j++)
+                                {
+                                    (this->outputs[l][0])[i][j] = (input[l][0])[i * this->row + j][0];
+                                }
+                        }
+                    this->outputs[l][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
                 }
         /*}
     else if(this->next_layers_type == CONVOLUTIONAL)

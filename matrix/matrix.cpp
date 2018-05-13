@@ -15,9 +15,10 @@ cl_program MatrixOperations::fullconv_program;
 cl_program MatrixOperations::sameconv_program;
 cl_program MatrixOperations::multiply_with_transpose_program;
 int MatrixOperations::instance_count=0;
+int MatrixData::instancecount=0;
 
 
-MatrixData::MatrixData(int r,int c) : data(NULL)
+MatrixData::MatrixData(int r,int c) : data(NULL), cl_mem_inuse(false), is_cl_memcontent_valid(false)
 {
     if(r >= 0)
         this->row = r;
@@ -39,7 +40,8 @@ MatrixData::MatrixData(int r,int c) : data(NULL)
         std::cerr << "MatrixData::constructor: bad_alloc caught: " << ba.what() << std::endl;
         throw;
     }
-    this->cl_mem_inuse = false;
+    //this->cl_mem_inuse = false;
+    //this->is_cl_memcontent_valid = false;
 }
 
 inline void MatrixData::destruct()
@@ -49,9 +51,6 @@ inline void MatrixData::destruct()
         delete[] this->data;
         this->data = NULL;
     }
-    if(this->cl_mem_inuse)
-        clReleaseMemObject(this->cl_mem_obj);
-        ///TODO release cl_context
 }
 
 inline void MatrixData::equality(const MatrixData &mtx)
@@ -68,7 +67,6 @@ inline void MatrixData::equality(const MatrixData &mtx)
         cerr << "MatrixData::copyconstructor: bad_alloc caught: " << ba.what() << endl;
         throw;
     }
-    this->cl_mem_inuse = false;
     for(int i = 0; i < row*col; i++)
     {
         this->data[i] = mtx.data[i];
@@ -78,15 +76,20 @@ inline void MatrixData::equality(const MatrixData &mtx)
 MatrixData::~MatrixData()
 {
     this->destruct();
+    if(this->cl_mem_inuse)
+    {
+        clReleaseMemObject(this->cl_mem_obj);
+        this->cl_mem_inuse = false;
+    }
 }
 
 MatrixData::MatrixData (const MatrixData& mtx)
 {
-    //this->destruct();
+    this->destruct();
     this->equality(mtx);
 
 }
-MatrixData MatrixData::operator= (const MatrixData& mtx)
+MatrixData& MatrixData::operator= (const MatrixData& mtx)
 {
     if(this==&mtx) return *this;
     this->destruct();
@@ -105,22 +108,33 @@ const float* MatrixData::operator[](int r) const
     return this->data + (this->col * r);
 }
 
-void MatrixData::copy_to_opencl_buffer(cl_context *context)
+void MatrixData::copy_to_opencl_buffer(cl_context *context, cl_command_queue* comm_queue)
 {
     cl_int errorcode;
-    if(this->cl_mem_inuse)
+    //cout << MatrixData::instancecount<<endl;
+    //MatrixData::instancecount++;
+    if((this->cl_mem_inuse) && (comm_queue!=NULL))
     {
-        clReleaseMemObject(this->cl_mem_obj);
+        clEnqueueWriteBuffer(*comm_queue, this->cl_mem_obj, CL_TRUE, 0, row*col*sizeof(float), (void*)this->data, 0, NULL, NULL);
+        return;
     }
-    this->cl_mem_obj = clCreateBuffer(*context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->row * this->col * sizeof(float), this->data, &errorcode);
-    if(errorcode != CL_SUCCESS)
+    else
     {
-        cerr << "unable to create OpenCL buffer\n";
-        throw exception();
+        if(this->cl_mem_inuse)
+        {
+            clReleaseMemObject(this->cl_mem_obj);
+        }
+        cout << "creating opencl buffer\n";
+        this->cl_mem_obj = clCreateBuffer(*context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->row * this->col * sizeof(float), this->data, &errorcode);
+        if(errorcode != CL_SUCCESS)
+        {
+            cerr << "unable to create OpenCL buffer\n";
+            throw exception();
+        }
+        this->cl_mem_inuse = true;
+        ///TODO increment the reference count of context
+        context_of_cl_mem_obj = *context;
     }
-    this->cl_mem_inuse = true;
-    ///TODO increment the reference count of context
-    context_of_cl_mem_obj = *context;
 }
 
 int MatrixData::get_row()
@@ -209,6 +223,12 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::transpose_and_multiply_program kernel\n";
+        throw exception();
+    }
+    this->zero_kernel= clCreateKernel(MatrixOperations::multiply_with_transpose_program, "zero", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL MatrixOperations::zero kernel\n";
         throw exception();
     }
 }
@@ -303,6 +323,15 @@ void MatrixOperations::transpose(MatrixData &a, MatrixData &b, int num_events, c
     errorcode = clSetKernelArg(this->transpose_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
     errorcode = clSetKernelArg(this->transpose_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->transpose_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+}
+
+void MatrixOperations::zero(MatrixData &a, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+{
+    cl_int errorcode;
+    size_t global_item_size = a.row*a.col;
+    size_t local_item_size = a.col;
+    errorcode = clSetKernelArg(this->zero_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->zero_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
 }
 
 void MatrixOperations::multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)

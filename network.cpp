@@ -11,7 +11,7 @@ using namespace std;
 ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false
 Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout):
                 dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num),
-                costfunction_type(costfunction_type), openclenv()
+                costfunction_type(costfunction_type), openclenv(), nabla(NULL), deltanabla(NULL)
 {
     try
     {
@@ -24,7 +24,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int
         }
 }
 
-Network::Network(char *data): openclenv()
+Network::Network(char *data): openclenv(), nabla(NULL), deltanabla(NULL)
 {
     ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
     ///int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1
@@ -35,7 +35,7 @@ Network::Network(char *data): openclenv()
             LayerDescriptor *dsc[this->layers_num];
             file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
+            file.read(reinterpret_cast<char *>(&(this->input_col)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
@@ -115,6 +115,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 throw std::exception();
         }
     }
+    cout << "layer construction is done\n\n\n\n\n\n";
 }
 
 inline void Network::feedforward(MatrixData **input)
@@ -162,20 +163,17 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
 {
     ///currently the final layer has to be a clasification layer
     this->feedforward(trainig_data[0].input);
-    MatrixData **delta = new MatrixData* [1];
-    delta[0] = new MatrixData;
-    delta[0][0] = this->layers[layers_num - 1][0].get_output_error(this->layers[layers_num - 2][0].get_output(),
+    MatrixData **delta;// = new MatrixData* [1];
+    //delta[0] = new MatrixData;
+    delta = this->layers[layers_num - 1][0].get_output_error(this->layers[layers_num - 2][0].get_output(),
                                                     trainig_data[0].required_output, this->costfunction_type);
-    nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
+    ///nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
+    clEnqueueCopyBuffer(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue, delta[0][0].cl_mem_obj, nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0].cl_mem_obj,
+                        0, 0, nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0].get_row(), 0, NULL, NULL);
     ///nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2][0].get_output()[0][0].transpose();
-    //MatrixData **helper = this->layers[this->layers_num - 2][0].get_output();
-    //MatrixData transposed(helper[0][0].get_col(), helper[0][0].get_row());
-    cl_event event;
-    //nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].transpose(helper[0][0], transposed, 0, NULL, &event[0]);
     nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].multiply_with_transpose(delta[0][0], this->layers[this->layers_num - 2][0].get_output()[0][0],
-                                                                               nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0], 0, NULL, &event);
+                                                                               nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0], 0, NULL, NULL);
     clFinish(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue);
-    //clWaitForEvents(1, &event);
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
@@ -183,7 +181,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
                                            this->layers[i + 1][0].get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1][0].get_fmap_count());
         }
-    if(this->layers[0][0].get_mapcount() > 1)
+    /*if(this->layers[0][0].get_mapcount() > 1)
         {
             for(int i = 0; i < this->layers[0][0].get_mapcount(); i++)
                 delete delta[i];
@@ -193,46 +191,64 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
         {
             delete delta[0];
             delete[] delta;
-        }
+        }*/
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
 {
-    Layers_features **nabla, **deltanabla;
+    //Layers_features **nabla, **deltanabla;
     //MatrixData **b_bck, **w_bck;
     int *layer_bck, **ind;
     //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
-    try
+    if(this->nabla == NULL)
+    {
+        try
+            {
+                this->nabla = new Layers_features* [this->layers_num];
+                this->deltanabla = new Layers_features* [this->layers_num];
+                for(int i = 0; i < this->layers_num; i++)
+                    {
+                        ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+                        int biascnt;
+                        if((this->layers[i][0].get_layer_type() == FULLY_CONNECTED) or (this->layers[i][0].get_layer_type() == SOFTMAX))
+                            biascnt = this->layers[i][0].get_weights_row();
+                        else
+                            biascnt = 1;
+                        this->nabla[i] = new Layers_features(this->layers[i][0].get_mapcount(),
+                                                       this->layers[i][0].get_weights_row(),
+                                                       this->layers[i][0].get_weights_col(),
+                                                       this->layers[i][0].get_mapdepth(),
+                                                       biascnt,
+                                                       &(this->openclenv));
+                        this->deltanabla[i] = new Layers_features(this->layers[i][0].get_mapcount(),
+                                                            this->layers[i][0].get_weights_row(),
+                                                            this->layers[i][0].get_weights_col(),
+                                                            this->layers[i][0].get_mapdepth(),
+                                                            biascnt,
+                                                            &(this->openclenv));
+                    }
+            }
+        catch(bad_alloc& ba)
+            {
+                cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
+                return;
+            }
+    }
+    else
+    {
+        for(int i=0; i<this->layers_num; i++)
         {
-            nabla = new Layers_features* [this->layers_num];
-            deltanabla = new Layers_features* [this->layers_num];
-            for(int i = 0; i < this->layers_num; i++)
-                {
-                    ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
-                    int biascnt;
-                    if((this->layers[i][0].get_layer_type() == FULLY_CONNECTED) or (this->layers[i][0].get_layer_type() == SOFTMAX))
-                        biascnt = this->layers[i][0].get_weights_row();
-                    else
-                        biascnt = 1;
-                    nabla[i] = new Layers_features(this->layers[i][0].get_mapcount(),
-                                                   this->layers[i][0].get_weights_row(),
-                                                   this->layers[i][0].get_weights_col(),
-                                                   this->layers[i][0].get_mapdepth(),
-                                                   biascnt,
-                                                   &(this->openclenv));
-                    deltanabla[i] = new Layers_features(this->layers[i][0].get_mapcount(),
-                                                        this->layers[i][0].get_weights_row(),
-                                                        this->layers[i][0].get_weights_col(),
-                                                        this->layers[i][0].get_mapdepth(),
-                                                        biascnt,
-                                                        &(this->openclenv));
-                }
+            for(int j=0; j<this->nabla[i][0].get_fmap_count();j++)
+            {
+                ///TODO handle the mapdepth!!!
+                /*this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
+                this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);
+                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
+                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);*/;
+            }
+            clFinish(this->deltanabla[i][0].fmap[0][0].mtxop[0].command_queue);
         }
-    catch(bad_alloc& ba)
-        {
-            cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
-            return;
-        }
+    }
     for(int i = 0; i < training_data_len; i++)
         {
             this->backpropagate(training_data[i], deltanabla);
@@ -248,13 +264,13 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             this->layers[i][0].update_weights_and_biasses(lr, reg, nabla[i]);
         }
     //this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
-    for(int i = 0; i < this->layers_num; i++)
+    /*for(int i = 0; i < this->layers_num; i++)
         {
             delete nabla[i];
             delete deltanabla[i];
         }
     delete[] nabla;
-    delete[] deltanabla;
+    delete[] deltanabla;*/
 }
 
 MatrixData Network::get_output(MatrixData **input)
@@ -431,8 +447,8 @@ void Network::check_accuracy(MNIST_data **test_data)
 
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
-    ///(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-    this->stochastic_gradient_descent(d, 2, 10, 0.03, true, 10, v, -1);
+    ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
+    this->stochastic_gradient_descent(d, 30, 10, 0.03, true, 1, v, -1);
     //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);

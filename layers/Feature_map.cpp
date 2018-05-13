@@ -24,6 +24,14 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
             this->initialize_weights(&(env->context));
             this->initialize_biases(&(env->context));
         }
+        else
+        {
+            for(int i = 0; i < this->mapdepth; i++)
+            {
+                this->biases[i][0].copy_to_opencl_buffer(&(env->context), &(this->mtxop[0].command_queue));
+                this->weights[i][0].copy_to_opencl_buffer(&(env->context), &(this->mtxop[0].command_queue));
+            }
+        }
     }
     else
         this->mtxop = NULL;
@@ -54,7 +62,7 @@ void Feature_map::initialize_biases(cl_context *context)
             random.read((char*)(&val), 2);
             (this->biases[i][0])[j][0] = (float)val/65000;
         }
-        this->biases[i][0].copy_to_opencl_buffer(context);
+        this->biases[i][0].copy_to_opencl_buffer(context, &(this->mtxop[0].command_queue));
     }
     random.close();
 }
@@ -74,7 +82,7 @@ void Feature_map::initialize_weights(cl_context *context)
                 (this->weights[i][0])[j][k] = (float)val/65000;
             }
         }
-        this->weights[i][0].copy_to_opencl_buffer(context);
+        this->weights[i][0].copy_to_opencl_buffer(context, &(this->mtxop[0].command_queue));
     }
     random.close();
 }

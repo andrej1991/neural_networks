@@ -15,6 +15,7 @@ class Network{
     int total_layers_num, layers_num, costfunction_type, input_row, input_col, input_channel_count;
     Layer **layers;
     LayerDescriptor **layerdsc;
+    Layers_features **nabla, **deltanabla;
     bool dropout;
     void construct_layers(LayerDescriptor **desc);
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
