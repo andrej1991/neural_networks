@@ -36,10 +36,12 @@ void Layers_features::operator+= (Layers_features &layer)
             layer.fmap[map_index][0].mtxop[0].add_matrices(this->fmap[map_index][0].weights[i][0],
                                                            layer.fmap[map_index][0].weights[i][0],
                                                            this->fmap[map_index][0].weights[i][0],
+                                                           //0, NULL, &events[2*i]);
                                                            0, NULL, NULL);
             layer.fmap[map_index][0].mtxop[0].add_matrices(this->fmap[map_index][0].biases[i][0],
                                                            layer.fmap[map_index][0].biases[i][0],
                                                            this->fmap[map_index][0].biases[i][0],
+                                                           //0, NULL, &events[2*i+1]);
                                                            0, NULL, NULL);
         }
          //clWaitForEvents(2*mapdepth, events);

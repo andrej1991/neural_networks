@@ -5,8 +5,7 @@
 using namespace std;
 
 int Neuron::instance_count = 0;
-cl_program Neuron::sigmoid_program;
-cl_program Neuron::sigmoid_derivate_program;
+cl_program Neuron::neuron_program;
 
 Neuron::Neuron(OpenclSetup *env, int neuron_type) : neuron_type(neuron_type), env(env)
 {
@@ -20,13 +19,13 @@ Neuron::Neuron(OpenclSetup *env, int neuron_type) : neuron_type(neuron_type), en
         std::cerr << "unable to create OpenCL command queue\n";
         throw exception();
     }
-    this->sigmoid_kernel = clCreateKernel(Neuron::sigmoid_program, "sigmoid", &errorcode);
+    this->sigmoid_kernel = clCreateKernel(Neuron::neuron_program, "sigmoid", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         std::cerr << "unable to create OpenCL Neuron::sigmoid_program kernel\n";
         throw exception();
     }
-    this->sigmoid_derivate_kernel = clCreateKernel(Neuron::sigmoid_derivate_program, "sigmoid_derivative", &errorcode);
+    this->sigmoid_derivate_kernel = clCreateKernel(Neuron::neuron_program, "sigmoid_derivative", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         std::cerr << "unable to create OpenCL Neuron::sigmoid_derivate_program kernel\n";
@@ -44,16 +43,14 @@ Neuron::~Neuron()
     Neuron::instance_count--;
     if(Neuron::instance_count == 0)
     {
-        clReleaseProgram(Neuron::sigmoid_program);
-        clReleaseProgram(Neuron::sigmoid_derivate_program);
+        clReleaseProgram(Neuron::neuron_program);
 
     }
 }
 
 void Neuron::load_neuron_operations_programs(cl_context *context, cl_device_id *deviceIds)
 {
-    Neuron::sigmoid_program = load_program("neuron/neuron_kernels.cl",context, deviceIds);;
-    Neuron::sigmoid_derivate_program = load_program("neuron/neuron_kernels.cl",context, deviceIds);;
+    Neuron::neuron_program = load_program("neuron/neuron_kernels.cl",context, deviceIds);;
 }
 
 inline void Neuron::sigmoid(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
@@ -64,12 +61,11 @@ inline void Neuron::sigmoid(MatrixData &inputs, MatrixData &outputs, int num_eve
     size_t global_item_size = row*col;
     size_t local_item_size = col;
     cl_event event;
-    const cl_event *e = &event;
     errorcode = clSetKernelArg(this->sigmoid_kernel, 0, sizeof(cl_mem), (void *)&(inputs.cl_mem_obj));
     errorcode = clSetKernelArg(this->sigmoid_kernel, 1, sizeof(cl_mem), (void *)&(outputs.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sigmoid_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, &event);
-    clFinish(this->command_queue);
-    //errorcode = clWaitForEvents(1, &event);
+    //clFinish(this->command_queue);
+    errorcode = clWaitForEvents(1, &event);
 }
 
 inline void Neuron::sigmoid_derivate(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
@@ -85,7 +81,8 @@ inline void Neuron::sigmoid_derivate(MatrixData &inputs, MatrixData &outputs, in
     errorcode = clSetKernelArg(this->sigmoid_derivate_kernel, 0, sizeof(cl_mem), (void *)&(inputs.cl_mem_obj));
     errorcode = clSetKernelArg(this->sigmoid_derivate_kernel, 1, sizeof(cl_mem), (void *)&(outputs.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sigmoid_derivate_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, &event);
-    clFinish(this->command_queue);
+    errorcode = clWaitForEvents(1, &event);
+    //clFinish(this->command_queue);
 }
 
 /*inline MatrixData Neuron::relu(MatrixData &inputs)

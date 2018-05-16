@@ -262,14 +262,6 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
         {
             this->layers[i][0].update_weights_and_biasses(lr, reg, nabla[i]);
         }
-    //this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
-    /*for(int i = 0; i < this->layers_num; i++)
-        {
-            delete nabla[i];
-            delete deltanabla[i];
-        }
-    delete[] nabla;
-    delete[] deltanabla;*/
 }
 
 MatrixData Network::get_output(MatrixData **input)
@@ -448,6 +440,7 @@ void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
     this->stochastic_gradient_descent(d, 30, 10, 0.03, true, 1, v, -1);
+    //this->check_accuracy(v);
     //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);

@@ -101,8 +101,7 @@ class FullyConnected : public Layer {
     short int layer_type;
     Neuron neuron;
     Feature_map **fmap;
-    cl_program update_weights_program;
-    cl_program update_biases_program;
+    cl_program fully_connected_program;
     cl_kernel update_weights_kernel;
     cl_kernel update_biases_kernel;
     public:

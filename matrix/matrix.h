@@ -28,15 +28,7 @@ class MatrixData{
 class MatrixOperations{
     static int instance_count;
     public:
-    static cl_program multiply_program;
-    static cl_program matrice_add_program;
-    static cl_program scalar_add_program;
-    static cl_program hadamart_program;
-    static cl_program transpose_program;
-    static cl_program convolution_program;
-    static cl_program fullconv_program;
-    static cl_program sameconv_program;
-    static cl_program multiply_with_transpose_program;
+    static cl_program matrix_program;
     cl_kernel multiply_kernel;
     cl_kernel transpose_and_multiply_kernel;
     cl_kernel matrice_add_kernel;

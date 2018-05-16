@@ -26,16 +26,15 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSet
         this->function_variables[i] = NULL;
     }
     this->layer_type = FULLY_CONNECTED;
-    this->update_weights_program = load_program("layers/layerspecific_kernels.cl", &(this->env->context), this->env->deviceIds);
-    this->update_biases_program = load_program("layers/layerspecific_kernels.cl", &(this->env->context), this->env->deviceIds);
+    this->fully_connected_program = load_program("layers/layerspecific_kernels.cl", &(this->env->context), this->env->deviceIds);
     cl_int errorcode;
-    this->update_weights_kernel = clCreateKernel(this->update_weights_program, "update_weights", &errorcode);
+    this->update_weights_kernel = clCreateKernel(this->fully_connected_program, "update_weights", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL update_weights kernel\n";
         throw exception();
     }
-    this->update_biases_kernel = clCreateKernel(this->update_biases_program, "update_biases", &errorcode);
+    this->update_biases_kernel = clCreateKernel(this->fully_connected_program, "update_biases", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL update_biases kernel\n";

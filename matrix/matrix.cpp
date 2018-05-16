@@ -5,15 +5,7 @@
 
 using namespace std;
 
-cl_program MatrixOperations::multiply_program;
-cl_program MatrixOperations::matrice_add_program;
-cl_program MatrixOperations::scalar_add_program;
-cl_program MatrixOperations::hadamart_program;
-cl_program MatrixOperations::transpose_program;
-cl_program MatrixOperations::convolution_program;
-cl_program MatrixOperations::fullconv_program;
-cl_program MatrixOperations::sameconv_program;
-cl_program MatrixOperations::multiply_with_transpose_program;
+cl_program MatrixOperations::matrix_program;
 int MatrixOperations::instance_count=0;
 int MatrixData::instancecount=0;
 
@@ -159,73 +151,73 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL command queue\n";
         throw exception();
     }
-    this->matrice_add_kernel = clCreateKernel(MatrixOperations::matrice_add_program, "add", &errorcode);
+    this->matrice_add_kernel = clCreateKernel(MatrixOperations::matrix_program, "add", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::matrice_add_program kernel\n";
         throw exception();
     }
-    this->matrice_substract_kernel = clCreateKernel(MatrixOperations::matrice_add_program, "add", &errorcode);
+    this->matrice_substract_kernel = clCreateKernel(MatrixOperations::matrix_program, "add", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::matrice_substract_program kernel\n";
         throw exception();
     }
-    this->scalar_add_kernel = clCreateKernel(MatrixOperations::scalar_add_program, "scalar_matrice_add", &errorcode);
+    this->scalar_add_kernel = clCreateKernel(MatrixOperations::matrix_program, "scalar_matrice_add", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::scalar_add_program kernel\n";
         throw exception();
     }
-    this->transpose_kernel = clCreateKernel(MatrixOperations::transpose_program, "transpose", &errorcode);
+    this->transpose_kernel = clCreateKernel(MatrixOperations::matrix_program, "transpose", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::transpose_program kernel\n";
         throw exception();
     }
-    this->multiply_kernel = clCreateKernel(MatrixOperations::multiply_program, "multiply", &errorcode);
+    this->multiply_kernel = clCreateKernel(MatrixOperations::matrix_program, "multiply", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::multiply_program kernel\n";
         throw exception();
     }
-    this->hadamart_kernel = clCreateKernel(MatrixOperations::hadamart_program, "hadamart_product", &errorcode);
+    this->hadamart_kernel = clCreateKernel(MatrixOperations::matrix_program, "hadamart_product", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::hadamart_program kernel\n";
         throw exception();
     }
-    this->convolution_kernel = clCreateKernel(MatrixOperations::convolution_program, "convolution", &errorcode);
+    this->convolution_kernel = clCreateKernel(MatrixOperations::matrix_program, "convolution", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::convolution_program kernel\n";
         throw exception();
     }
-    this->fullconv_kernel = clCreateKernel(MatrixOperations::fullconv_program, "fullconv", &errorcode);
+    this->fullconv_kernel = clCreateKernel(MatrixOperations::matrix_program, "fullconv", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::fullconv_program kernel\n";
         throw exception();
     }
-    this->sameconv_kernel = clCreateKernel(MatrixOperations::sameconv_program, "sameconv", &errorcode);
+    this->sameconv_kernel = clCreateKernel(MatrixOperations::matrix_program, "sameconv", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::sameconv_program kernel\n";
         throw exception();
     }
-    this->multiply_with_transpose_kernel = clCreateKernel(MatrixOperations::multiply_with_transpose_program, "multiply_with_transpose", &errorcode);
+    this->multiply_with_transpose_kernel = clCreateKernel(MatrixOperations::matrix_program, "multiply_with_transpose", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::multiply_with_transpose_program kernel\n";
         throw exception();
     }
-    this->transpose_and_multiply_kernel = clCreateKernel(MatrixOperations::multiply_with_transpose_program, "multiply_with_transpose", &errorcode);
+    this->transpose_and_multiply_kernel = clCreateKernel(MatrixOperations::matrix_program, "multiply_with_transpose", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::transpose_and_multiply_program kernel\n";
         throw exception();
     }
-    this->zero_kernel= clCreateKernel(MatrixOperations::multiply_with_transpose_program, "zero", &errorcode);
+    this->zero_kernel= clCreateKernel(MatrixOperations::matrix_program, "zero", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::zero kernel\n";
@@ -251,15 +243,7 @@ MatrixOperations::~MatrixOperations()
     MatrixOperations::instance_count--;
     if(MatrixOperations::instance_count == 0)
     {
-        clReleaseProgram(MatrixOperations::multiply_program);
-        clReleaseProgram(MatrixOperations::matrice_add_program);
-        clReleaseProgram(MatrixOperations::scalar_add_program);
-        clReleaseProgram(MatrixOperations::hadamart_program);
-        clReleaseProgram(MatrixOperations::transpose_program);
-        clReleaseProgram(MatrixOperations::convolution_program);
-        clReleaseProgram(MatrixOperations::fullconv_program);
-        clReleaseProgram(MatrixOperations::sameconv_program);
-        clReleaseProgram(MatrixOperations::multiply_with_transpose_program);
+        clReleaseProgram(MatrixOperations::matrix_program);
     }
 }
 
@@ -493,13 +477,5 @@ void print_mtx(MatrixData &mtx)
 
 void MatrixOperations::load_matrice_operations_programs(cl_context *context, cl_device_id *deviceIds)
 {
-    MatrixOperations::matrice_add_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::scalar_add_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::transpose_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::multiply_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::hadamart_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::convolution_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::fullconv_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::sameconv_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
-    MatrixOperations::multiply_with_transpose_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
+    MatrixOperations::matrix_program = load_program("matrix/opencl_kernels.cl",context, deviceIds);
 }
