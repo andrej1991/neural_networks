@@ -25,7 +25,7 @@ __kernel void multiply(const int Arow, const int Bcol, const int Brow,
         acc += A[globalRow*Brow + k] * B[k*Bcol + globalCol];
     }
  
-    C[globalRow*Bcol + globalCol] = acc;
+    C[globalRow*Bcol + globalCol] = 1;
 }
 
 __kernel void multiply_with_transpose(const int Arow, const int Bcol, const int Brow,

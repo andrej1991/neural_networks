@@ -258,9 +258,14 @@ void MatrixOperations::add_matrices(MatrixData &a, MatrixData &b, MatrixData &c,
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.row;
     errorcode = clSetKernelArg(this->matrice_add_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->matrice_add_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clSetKernelArg(this->matrice_add_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clSetKernelArg(this->matrice_add_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->matrice_add_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring matrix addition \n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::substract_matrices(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -274,9 +279,14 @@ void MatrixOperations::substract_matrices(MatrixData &a, MatrixData &b, MatrixDa
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.row;
     errorcode = clSetKernelArg(this->matrice_substract_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->matrice_substract_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clSetKernelArg(this->matrice_substract_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->matrice_substract_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clSetKernelArg(this->matrice_substract_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->matrice_substract_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->matrice_substract_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring matrix substraction \n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::scalar_add(MatrixData &a, float b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -290,9 +300,14 @@ void MatrixOperations::scalar_add(MatrixData &a, float b, MatrixData &c, int num
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.col;
     errorcode = clSetKernelArg(this->scalar_add_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->scalar_add_kernel, 1, sizeof(float), (void *)&b);
-    errorcode = clSetKernelArg(this->scalar_add_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->scalar_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clSetKernelArg(this->scalar_add_kernel, 1, sizeof(float), (void *)&b);
+    errorcode |= clSetKernelArg(this->scalar_add_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->scalar_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring adding scalar to matrix\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::transpose(MatrixData &a, MatrixData &b, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -306,8 +321,13 @@ void MatrixOperations::transpose(MatrixData &a, MatrixData &b, int num_events, c
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.col;
     errorcode = clSetKernelArg(this->transpose_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->transpose_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->transpose_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clSetKernelArg(this->transpose_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->transpose_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring transposig the matrix\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::zero(MatrixData &a, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -316,7 +336,12 @@ void MatrixOperations::zero(MatrixData &a, int num_events, cl_event *wait_for_ev
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.row;
     errorcode = clSetKernelArg(this->zero_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->zero_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->zero_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring zeroing the elements of the matrix\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -328,15 +353,20 @@ void MatrixOperations::multiply(MatrixData &a, MatrixData &b, MatrixData &c, int
     }
     cl_int errorcode;
     errorcode = clSetKernelArg(this->multiply_kernel, 0, sizeof(int), (void*)&a.row);
-    errorcode = clSetKernelArg(this->multiply_kernel, 1, sizeof(int), (void*)&b.col);
-    errorcode = clSetKernelArg(this->multiply_kernel, 2, sizeof(int), (void*)&b.row);
-    errorcode = clSetKernelArg(this->multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->multiply_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clSetKernelArg(this->multiply_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_kernel, 1, sizeof(int), (void*)&b.col);
+    errorcode |= clSetKernelArg(this->multiply_kernel, 2, sizeof(int), (void*)&b.row);
+    errorcode |= clSetKernelArg(this->multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
 
-    const size_t local[2] = { 2,4 };///TODO handle the local size
+    const size_t local[2] = { (size_t)c.row, (size_t)c.col };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring durring the multiplication of matrices\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -348,15 +378,20 @@ void MatrixOperations::multiply_with_transpose(MatrixData &a, MatrixData &b, Mat
     }
     cl_int errorcode;
     errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 0, sizeof(int), (void*)&a.row);
-    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 1, sizeof(int), (void*)&b.col);
-    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 2, sizeof(int), (void*)&b.row);
-    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 1, sizeof(int), (void*)&b.col);
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 2, sizeof(int), (void*)&b.row);
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
 
-    const size_t local[2] = { 2,4 };///TODO handle the local size
+    const size_t local[2] = { 1, 1 };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->multiply_with_transpose_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->multiply_with_transpose_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring multiplying a matrice with the other matrices transpose\n" << errorcode << endl;
+        throw exception();
+    }
 }
 
 void MatrixOperations::transpose_and_multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -368,15 +403,20 @@ void MatrixOperations::transpose_and_multiply(MatrixData &a, MatrixData &b, Matr
     }
     cl_int errorcode;
     errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 0, sizeof(int), (void*)&a.row);
-    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 1, sizeof(int), (void*)&b.col);
-    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 2, sizeof(int), (void*)&b.row);
-    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 1, sizeof(int), (void*)&b.col);
+    errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 2, sizeof(int), (void*)&b.row);
+    errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
 
-    const size_t local[2] = { 2,4 };///TODO handle the local size
+    const size_t local[2] = { (size_t)c.row, (size_t)c.col };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->transpose_and_multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->transpose_and_multiply_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring transposing and multplying the matrix with other matrix\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -390,9 +430,14 @@ void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int 
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.row;
     errorcode = clSetKernelArg(this->hadamart_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode = clSetKernelArg(this->hadamart_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode = clSetKernelArg(this->hadamart_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->hadamart_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clSetKernelArg(this->hadamart_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->hadamart_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->hadamart_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring calculating the hadamart product\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::convolution(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -400,14 +445,19 @@ void MatrixOperations::convolution(MatrixData &input, MatrixData &kernel, Matrix
     ///TODO some error checking
     cl_int errorcode;
     errorcode = clSetKernelArg(this->convolution_kernel, 0, sizeof(int), (void*)&kernel.row);
-    errorcode = clSetKernelArg(this->convolution_kernel, 1, sizeof(int), (void*)&kernel.col);
-    errorcode = clSetKernelArg(this->convolution_kernel, 2, sizeof(int), (void*)&input.col);
-    errorcode = clSetKernelArg(this->convolution_kernel, 3, sizeof(int), (void*)&output.col);
-    errorcode = clSetKernelArg(this->convolution_kernel, 4, sizeof(cl_mem), (void *)&(input.cl_mem_obj));
-    errorcode = clSetKernelArg(this->convolution_kernel, 5, sizeof(cl_mem), (void *)&(kernel.cl_mem_obj));
-    errorcode = clSetKernelArg(this->convolution_kernel, 6, sizeof(cl_mem), (void *)&(output.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->convolution_kernel, 1, sizeof(int), (void*)&kernel.col);
+    errorcode |= clSetKernelArg(this->convolution_kernel, 2, sizeof(int), (void*)&input.col);
+    errorcode |= clSetKernelArg(this->convolution_kernel, 3, sizeof(int), (void*)&output.col);
+    errorcode |= clSetKernelArg(this->convolution_kernel, 4, sizeof(cl_mem), (void *)&(input.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->convolution_kernel, 5, sizeof(cl_mem), (void *)&(kernel.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->convolution_kernel, 6, sizeof(cl_mem), (void *)&(output.cl_mem_obj));
     const size_t global[2] = { (size_t)output.row, (size_t)output.col };
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->convolution_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->convolution_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring valid convolution\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::fullconv(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -415,15 +465,20 @@ void MatrixOperations::fullconv(MatrixData &input, MatrixData &kernel, MatrixDat
     ///TODO some error checking
     cl_int errorcode;
     errorcode = clSetKernelArg(this->fullconv_kernel, 0, sizeof(int), (void*)&kernel.row);
-    errorcode = clSetKernelArg(this->fullconv_kernel, 1, sizeof(int), (void*)&kernel.col);
-    errorcode = clSetKernelArg(this->fullconv_kernel, 2, sizeof(int), (void*)&input.col);
-    errorcode = clSetKernelArg(this->fullconv_kernel, 3, sizeof(int), (void*)&input.row);
-    errorcode = clSetKernelArg(this->fullconv_kernel, 4, sizeof(int), (void*)&output.col);
-    errorcode = clSetKernelArg(this->fullconv_kernel, 5, sizeof(cl_mem), (void *)&(input.cl_mem_obj));
-    errorcode = clSetKernelArg(this->fullconv_kernel, 6, sizeof(cl_mem), (void *)&(kernel.cl_mem_obj));
-    errorcode = clSetKernelArg(this->fullconv_kernel, 7, sizeof(cl_mem), (void *)&(output.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 1, sizeof(int), (void*)&kernel.col);
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 2, sizeof(int), (void*)&input.col);
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 3, sizeof(int), (void*)&input.row);
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 4, sizeof(int), (void*)&output.col);
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 5, sizeof(cl_mem), (void *)&(input.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 6, sizeof(cl_mem), (void *)&(kernel.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->fullconv_kernel, 7, sizeof(cl_mem), (void *)&(output.cl_mem_obj));
     const size_t global[2] = { (size_t)output.row, (size_t)output.col };
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->fullconv_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->fullconv_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring full convolution\n";
+        throw exception();
+    }
 }
 
 void MatrixOperations::sameconv(MatrixData &input, MatrixData &kernel, MatrixData &output, int num_events, cl_event *wait_for_events, cl_event *generated_event)
@@ -431,13 +486,18 @@ void MatrixOperations::sameconv(MatrixData &input, MatrixData &kernel, MatrixDat
     ///TODO some error checking
     cl_int errorcode;
     errorcode = clSetKernelArg(this->sameconv_kernel, 0, sizeof(int), (void*)&kernel.row);
-    errorcode = clSetKernelArg(this->sameconv_kernel, 1, sizeof(int), (void*)&kernel.col);
-    errorcode = clSetKernelArg(this->sameconv_kernel, 2, sizeof(int), (void*)&output.col);
-    errorcode = clSetKernelArg(this->sameconv_kernel, 3, sizeof(cl_mem), (void *)&(input.cl_mem_obj));
-    errorcode = clSetKernelArg(this->sameconv_kernel, 4, sizeof(cl_mem), (void *)&(kernel.cl_mem_obj));
-    errorcode = clSetKernelArg(this->sameconv_kernel, 5, sizeof(cl_mem), (void *)&(output.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->sameconv_kernel, 1, sizeof(int), (void*)&kernel.col);
+    errorcode |= clSetKernelArg(this->sameconv_kernel, 2, sizeof(int), (void*)&output.col);
+    errorcode |= clSetKernelArg(this->sameconv_kernel, 3, sizeof(cl_mem), (void *)&(input.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->sameconv_kernel, 4, sizeof(cl_mem), (void *)&(kernel.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->sameconv_kernel, 5, sizeof(cl_mem), (void *)&(output.cl_mem_obj));
     const size_t global[2] = { (size_t)output.row, (size_t)output.col };
-    errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sameconv_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->sameconv_kernel, 2, NULL, global, NULL, num_events, wait_for_events, generated_event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring same convolution\n";
+        throw exception();
+    }
 }
 
 void print_mtx_list(MatrixData **mtx, int list_len)

@@ -104,6 +104,7 @@ class FullyConnected : public Layer {
     cl_program fully_connected_program;
     cl_kernel update_weights_kernel;
     cl_kernel update_biases_kernel;
+    cl_mem reg_rate, learn_rate;
     public:
     FullyConnected(int row, int prev_row, int neuron_type, OpenclSetup *env);
     ~FullyConnected();

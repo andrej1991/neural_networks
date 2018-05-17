@@ -235,17 +235,19 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
     }
     else
     {
+        cl_event events[4];
         for(int i=0; i<this->layers_num; i++)
         {
             for(int j=0; j<this->nabla[i][0].get_fmap_count();j++)
             {
                 ///TODO handle the mapdepth!!!
-                this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
-                this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);
-                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0]);
-                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0]);
+                this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0], 0, NULL, &events[0]);
+                this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0], 0, NULL, &events[1]);
+                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[0][0], 0, NULL, &events[2]);
+                this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[0][0], 0, NULL, &events[3]);
+                clWaitForEvents(4, events);
             }
-            clFinish(this->deltanabla[i][0].fmap[0][0].mtxop[0].command_queue);
+            //clFinish(this->deltanabla[i][0].fmap[0][0].mtxop[0].command_queue);
         }
     }
     for(int i = 0; i < training_data_len; i++)
@@ -350,6 +352,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             for(int j = 0; j < minibatch_count; j++)
                 {
                     this->update_weights_and_biasses(minibatches[j], minibatch_len, trainingdata_len, learning_rate, regularization_rate);
+                    cout << j << endl;
                 }
             if(test_data != NULL)
                 {
@@ -439,7 +442,7 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
-    this->stochastic_gradient_descent(d, 30, 10, 0.03, true, 1, v, -1);
+    this->stochastic_gradient_descent(d, 30, 10, 0.03, true, 1, v, 10);
     //this->check_accuracy(v);
     //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);

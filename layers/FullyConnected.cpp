@@ -40,6 +40,18 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSet
         cerr << "unable to create OpenCL update_biases kernel\n";
         throw exception();
     }
+    this->reg_rate = clCreateBuffer((this->env->context), CL_MEM_READ_WRITE, sizeof(float), NULL, &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL buffer\n";
+        throw exception();
+    }
+    this->learn_rate = clCreateBuffer((this->env->context), CL_MEM_READ_WRITE, sizeof(float), NULL, &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL buffer\n";
+        throw exception();
+    }
 }
 
 FullyConnected::~FullyConnected()
@@ -52,22 +64,16 @@ FullyConnected::~FullyConnected()
 
 inline void FullyConnected::layers_output(MatrixData **input)
 {
-    /*MatrixData multiplied(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
-    multiplied.copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));*/
     if(this->function_variables[0] == NULL)
     {
         this->function_variables[0] = new MatrixData(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
         this->function_variables[0]->copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     }
-    //MatrixData inputparam(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
-    //inputparam.copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     ///inputparam += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     cl_event event[2];
     this->fmap[0][0].mtxop[0].multiply(this->fmap[0][0].weights[0][0], input[0][0], this->function_variables[0][0], 0, NULL, &event[0]);
-    clFinish(this->fmap[0][0].mtxop[0].command_queue);
-    //this->fmap[0][0].mtxop[0].add_matrices(multiplied, this->fmap[0][0].biases[0][0], inputparam, 1, event, &event[1]);
-    this->fmap[0][0].mtxop[0].add_matrices(this->function_variables[0][0], this->fmap[0][0].biases[0][0], this->function_variables[0][0], 0, NULL, &event[1]);
-
+    //clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    this->fmap[0][0].mtxop[0].add_matrices(this->function_variables[0][0], this->fmap[0][0].biases[0][0], this->function_variables[0][0], 1, &event[0], &event[1]);
     this->neuron.activation(this->function_variables[0][0], this->output[0][0], 1, &event[1]);
 }
 
@@ -140,11 +146,9 @@ inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
     cl_event event[2];
     this->fmap[0][0].mtxop[0].multiply(this->fmap[0][0].weights[0][0], input[0][0], this->function_variables[0][0], 0, NULL, &event[0]);
     clFinish(this->fmap[0][0].mtxop[0].command_queue);
-    this->fmap[0][0].mtxop[0].add_matrices(this->function_variables[0][0], this->fmap[0][0].biases[0][0], this->function_variables[0][0]);
-    //clWaitForEvents(1, &event[1]);
-    clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    this->fmap[0][0].mtxop[0].add_matrices(this->function_variables[0][0], this->fmap[0][0].biases[0][0], this->function_variables[0][0], 1, &event[0], &event[1]);
     ///inputparam = (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
-    this->neuron.activation_derivate(this->function_variables[0][0], this->output_derivative[0][0]);
+    this->neuron.activation_derivate(this->function_variables[0][0], this->output_derivative[0][0], 1, &event[1]);
     return (this->output_derivative);
 }
 
@@ -159,17 +163,20 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
     size_t global_item_size = prev_outputlen * this->outputlen;
     size_t local_item_size = this->outputlen;
     cl_int errorcode;
-    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(cl_mem), (void *)&(learning_rate));
-    errorcode = clSetKernelArg(this->update_weights_kernel, 1, sizeof(cl_mem), (void *)&(regularization_rate));
-    errorcode = clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
+    cl_event events[2];
+    errorcode = clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->reg_rate, CL_BLOCKING, 0, sizeof(float), (void*)&regularization_rate, 0, NULL, NULL);
+    errorcode |= clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->learn_rate, CL_BLOCKING, 0, sizeof(float), (void*)&learning_rate, 0, NULL, NULL);
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 0, sizeof(cl_mem), (void *)&(this->learn_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(cl_mem), (void *)&(this->reg_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[0]);
 
     global_item_size = this->outputlen;
-    errorcode = clSetKernelArg(this->update_biases_kernel, 0, sizeof(cl_mem), (void *)&(learning_rate));
-    errorcode = clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
-    errorcode = clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_biases_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, NULL);
-
-    clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(cl_mem), (void *)&(this->learn_rate));
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_biases_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[1]);
+    clWaitForEvents(2, events);
+    //clFinish(this->fmap[0][0].mtxop[0].command_queue);
 }
 
 inline void FullyConnected::remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes)
@@ -206,17 +213,17 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
         this->function_variables[4] = new MatrixData(this->outputlen, 1);
         this->function_variables[4]->copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     }
+    cl_event events[4];
     this->derivate_layers_output(input);
     ///multiplied = (next_layers_fmaps[0][0].weights[0][0].transpose()) * delta[0][0];
-    this->fmap[0][0].mtxop[0].transpose_and_multiply(next_layers_fmaps[0][0].weights[0][0], delta[0][0], this->function_variables[3][0]);
-    clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    this->fmap[0][0].mtxop[0].transpose_and_multiply(next_layers_fmaps[0][0].weights[0][0], delta[0][0], this->function_variables[3][0], 0, NULL, &events[0]);
     ///delta[0][0] = hadamart_product(multiplied, **output_derivate);
-    this->fmap[0][0].mtxop[0].hadamart(this->function_variables[3][0], this->output_derivative[0][0], this->function_variables[4][0]);
-    this->fmap[0][0].mtxop[0].hadamart(this->function_variables[3][0], this->output_derivative[0][0], nabla[0][0].biases[0][0]);
-    clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    this->fmap[0][0].mtxop[0].hadamart(this->function_variables[3][0], this->output_derivative[0][0], this->function_variables[4][0], 1, &events[0], &events[1]);
+    this->fmap[0][0].mtxop[0].hadamart(this->function_variables[3][0], this->output_derivative[0][0], nabla[0][0].biases[0][0], 1, &events[0], &events[2]);
     ///nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
-    this->fmap[0][0].mtxop[0].multiply_with_transpose(this->function_variables[4][0], input[0][0], nabla[0][0].weights[0][0]);
-    clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    this->fmap[0][0].mtxop[0].multiply_with_transpose(this->function_variables[4][0], input[0][0], nabla[0][0].weights[0][0], 1, &events[1], &events[3]);
+    //clFinish(this->fmap[0][0].mtxop[0].command_queue);
+    cl_int err = clWaitForEvents(1, &events[3]);
     return &(this->function_variables[4]);
 }
 
