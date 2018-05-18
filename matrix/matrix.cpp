@@ -211,7 +211,7 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL MatrixOperations::multiply_with_transpose_program kernel\n";
         throw exception();
     }
-    this->transpose_and_multiply_kernel = clCreateKernel(MatrixOperations::matrix_program, "multiply_with_transpose", &errorcode);
+    this->transpose_and_multiply_kernel = clCreateKernel(MatrixOperations::matrix_program, "transpose_and_multiply", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::transpose_and_multiply_program kernel\n";
@@ -352,12 +352,11 @@ void MatrixOperations::multiply(MatrixData &a, MatrixData &b, MatrixData &c, int
         throw exception();
     }
     cl_int errorcode;
-    errorcode = clSetKernelArg(this->multiply_kernel, 0, sizeof(int), (void*)&a.row);
-    errorcode |= clSetKernelArg(this->multiply_kernel, 1, sizeof(int), (void*)&b.col);
-    errorcode |= clSetKernelArg(this->multiply_kernel, 2, sizeof(int), (void*)&b.row);
-    errorcode |= clSetKernelArg(this->multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode |= clSetKernelArg(this->multiply_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode |= clSetKernelArg(this->multiply_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode = clSetKernelArg(this->multiply_kernel, 0, sizeof(int), (void*)&b.col);
+    errorcode |= clSetKernelArg(this->multiply_kernel, 1, sizeof(int), (void*)&b.row);
+    errorcode |= clSetKernelArg(this->multiply_kernel, 2, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_kernel, 3, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_kernel, 4, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
 
     const size_t local[2] = { (size_t)c.row, (size_t)c.col };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
@@ -377,14 +376,13 @@ void MatrixOperations::multiply_with_transpose(MatrixData &a, MatrixData &b, Mat
         throw exception();
     }
     cl_int errorcode;
-    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 0, sizeof(int), (void*)&a.row);
-    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 1, sizeof(int), (void*)&b.col);
-    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 2, sizeof(int), (void*)&b.row);
-    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 4, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
-    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 5, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
+    errorcode = clSetKernelArg(this->multiply_with_transpose_kernel, 0, sizeof(int), (void*)&b.col);
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 1, sizeof(int), (void*)&b.row);
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 2, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 3, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->multiply_with_transpose_kernel, 4, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
 
-    const size_t local[2] = { 1, 1 };///TODO handle the local size
+    const size_t local[2] = { /*(size_t)c.row, (size_t)c.col*/ 1,1 };///TODO handle the local size
     const size_t global[2] = { (size_t)c.row, (size_t)c.col };
     errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->multiply_with_transpose_kernel, 2, NULL, global, local, num_events, wait_for_events, generated_event);
     if(errorcode != CL_SUCCESS)
@@ -402,7 +400,7 @@ void MatrixOperations::transpose_and_multiply(MatrixData &a, MatrixData &b, Matr
         throw exception();
     }
     cl_int errorcode;
-    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 0, sizeof(int), (void*)&a.row);
+    errorcode = clSetKernelArg(this->transpose_and_multiply_kernel, 0, sizeof(int), (void*)&a.col);
     errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 1, sizeof(int), (void*)&b.col);
     errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 2, sizeof(int), (void*)&b.row);
     errorcode |= clSetKernelArg(this->transpose_and_multiply_kernel, 3, sizeof(cl_mem), (void *)&(a.cl_mem_obj));

@@ -13,7 +13,7 @@ __kernel void scalar_matrice_add(__global const float *A, __global const float *
     C[i] = A[i] + B[0];
 }
 
-__kernel void multiply(const int Arow, const int Bcol, const int Brow,
+__kernel void multiply(const int Bcol, const int Brow,
                       const __global float* A, const __global float* B, __global float* C)
 {
 
@@ -28,22 +28,23 @@ __kernel void multiply(const int Arow, const int Bcol, const int Brow,
     C[globalRow*Bcol + globalCol] = 1;
 }
 
-__kernel void multiply_with_transpose(const int Arow, const int Bcol, const int Brow,
-                      const __global float* A, const __global float* B, __global float* C)
-{
+__kernel void multiply_with_transpose(const int Bcol, const int Brow,
+                      const __global float* A,
+                      const __global float* B,
+                      __global float* C) {
     
     const int globalRow = get_global_id(0);
     const int globalCol = get_global_id(1);
- 
+
     float acc = 0.0f;
-    for (int k=0; k<Brow; k++) {
-        acc += A[globalRow*Brow + k] * B[globalRow*Brow + k];
+    for (int k=0; k<Bcol; k++) {
+        acc += A[globalRow*Bcol + k] * B[globalCol*Bcol + k];
     }
  
-    C[globalRow*Bcol + globalCol] = acc;
+    C[globalRow*Brow + globalCol] = acc;
 }
 
-__kernel void transpose_ant_multiply(const int Arow, const int Bcol, const int Brow,
+__kernel void transpose_and_multiply(const int Acol, const int Bcol, const int Brow,
                       const __global float* A, const __global float* B, __global float* C)
 {
 
@@ -52,7 +53,7 @@ __kernel void transpose_ant_multiply(const int Arow, const int Bcol, const int B
  
     float acc = 0.0f;
     for (int k=0; k<Brow; k++) {
-        acc += A[k*Bcol + globalCol] * B[k*Bcol + globalCol];
+        acc += A[k*Acol + globalRow] * B[k*Bcol + globalCol];
     }
  
     C[globalRow*Bcol + globalCol] = acc;

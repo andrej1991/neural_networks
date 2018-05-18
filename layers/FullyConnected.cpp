@@ -223,7 +223,7 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
     ///nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
     this->fmap[0][0].mtxop[0].multiply_with_transpose(this->function_variables[4][0], input[0][0], nabla[0][0].weights[0][0], 1, &events[1], &events[3]);
     //clFinish(this->fmap[0][0].mtxop[0].command_queue);
-    cl_int err = clWaitForEvents(1, &events[3]);
+    cl_int err = clWaitForEvents(4, events);
     return &(this->function_variables[4]);
 }
 
