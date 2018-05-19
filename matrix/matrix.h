@@ -63,6 +63,6 @@ class MatrixOperations{
 };
 
 void print_mtx_list(MatrixData **mtx, int list_len);
-void print_mtx(MatrixData &mtx);
+void print_mtx(MatrixData &mtx, cl_command_queue *q=NULL);
 
 #endif // MATRIX_H_INCLUDED

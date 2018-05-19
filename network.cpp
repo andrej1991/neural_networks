@@ -350,7 +350,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             for(int j = 0; j < minibatch_count; j++)
                 {
                     this->update_weights_and_biasses(minibatches[j], minibatch_len, trainingdata_len, learning_rate, regularization_rate);
-                    cout << j << endl;
                 }
             if(test_data != NULL)
                 {
@@ -440,9 +439,12 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
-    this->stochastic_gradient_descent(d, 30, 10, 0.03, true, 1, v, -1);
+    this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 1, v, -1);
     /*for(int i=0; i<30;i++)
-        this->check_accuracy(v);*/
+    {
+        this->check_accuracy(v);
+        cout << i << endl;
+    }*/
     //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);

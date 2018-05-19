@@ -517,8 +517,12 @@ void print_mtx_list(MatrixData **mtx, int list_len)
 
 }
 
-void print_mtx(MatrixData &mtx)
+void print_mtx(MatrixData &mtx, cl_command_queue *q)
 {
+    if(mtx.cl_mem_inuse)
+    {
+        clEnqueueReadBuffer(*q, mtx.cl_mem_obj, CL_TRUE, 0, mtx.row*mtx.col*sizeof(float), mtx.data, 0, NULL, NULL);
+    }
     cout << "[";
     for(int j = 0; j < mtx.row; j++)
     {
