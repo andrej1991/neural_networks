@@ -76,7 +76,7 @@ void InputLayer::set_input(MatrixData **input)
                         {
                             for(int j = 0; j < this->col; j++)
                                 {
-                                    (this->outputs[l][0])[i][j] = (input[l][0])[i * this->row + j][0];
+                                    (this->outputs[l][0])[i][j] = (input[l][0])[i][j];
                                 }
                         }
                     this->outputs[l][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));

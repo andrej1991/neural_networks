@@ -52,18 +52,6 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSet
         cerr << "unable to create OpenCL update_biases kernel\n";
         throw exception();
     }
-    this->reg_rate = clCreateBuffer((this->env->context), CL_MEM_READ_WRITE, sizeof(float), NULL, &errorcode);
-    if(errorcode != CL_SUCCESS)
-    {
-        cerr << "unable to create OpenCL buffer\n";
-        throw exception();
-    }
-    this->learn_rate = clCreateBuffer((this->env->context), CL_MEM_READ_WRITE, sizeof(float), NULL, &errorcode);
-    if(errorcode != CL_SUCCESS)
-    {
-        cerr << "unable to create OpenCL buffer\n";
-        throw exception();
-    }
 }
 
 FullyConnected::~FullyConnected()
@@ -93,7 +81,7 @@ inline void FullyConnected::layers_output(MatrixData **input)
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->get_act_input_kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if(errorcode != CL_SUCCESS)
     {
-        cerr << "Some error happened durring durring the multiplication of matrices\n" << errorcode << endl;
+        cerr << "Some error happened while calculatingt the output of the Fully Connected layer\n" << errorcode << endl;
         throw exception();
     }
     this->neuron.activation(this->function_variables[0][0], this->output[0][0], 1, &event);
@@ -176,7 +164,7 @@ inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->get_act_input_kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if(errorcode != CL_SUCCESS)
     {
-        cerr << "Some error happened durring durring the multiplication of matrices\n" << errorcode << endl;
+        cerr << "Some error happened durring the derivation of the Fully connected layers output\n" << errorcode << endl;
         throw exception();
     }
     this->neuron.activation_derivate(this->function_variables[0][0], this->output_derivative[0][0], 1, &event);
@@ -195,17 +183,23 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
     size_t local_item_size = this->outputlen;
     cl_int errorcode;
     cl_event events[2];
-    errorcode = clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->reg_rate, CL_BLOCKING, 0, sizeof(float), (void*)&regularization_rate, 0, NULL, NULL);
-    errorcode |= clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->learn_rate, CL_BLOCKING, 0, sizeof(float), (void*)&learning_rate, 0, NULL, NULL);
-    errorcode |= clSetKernelArg(this->update_weights_kernel, 0, sizeof(cl_mem), (void *)&(this->learn_rate));
-    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(cl_mem), (void *)&(this->reg_rate));
-    errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
+    //print_mtx(layer[0].fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learning_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regularization_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[0]);
 
     global_item_size = this->outputlen;
-    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(cl_mem), (void *)&(this->learn_rate));
-    errorcode |= clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(float), (void *)&(learning_rate));
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].biases[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_biases_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[1]);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened while updating the weights and biases of the Fully Connected layer\n" << errorcode << endl;
+        throw exception();
+    }
     clWaitForEvents(2, events);
 }
 
@@ -230,6 +224,7 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
                                           MatrixData **delta, int next_layers_fmapcount)
 {
     ///TODO think through this function from mathematical perspective!!!
+    //print_mtx(delta[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
     if(next_layers_fmapcount != 1)
         {
             cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
@@ -243,6 +238,7 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
     cl_event events[2];
     ///MatrixData multiplied = (next_layers_fmaps[0][0].weights[0][0].transpose()) * delta[0][0];
     ///new_delta = hadamart(multiplied, this->output_derivative[0][0]);
+    this->derivate_layers_output(input);
     cl_int errorcode;
     size_t global_item_size = this->outputlen;
     errorcode = clSetKernelArg(this->get_layers_delta_kernel, 0, sizeof(int), (void *)&next_layers_fmaps[0][0].weights[0][0].col);
@@ -253,6 +249,7 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
     errorcode |= clSetKernelArg(this->get_layers_delta_kernel, 5, sizeof(cl_mem), (void *)&(this->function_variables[3][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->get_layers_delta_kernel, 6, sizeof(cl_mem), (void *)&(nabla[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->get_layers_delta_kernel, 1, NULL, &global_item_size, NULL, 0, NULL, &events[0]);
+    //print_mtx(this->function_variables[3][0], &(this->fmap[0][0].mtxop[0].command_queue));
     if(errorcode != CL_SUCCESS)
     {
         cerr << "Some error happened durring calculating the delta of the layer\n" << errorcode << endl;
@@ -260,6 +257,9 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
     }
     this->fmap[0][0].mtxop[0].multiply_with_transpose(this->function_variables[3][0], input[0][0], nabla[0][0].weights[0][0], 1, &events[0], &events[1]);
     cl_int err = clWaitForEvents(1, &events[1]);
+    /*print_mtx(nabla[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+    print_mtx(this->function_variables[3][0], &(this->fmap[0][0].mtxop[0].command_queue));
+    print_mtx(input[0][0], &(this->fmap[0][0].mtxop[0].command_queue));*/
     return &(this->function_variables[3]);
 }
 

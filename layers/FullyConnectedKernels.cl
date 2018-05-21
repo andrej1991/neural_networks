@@ -1,14 +1,14 @@
-__kernel void update_weights(__global const float *learning_rate, __global const float *regularization_rate, __global float *weights) 
+__kernel void update_weights(const float learning_rate, const float regularization_rate, __global const float *delta_weights, __global float *weights) 
 {
     int i = get_global_id(0);
-    float result = regularization_rate[0] * weights[i] - learning_rate[0] * weights[i];
+    float result = regularization_rate * weights[i] - learning_rate * delta_weights[i];
     weights[i] = result;
 }
 
-__kernel void update_biases(__global const float *learning_rate, __global float *biases) 
+__kernel void update_biases(const float learning_rate, __global const float *delta_biases, __global float *biases) 
 {
     int i = get_global_id(0);
-    float result = biases[i] - learning_rate[0] * biases[i];
+    float result = biases[i] - learning_rate * delta_biases[i];
     biases[i] = result;
 }
 
