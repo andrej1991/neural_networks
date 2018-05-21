@@ -11,7 +11,7 @@ Layers_features::Layers_features(int mapcount, int row, int col, int depth, int 
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
         {
-            this->fmap[i] = new Feature_map(row, col, depth, biascnt);
+            this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
         }
 }
 

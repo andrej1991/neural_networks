@@ -1,6 +1,6 @@
 #include "layers.h"
 
-Feature_map::Feature_map(int row, int col, int depth, int biascnt):
+Feature_map::Feature_map(int row, int col, int depth, int biascnt, bool initializtion_needed):
                 mapdepth(depth), row(row), col(col)
 {
     this->weights = new Matrice* [depth];
@@ -15,8 +15,11 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt):
             this->weights[i] = new Matrice(row, col);
             this->biases[i] = new Matrice(biascount, 1);
         }
-    this->initialize_weights();
-    this->initialize_biases();
+    if(initializtion_needed)
+    {
+        this->initialize_weights();
+        this->initialize_biases();
+    }
 }
 
 Feature_map::~Feature_map()

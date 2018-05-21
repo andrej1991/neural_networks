@@ -34,7 +34,7 @@ class Feature_map{
     int row, col, mapdepth;
     public:
     Matrice **weights, **biases;
-    Feature_map(int row, int col, int mapdepth, int biascnt = -1);
+    Feature_map(int row, int col, int mapdepth, int biascnt = -1, bool initialization_needed = true);
     int get_col();
     int get_row();
     int get_mapdepth();
