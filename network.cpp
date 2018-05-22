@@ -126,9 +126,9 @@ inline void Network::feedforward(MatrixData **input)
         }
 }
 
-double Network::cost(MatrixData &required_output, int req_outp_indx)
+float Network::cost(MatrixData &required_output, int req_outp_indx)
 {
-    double helper = 0, result = 0;
+    float helper = 0, result = 0;
     this->layers[this->layers_num - 1][0].sync_memory();
     switch(this->costfunction_type)
         {
@@ -199,7 +199,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
         }*/
 }
 
-void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
+void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, float learning_rate, float regularization_rate)
 {
     int *layer_bck, **ind;
     //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
@@ -263,8 +263,8 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
                     nabla[j][0] += deltanabla[j][0];
                 }
         }
-    double lr = learning_rate / training_data_len;
-    double reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
+    float lr = learning_rate / training_data_len;
+    float reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
     for(int i = 0; i < this->layers_num; i++)
         {
             this->layers[i][0].update_weights_and_biasses(lr, reg, nabla[i]);
@@ -325,8 +325,8 @@ void Network::store(char *filename)
         }
 }
 
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
-                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, float learning_rate, bool monitor_learning_cost,
+                                            float regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     if(minibatch_count < 0)
         {
@@ -337,7 +337,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     rand.open("/dev/urandom", ios::in);
     int break_counter = 0;
     int learning_accuracy, learnig_cost_counter = 0;
-    double learning_cost, previoius_learning_cost = 0;
+    float learning_cost, previoius_learning_cost = 0;
     MatrixData helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
     for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_row(); i++)
         {
@@ -406,7 +406,7 @@ void Network::check_accuracy(MNIST_data **test_data)
 {
     int break_counter = 0;
     int learning_accuracy, learnig_cost_counter = 0;
-    double learning_cost, previoius_learning_cost = 0;
+    float learning_cost, previoius_learning_cost = 0;
     MatrixData helper(this->layers[this->layers_num - 1][0].get_output_row(), 1);
     MatrixData output;
     int test_data_len = 10000;

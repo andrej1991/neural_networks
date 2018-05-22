@@ -47,7 +47,7 @@ inline MatrixData** InputLayer::derivate_layers_output(MatrixData **input)
     ;
 }
 
-void InputLayer::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+void InputLayer::update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer)
 {
     ;
 }

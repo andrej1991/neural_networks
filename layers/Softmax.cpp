@@ -25,8 +25,8 @@ inline void Softmax::layers_output(Matrice **input)
 {
     Matrice weighted_input(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
     Matrice output_helper(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
-    double nominator = 0;
-    double helper;
+    float nominator = 0;
+    float helper;
     weighted_input += (this->fmap[0][0].weights[0][0] * input[0][0] + this->fmap[0][0].biases[0][0]);
     for(int i = 0; i < this->outputlen; i++)
         {
@@ -93,7 +93,7 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
 
 
 ///these are inherited from Softmax layer
-/*void Softmax::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+/*void Softmax::update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer)
 {
     ;
 }

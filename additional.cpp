@@ -2,7 +2,7 @@
 
 int getmax(float *d)
 {
-    double Max = d[0];
+    float Max = d[0];
     int index = 0;
     for(int i = 0; i < 10; i++)
         {

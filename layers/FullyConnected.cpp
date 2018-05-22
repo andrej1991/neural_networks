@@ -171,7 +171,7 @@ inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
     return (this->output_derivative);
 }
 
-void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+void FullyConnected::update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer)
 {
     if((layer[0].get_fmap_count() != 1) + (layer[0].fmap[0][0].get_mapdepth() != 1))
         {
@@ -183,17 +183,15 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
     size_t local_item_size = this->outputlen;
     cl_int errorcode;
     cl_event events[2];
-    float regrate = regularization_rate;
-    float learnrate = learning_rate;
     //print_mtx(layer[0].fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
-    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learnrate));
-    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regrate));
+    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learning_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regularization_rate));
     errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->update_weights_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[0]);
 
     global_item_size = this->outputlen;
-    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(float), (void *)&(learnrate));
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(float), (void *)&(learning_rate));
     errorcode |= clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->update_biases_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_biases_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[1]);

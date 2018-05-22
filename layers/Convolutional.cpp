@@ -146,7 +146,7 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
     return layers_delta;
 }
 
-void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+void Convolutional::update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer)
 {
     for(int i = 0; i < this->map_count; i++)
         {
