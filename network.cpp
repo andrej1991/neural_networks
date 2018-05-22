@@ -167,8 +167,11 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     delta = this->layers[layers_num - 1][0].get_output_error(this->layers[layers_num - 2][0].get_output(),
                                                     trainig_data[0].required_output, this->costfunction_type);
     ///nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
-    clEnqueueCopyBuffer(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue, delta[0][0].cl_mem_obj, nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0].cl_mem_obj,
-                        0, 0, nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0].get_row(), 0, NULL, &event[0]);
+    clEnqueueCopyBuffer(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue,
+                        delta[0][0].cl_mem_obj,
+                        nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0].cl_mem_obj,
+                        0, 0,
+                        nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0].get_row(), 0, NULL, &event[0]);
     ///nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2][0].get_output()[0][0].transpose();
     nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].multiply_with_transpose(delta[0][0], this->layers[this->layers_num - 2][0].get_output()[0][0],
                                                                                nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0], 0, NULL, &event[1]);
@@ -243,8 +246,8 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             {
                 for(int k = 0; k < this->nabla[i][0].fmap[j][0].get_mapdepth(); k++)
                 {
-                    this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[k][0], 0, NULL, &events[0]);
-                    this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[k][0], 0, NULL, &events[1]);
+                    this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->deltanabla[i][0].fmap[j][0].biases[k][0], 0, NULL, &events[0]);
+                    this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->deltanabla[i][0].fmap[j][0].weights[k][0], 0, NULL, &events[1]);
                     this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[k][0], 0, NULL, &events[2]);
                     this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[k][0], 0, NULL, &events[3]);
                     clWaitForEvents(4, events);
@@ -443,15 +446,15 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
-    //this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 1, v, -1);
+    //this->check_accuracy(v);
+    this->stochastic_gradient_descent(d, 3, 10, 0.3, true, 10, v, -1);
     /*for(int i=0; i<1;i++)
     {
         this->check_accuracy(v);
         this->store("/home/andrej/myfiles/Asztal/net2.bin");
         cout << i << endl;
     }*/
-    this->check_accuracy(v);
-    this->store("/home/andrej/myfiles/Asztal/net2.bin");
+    //this->check_accuracy(v);
     //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);

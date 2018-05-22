@@ -8,8 +8,7 @@ __kernel void update_weights(const float learning_rate, const float regularizati
 __kernel void update_biases(const float learning_rate, __global const float *delta_biases, __global float *biases) 
 {
     int i = get_global_id(0);
-    float result = biases[i] - learning_rate * delta_biases[i];
-    biases[i] = result;
+    biases[i] -= learning_rate * delta_biases[i];
 }
 
 __kernel void get_activation_input(const int InpRow, const __global float* weights,

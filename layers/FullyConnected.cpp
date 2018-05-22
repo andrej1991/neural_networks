@@ -183,15 +183,17 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
     size_t local_item_size = this->outputlen;
     cl_int errorcode;
     cl_event events[2];
+    float regrate = regularization_rate;
+    float learnrate = learning_rate;
     //print_mtx(layer[0].fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
-    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learning_rate));
-    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regularization_rate));
+    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learnrate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regrate));
     errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->update_weights_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[0]);
 
     global_item_size = this->outputlen;
-    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(float), (void *)&(learning_rate));
+    errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(float), (void *)&(learnrate));
     errorcode |= clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->update_biases_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_biases_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[1]);
@@ -201,6 +203,9 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
         throw exception();
     }
     clWaitForEvents(2, events);
+    //print_mtx(this->fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+    //cout << regularization_rate << endl;
+    //throw exception();
 }
 
 inline void FullyConnected::remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes)
@@ -257,9 +262,6 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
     }
     this->fmap[0][0].mtxop[0].multiply_with_transpose(this->function_variables[3][0], input[0][0], nabla[0][0].weights[0][0], 1, &events[0], &events[1]);
     cl_int err = clWaitForEvents(1, &events[1]);
-    /*print_mtx(nabla[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
-    print_mtx(this->function_variables[3][0], &(this->fmap[0][0].mtxop[0].command_queue));
-    print_mtx(input[0][0], &(this->fmap[0][0].mtxop[0].command_queue));*/
     return &(this->function_variables[3]);
 }
 
