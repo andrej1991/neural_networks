@@ -443,12 +443,15 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
-    this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 1, v, -1);
-    /*for(int i=0; i<30;i++)
+    //this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 1, v, -1);
+    /*for(int i=0; i<1;i++)
     {
         this->check_accuracy(v);
+        this->store("/home/andrej/myfiles/Asztal/net2.bin");
         cout << i << endl;
     }*/
+    this->check_accuracy(v);
+    this->store("/home/andrej/myfiles/Asztal/net2.bin");
     //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);

@@ -44,7 +44,9 @@ int main()
     LayerDescriptor *layers[2];
     layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
     layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    Network n(2, layers, InputRow, InputCol, 1, QUADRATIC_CF);
+    //Network n(2, layers, InputRow, InputCol, 1, QUADRATIC_CF);
+    //n.test(m, validation);
+    Network n("/home/andrej/myfiles/Asztal/net.bin");
     n.test(m, validation);
     input.close();
     required_output.close();

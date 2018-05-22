@@ -2,7 +2,7 @@
 #include "../opencl_setup.h"
 
 Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *env, bool initialization_needed):
-                mapdepth(depth), row(row), col(col)
+                mapdepth(depth), row(row), col(col), openclenv(env)
 {
     this->weights = new MatrixData* [depth];
     this->biases = new MatrixData* [depth];
@@ -105,33 +105,47 @@ int Feature_map::get_mapdepth()
 void Feature_map::store(std::ofstream &params)
 {
     for(int i = 0; i < this->mapdepth; i++)
-    for(int j = 0; j < this->weights[i][0].get_row(); j++)
+    {
+        int s = this->weights[i][0].get_row() * this->weights[i][0].get_col() * sizeof(float);
+        clEnqueueReadBuffer(this->mtxop[0].command_queue, this->weights[i][0].cl_mem_obj, CL_TRUE, 0, s, this->weights[i][0].data, 0, NULL, NULL);
+        for(int j = 0; j < this->weights[i][0].get_row(); j++)
         {
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
-                {
-                    params.write(reinterpret_cast<char *>(&((this->weights[i][0])[j][k])), sizeof(double));
-                }
-        }
-    for(int i = 0; i < this->mapdepth; i++)
-        for(int j = 0; j < this->biases[i][0].get_row(); j++)
             {
-                params.write(reinterpret_cast<char *>(&((this->biases[i][0])[j][0])), sizeof(double));
+                params.write(reinterpret_cast<char *>(&((this->weights[i][0])[j][k])), sizeof(float));
             }
+        }
+    }
+    for(int i = 0; i < this->mapdepth; i++)
+    {
+        int s = this->biases[i][0].get_row() * sizeof(float);
+        clEnqueueReadBuffer(this->mtxop[0].command_queue, this->biases[i][0].cl_mem_obj, CL_TRUE, 0, s, this->biases[i][0].data, 0, NULL, NULL);
+        for(int j = 0; j < this->biases[i][0].get_row(); j++)
+        {
+            params.write(reinterpret_cast<char *>(&((this->biases[i][0])[j][0])), sizeof(float));
+        }
+    }
 }
 
 void Feature_map::load(std::ifstream &params)
 {
     for(int i = 0; i < this->mapdepth; i++)
-    for(int j = 0; j < this->weights[i][0].get_row(); j++)
+    {
+        for(int j = 0; j < this->weights[i][0].get_row(); j++)
         {
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
-                {
-                    params.read(reinterpret_cast<char *>(&((this->weights[i][0])[j][k])), sizeof(double));
-                }
-        }
-    for(int i = 0; i < this->mapdepth; i++)
-        for(int j = 0; j < this->biases[i][0].get_row(); j++)
             {
-                params.read(reinterpret_cast<char *>(&((this->biases[i][0])[j][0])), sizeof(double));
+                params.read(reinterpret_cast<char *>(&((this->weights[i][0])[j][k])), sizeof(float));
             }
+        }
+        this->weights[i][0].copy_to_opencl_buffer(&(this->openclenv->context), &(this->mtxop[0].command_queue));
+    }
+    for(int i = 0; i < this->mapdepth; i++)
+    {
+        for(int j = 0; j < this->biases[i][0].get_row(); j++)
+        {
+            params.read(reinterpret_cast<char *>(&((this->biases[i][0])[j][0])), sizeof(float));
+        }
+        this->biases[i][0].copy_to_opencl_buffer(&(this->openclenv->context), &(this->mtxop[0].command_queue));
+    }
 }

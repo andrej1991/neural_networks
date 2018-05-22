@@ -104,11 +104,10 @@ const float* MatrixData::operator[](int r) const
 void MatrixData::copy_to_opencl_buffer(cl_context *context, cl_command_queue* comm_queue)
 {
     cl_int errorcode;
-    //cout << MatrixData::instancecount<<endl;
-    //MatrixData::instancecount++;
+    int s = (this->row)*(this->col)*sizeof(float);
     if((this->cl_mem_inuse) && (comm_queue!=NULL))
     {
-        clEnqueueWriteBuffer(*comm_queue, this->cl_mem_obj, CL_TRUE, 0, row*col*sizeof(float), (void*)this->data, 0, NULL, NULL);
+        clEnqueueWriteBuffer(*comm_queue, this->cl_mem_obj, CL_TRUE, 0, s, (void*)this->data, 0, NULL, NULL);
         return;
     }
     else
@@ -117,7 +116,7 @@ void MatrixData::copy_to_opencl_buffer(cl_context *context, cl_command_queue* co
         {
             clReleaseMemObject(this->cl_mem_obj);
         }
-        this->cl_mem_obj = clCreateBuffer(*context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this->row * this->col * sizeof(float), this->data, &errorcode);
+        this->cl_mem_obj = clCreateBuffer(*context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, s, this->data, &errorcode);
         if(errorcode != CL_SUCCESS)
         {
             cerr << "unable to create OpenCL buffer\n";
