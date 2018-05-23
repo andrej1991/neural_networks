@@ -40,3 +40,10 @@ __kernel void get_layers_delta(const int WeightsCol, const int DeltaRow, const _
     layers_delta[globalRow] = acc * output_derivative[globalRow];
     delta_biases[globalRow] = acc * output_derivative[globalRow];
 }
+
+__kernel void output_err_quadratic_cf(const __global float* output, const __global float* required_output,
+                                      const __global float* output_derivative, __global float* output_error)
+{
+    const int globalRow = get_global_id(0);
+    output_error[globalRow] = (output[globalRow] - required_output[globalRow]) * output_derivative[globalRow];
+}

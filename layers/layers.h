@@ -103,10 +103,7 @@ class FullyConnected : public Layer {
     Neuron neuron;
     Feature_map **fmap;
     cl_program fully_connected_program;
-    cl_kernel update_weights_kernel;
-    cl_kernel update_biases_kernel;
-    cl_kernel get_act_input_kernel;
-    cl_kernel get_layers_delta_kernel;
+    cl_kernel update_weights_kernel, update_biases_kernel, get_act_input_kernel, get_layers_delta_kernel, out_err_quad_cf_kernel;
     public:
     FullyConnected(int row, int prev_row, int neuron_type, OpenclSetup *env);
     ~FullyConnected();

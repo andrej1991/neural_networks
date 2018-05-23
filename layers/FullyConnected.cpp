@@ -52,6 +52,12 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSet
         cerr << "unable to create OpenCL update_biases kernel\n";
         throw exception();
     }
+    this->out_err_quad_cf_kernel = clCreateKernel(this->fully_connected_program, "output_err_quadratic_cf", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL update_biases kernel\n";
+        throw exception();
+    }
 }
 
 FullyConnected::~FullyConnected()
@@ -102,31 +108,40 @@ inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixD
     mtx.copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));*/
     if(this->function_variables[1] == NULL)
     {
-        this->function_variables[1] = new MatrixData(this->outputlen, 1);
-        this->function_variables[2] = new MatrixData;
-        this->function_variables[1][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+        this->function_variables[1] = new MatrixData;
     }
     /*MatrixData delta(this->outputlen, 1);
     delta.copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));*/
     //MatrixData req_op = required_output;
-    this->function_variables[2][0] = required_output;
-    this->function_variables[2][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
-    MatrixData **output_derivate;
-    cl_event events[2];
+    this->function_variables[1][0] = required_output;
+    this->function_variables[1][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    cl_event event;
+    cl_int errorcode;
+    size_t global;
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
-            this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[2][0], this->function_variables[1][0], 0, NULL, &events[0]);
-            this->derivate_layers_output(input);
-            ///delta = hadamart_product(mtx, **output_derivate);
-            this->fmap[0][0].mtxop[0].hadamart(this->function_variables[1][0], this->output_derivative[0][0], this->output_error[0][0], 1, &events[0], &events[1]);
-            clWaitForEvents(1, &events[1]);
+            global = this->fmap[0][0].biases[0][0].row;
+            errorcode = clSetKernelArg(this->out_err_quad_cf_kernel, 0, sizeof(cl_mem), (void*)&(this->output[0][0].cl_mem_obj));
+            errorcode |= clSetKernelArg(this->out_err_quad_cf_kernel, 1, sizeof(cl_mem), (void *)&(this->function_variables[1][0].cl_mem_obj));
+            errorcode |= clSetKernelArg(this->out_err_quad_cf_kernel, 2, sizeof(cl_mem), (void *)&(this->output_derivative[0][0].cl_mem_obj));
+            errorcode |= clSetKernelArg(this->out_err_quad_cf_kernel, 3, sizeof(cl_mem), (void *)&(this->output_error[0][0].cl_mem_obj));
+            errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->out_err_quad_cf_kernel, 1, NULL, &global, NULL, 0, NULL, &event);
+            if(errorcode != CL_SUCCESS)
+            {
+                cerr << "Some error happened while calculatingt the output of the Fully Connected layer\n" << errorcode << endl;
+                throw exception();
+            }
+            clWaitForEvents(1, &event);
             return (this->output_error);
-        /*case CROSS_ENTROPY_CF:
-            switch(this->neuron_type)
+        case CROSS_ENTROPY_CF:
+            this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[1][0], this->output_error[0][0], 0, NULL, &event);
+            clWaitForEvents(1, &event);
+            return (this->output_error);
+            /*switch(this->neuron_type)
                 {
                 case SIGMOID:
-                    this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[2][0], this->output_error[0][0]);
+                    this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[1][0], this->output_error[0][0]);
                     clFinish(this->fmap[0][0].mtxop[0].command_queue);
                     return this->output_error;
                 default:
@@ -148,10 +163,10 @@ inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixD
 inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
 {
     //MatrixData inputparam(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
-    if(this->function_variables[0] == NULL)
+    if(this->function_variables[2] == NULL)
     {
-        this->function_variables[0] = new MatrixData(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
-        this->function_variables[0]->copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+        this->function_variables[2] = new MatrixData(this->fmap[0][0].biases[0][0].get_row(), this->fmap[0][0].biases[0][0].get_col());
+        this->function_variables[2]->copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     }
     cl_int errorcode;
     cl_event event;
@@ -160,14 +175,14 @@ inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
     errorcode |= clSetKernelArg(this->get_act_input_kernel, 1, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->get_act_input_kernel, 2, sizeof(cl_mem), (void *)&(input[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->get_act_input_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[0][0].biases[0][0].cl_mem_obj));
-    errorcode |= clSetKernelArg(this->get_act_input_kernel, 4, sizeof(cl_mem), (void *)&(this->function_variables[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->get_act_input_kernel, 4, sizeof(cl_mem), (void *)&(this->function_variables[2][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->get_act_input_kernel, 1, NULL, &global, NULL, 0, NULL, &event);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "Some error happened durring the derivation of the Fully connected layers output\n" << errorcode << endl;
         throw exception();
     }
-    this->neuron.activation_derivate(this->function_variables[0][0], this->output_derivative[0][0], 1, &event);
+    this->neuron.activation_derivate(this->function_variables[2][0], this->output_derivative[0][0], 1, &event);
     return (this->output_derivative);
 }
 
@@ -179,8 +194,8 @@ void FullyConnected::update_weights_and_biasses(float learning_rate, float regul
             throw exception();
         }
     int prev_outputlen = this->fmap[0][0].get_col();
-    size_t global_item_size = prev_outputlen * this->outputlen;
-    size_t local_item_size = this->outputlen;
+    size_t global_item_size = this->fmap[0][0].weights[0][0].row * this->fmap[0][0].weights[0][0].col;
+    size_t local_item_size = this->fmap[0][0].weights[0][0].row;
     cl_int errorcode;
     cl_event events[2];
     //print_mtx(layer[0].fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
@@ -190,7 +205,8 @@ void FullyConnected::update_weights_and_biasses(float learning_rate, float regul
     errorcode |= clSetKernelArg(this->update_weights_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
     errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[0]);
 
-    global_item_size = this->outputlen;
+    global_item_size = this->fmap[0][0].biases[0][0].row;
+    local_item_size = this->fmap[0][0].biases[0][0].row;
     errorcode |= clSetKernelArg(this->update_biases_kernel, 0, sizeof(float), (void *)&(learning_rate));
     errorcode |= clSetKernelArg(this->update_biases_kernel, 1, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].biases[0][0].cl_mem_obj));
     errorcode |= clSetKernelArg(this->update_biases_kernel, 2, sizeof(cl_mem), (void *)&(this->fmap[0][0].biases[0][0].cl_mem_obj));
