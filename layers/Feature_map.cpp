@@ -129,6 +129,7 @@ void Feature_map::store(std::ofstream &params)
 
 void Feature_map::load(std::ifstream &params)
 {
+    //double temp;
     for(int i = 0; i < this->mapdepth; i++)
     {
         for(int j = 0; j < this->weights[i][0].get_row(); j++)
@@ -136,6 +137,7 @@ void Feature_map::load(std::ifstream &params)
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
             {
                 params.read(reinterpret_cast<char *>(&((this->weights[i][0])[j][k])), sizeof(float));
+                //(this->weights[i][0])[j][k] = (float)temp;
             }
         }
         this->weights[i][0].copy_to_opencl_buffer(&(this->openclenv->context), &(this->mtxop[0].command_queue));
@@ -145,6 +147,7 @@ void Feature_map::load(std::ifstream &params)
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
         {
             params.read(reinterpret_cast<char *>(&((this->biases[i][0])[j][0])), sizeof(float));
+            //(this->biases[i][0])[j][0] = (float)temp;
         }
         this->biases[i][0].copy_to_opencl_buffer(&(this->openclenv->context), &(this->mtxop[0].command_queue));
     }

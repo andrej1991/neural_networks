@@ -130,26 +130,30 @@ float Network::cost(MatrixData &required_output, int req_outp_indx)
 {
     float helper = 0, result = 0;
     this->layers[this->layers_num - 1][0].sync_memory();
+    MatrixData **output = this->layers[this->layers_num - 1][0].get_output();
     switch(this->costfunction_type)
         {
         case QUADRATIC_CF:
             /// 1/2 * ||y(x) - a||^2
             for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_len(); i++)
                 {
-                    helper = required_output[i][0] - (this->layers[this->layers_num - 1][0].get_output()[0][0])[i][0];
+                    helper = required_output[i][0] - (output[0][0])[i][0];
                     result += helper * helper;
                 }
-            return 0.5 * result;
+            result *= 0.5;
+            if(result == NAN)
+                throw exception();
+            return result;
         case CROSS_ENTROPY_CF:
             ///y(x)ln a + (1 - y(x))ln(1 - a)
             for(int i = 0; i < this->layers[this->layers_num - 1][0].get_output_len(); i++)
                 {
-                    helper += required_output[i][0] * log((this->layers[this->layers_num - 1][0].get_output()[0][0])[i][0]) + (1 - required_output[i][0]) *
-                                    log(1 - (this->layers[this->layers_num - 1][0].get_output()[0][0])[i][0]);
+                    helper += required_output[i][0] * log((output[0][0])[i][0]) + (1 - required_output[i][0]) *
+                                    log(1 - (output[0][0])[i][0]);
                 }
             return helper;
         case LOG_LIKELIHOOD_CF:
-            result = -1 * log((this->layers[this->layers_num - 1][0].get_output()[0][0])[req_outp_indx][0]);
+            result = -1 * log((output[0][0])[req_outp_indx][0]);
             return result;
         default:
             cerr << "Unknown cost function\n";
@@ -166,6 +170,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     cl_event event[2];
     delta = this->layers[layers_num - 1][0].get_output_error(this->layers[layers_num - 2][0].get_output(),
                                                     trainig_data[0].required_output, this->costfunction_type);
+    //print_mtx(delta[0][0], &(this->nabla[0][0].fmap[0][0].mtxop[0].command_queue));
     ///nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
     clEnqueueCopyBuffer(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue,
                         delta[0][0].cl_mem_obj,
@@ -184,19 +189,9 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
                                            this->layers[i + 1][0].get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1][0].get_fmap_count());
             //print_mtx(delta[0][0], &(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue));
+            //throw exception();
         }
     //throw exception();
-    /*if(this->layers[0][0].get_mapcount() > 1)
-        {
-            for(int i = 0; i < this->layers[0][0].get_mapcount(); i++)
-                delete delta[i];
-            delete[] delta;
-        }
-    else
-        {
-            delete delta[0];
-            delete[] delta;
-        }*/
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, float learning_rate, float regularization_rate)
@@ -351,6 +346,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                     for(int k = 0; k < minibatch_len; k++)
                         {
                             minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                            //minibatches[j][k] = training_data[5];
                         }
                 }
 
@@ -448,14 +444,8 @@ void Network::test(MNIST_data **d, MNIST_data **v)
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
     //this->check_accuracy(v);
     this->stochastic_gradient_descent(d, 3, 10, 0.3, true, 10, v, -1);
-    /*for(int i=0; i<1;i++)
-    {
-        this->check_accuracy(v);
-        this->store("/home/andrej/myfiles/Asztal/net2.bin");
-        cout << i << endl;
-    }*/
+    //this->stochastic_gradient_descent(d, 1, 1, 0.3, true, 10, v, 1);
     //this->check_accuracy(v);
-    //this->store("/home/andrej/myfiles/Asztal/net.bin");
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);
 }

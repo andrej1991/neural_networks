@@ -42,9 +42,9 @@ int main()
     //Neuron n(&(env), SIGMOID);
     //n.neuron(m[0]->required_output);
     LayerDescriptor *layers[2];
-    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 100);
     layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    Network n(2, layers, InputRow, InputCol, 1, CROSS_ENTROPY_CF);
+    Network n(2, layers, InputRow, InputCol, 1, QUADRATIC_CF);
     //Network n("/home/andrej/myfiles/Asztal/net.bin");
     n.test(m, validation);
     input.close();

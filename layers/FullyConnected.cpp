@@ -118,6 +118,7 @@ inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixD
     cl_event event;
     cl_int errorcode;
     size_t global;
+    this->derivate_layers_output(input);
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
@@ -133,6 +134,10 @@ inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixD
                 throw exception();
             }
             clWaitForEvents(1, &event);
+            //print_mtx(this->output[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+            //print_mtx(this->function_variables[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+            //print_mtx(this->output_derivative[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+            //print_mtx(this->output_error[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
             return (this->output_error);
         case CROSS_ENTROPY_CF:
             this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[1][0], this->output_error[0][0], 0, NULL, &event);
@@ -217,7 +222,7 @@ void FullyConnected::update_weights_and_biasses(float learning_rate, float regul
         throw exception();
     }
     clWaitForEvents(2, events);
-    //print_mtx(this->fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
+    //print_mtx(layer[0].fmap[0][0].weights[0][0], &(this->fmap[0][0].mtxop[0].command_queue));
     //cout << regularization_rate << endl;
     //throw exception();
 }
