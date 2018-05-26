@@ -101,10 +101,10 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 this->layers[i] = new FullyConnected(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(),
                                                      layerdesc[i][0].neuron_type, &(this->openclenv));
                 break;
-            /*case SOFTMAX:
-                this->layers[i] = new Softmax(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len());
+            case SOFTMAX:
+                this->layers[i] = new Softmax(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(), &(this->openclenv));
                 break;
-            case CONVOLUTIONAL:
+            /*case CONVOLUTIONAL:
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers[i - 1][0].get_output_row(), this->layers[i - 1][0].get_output_col(),
                                                     this->layers[i - 1][0].get_mapcount(), layerdesc[i][0].row, layerdesc[i][0].col,
@@ -367,8 +367,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                                 }
                             if(monitor_learning_cost)
                                 {
-                                    //if(j > 0)
-                                    //    helper[(int)test_data[j - 1]->required_output[0][0]][0] = 0;
                                     helper[(int)test_data[j][0].required_output[0][0]][0] = 1;
                                     learning_cost += this->cost(helper, test_data[j][0].required_output[0][0]);
                                     helper[(int)test_data[j][0].required_output[0][0]][0] = 0;
@@ -422,8 +420,6 @@ void Network::check_accuracy(MNIST_data **test_data)
                 }
             if(monitor_learning_cost)
                 {
-                    //if(j > 0)
-                    //    helper[(int)test_data[j - 1]->required_output[0][0]][0] = 0;
                     helper[(int)test_data[j][0].required_output[0][0]][0] = 1;
                     learning_cost += this->cost(helper, test_data[j][0].required_output[0][0]);
                     helper[(int)test_data[j][0].required_output[0][0]][0] = 0;
@@ -445,7 +441,8 @@ void Network::test(MNIST_data **d, MNIST_data **v)
     //this->check_accuracy(v);
     this->stochastic_gradient_descent(d, 3, 10, 0.3, true, 10, v, -1);
     //this->stochastic_gradient_descent(d, 1, 1, 0.3, true, 10, v, 1);
-    //this->check_accuracy(v);
+    //for(int i = 0; i < 30; i++)
+    //    this->check_accuracy(v);
     //MatrixData o = this->get_output(v[0]->input);
     //print_mtx(o);
 }

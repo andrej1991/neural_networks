@@ -132,17 +132,19 @@ class FullyConnected : public Layer {
     virtual void load(std::ifstream &params);
 };
 
-/*class Softmax : public FullyConnected {
+class Softmax : public FullyConnected {
+    cl_program softmax_program;
+    cl_kernel softmax_kernel, softmax_derivative_kernel, softmax_helper_kernel;
     public:
     Softmax(int row, int col, OpenclSetup *env);
     ~Softmax();
     inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(MatrixData **input);
-    inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
+    inline MatrixData** get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
     inline MatrixData** derivate_layers_output(MatrixData **input);
 };
 
-class Convolutional : public Layer {
+/*class Convolutional : public Layer {
     MatrixData **outputs, **flattened_output;
     Feature_map **fmap;
     Padding pad;

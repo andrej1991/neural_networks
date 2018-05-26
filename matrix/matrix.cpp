@@ -156,7 +156,7 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL MatrixOperations::matrice_add_program kernel\n";
         throw exception();
     }
-    this->matrice_substract_kernel = clCreateKernel(MatrixOperations::matrix_program, "add", &errorcode);
+    this->matrice_substract_kernel = clCreateKernel(MatrixOperations::matrix_program, "substract", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL MatrixOperations::matrice_substract_program kernel\n";
@@ -283,7 +283,7 @@ void MatrixOperations::substract_matrices(MatrixData &a, MatrixData &b, MatrixDa
     errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->matrice_substract_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
     if(errorcode != CL_SUCCESS)
     {
-        cerr << "Some error happened durring matrix substraction \n";
+        cerr << "Some error happened durring matrix substraction.\n";
         throw exception();
     }
 }
