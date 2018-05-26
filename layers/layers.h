@@ -144,13 +144,15 @@ class Softmax : public FullyConnected {
     inline MatrixData** derivate_layers_output(MatrixData **input);
 };
 
-/*class Convolutional : public Layer {
-    MatrixData **outputs, **flattened_output;
+class Convolutional : public Layer {
+    MatrixData **outputs, **flattened_output, **convolution_helper, **output_derivative, **layers_delta;
     Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
+    OpenclSetup *env;
+    cl_program convolutional_program;
     inline void fulldepth_conv(MatrixData &helper, MatrixData &convolved, MatrixData **input, int map_index);
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, OpenclSetup *env, int stride = 1);
@@ -158,7 +160,7 @@ class Softmax : public FullyConnected {
     inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(MatrixData **input);
     void sync_memory();
-    inline MatrixData get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
+    inline MatrixData** get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
     inline MatrixData** derivate_layers_output(MatrixData **input);
     void update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes);
@@ -180,7 +182,7 @@ class Softmax : public FullyConnected {
     void get_2D_weights(int neuron_id, int fmap_id, MatrixData &kernel, Feature_map **next_layers_fmap);
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-};*/
+};
 
 
 class InputLayer : public Layer {

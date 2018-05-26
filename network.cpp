@@ -104,12 +104,12 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
             case SOFTMAX:
                 this->layers[i] = new Softmax(layerdesc[i][0].neuron_count, this->layers[i - 1][0].get_output_len(), &(this->openclenv));
                 break;
-            /*case CONVOLUTIONAL:
+            case CONVOLUTIONAL:
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers[i - 1][0].get_output_row(), this->layers[i - 1][0].get_output_col(),
                                                     this->layers[i - 1][0].get_mapcount(), layerdesc[i][0].row, layerdesc[i][0].col,
-                                                    layerdesc[i][0].mapcount, SIGMOID, layerdesc[i + 1][0].layer_type, p, 1);
-                break;*/
+                                                    layerdesc[i][0].mapcount, SIGMOID, layerdesc[i + 1][0].layer_type, p, &(this->openclenv), 1);
+                break;
             default:
                 cerr << "Unknown layer type: " << layerdesc[i][0].layer_type << "\n";
                 throw std::exception();
@@ -170,7 +170,6 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     cl_event event[2];
     delta = this->layers[layers_num - 1][0].get_output_error(this->layers[layers_num - 2][0].get_output(),
                                                     trainig_data[0].required_output, this->costfunction_type);
-    //print_mtx(delta[0][0], &(this->nabla[0][0].fmap[0][0].mtxop[0].command_queue));
     ///nabla[this->layers_num - 1][0].fmap[0][0].biases[0][0] = delta[0][0];
     clEnqueueCopyBuffer(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue,
                         delta[0][0].cl_mem_obj,
@@ -181,17 +180,13 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].multiply_with_transpose(delta[0][0], this->layers[this->layers_num - 2][0].get_output()[0][0],
                                                                                nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0], 0, NULL, &event[1]);
     clWaitForEvents(2, event);
-    //print_mtx(delta[0][0], &(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue));
     ///*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
             delta = this->layers[i][0].backpropagate(this->layers[i - 1][0].get_output(),
                                            this->layers[i + 1][0].get_feature_maps(), nabla[i][0].fmap, delta,
                                            nabla[i+1][0].get_fmap_count());
-            //print_mtx(delta[0][0], &(nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].command_queue));
-            //throw exception();
         }
-    //throw exception();
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, float learning_rate, float regularization_rate)
