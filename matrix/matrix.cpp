@@ -216,10 +216,10 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         cerr << "unable to create OpenCL MatrixOperations::transpose_and_multiply_program kernel\n";
         throw exception();
     }
-    this->zero_kernel= clCreateKernel(MatrixOperations::matrix_program, "zero", &errorcode);
+    this->assign_scalar_kernel= clCreateKernel(MatrixOperations::matrix_program, "assign_scalar", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
-        cerr << "unable to create OpenCL MatrixOperations::zero kernel\n";
+        cerr << "unable to create OpenCL MatrixOperations::assign_scalar kernel\n";
         throw exception();
     }
 }
@@ -235,7 +235,7 @@ MatrixOperations::~MatrixOperations()
     clReleaseKernel(this->fullconv_kernel);
     clReleaseKernel(this->sameconv_kernel);
     clReleaseKernel(this->multiply_with_transpose_kernel);
-    clReleaseKernel(this->zero_kernel);
+    clReleaseKernel(this->assign_scalar_kernel);
     clFlush(this->command_queue);
     clFinish(this->command_queue);
     clReleaseCommandQueue(this->command_queue);
@@ -329,13 +329,14 @@ void MatrixOperations::transpose(MatrixData &a, MatrixData &b, int num_events, c
     }
 }
 
-void MatrixOperations::zero(MatrixData &a, int num_events, cl_event *wait_for_events, cl_event *generated_event)
+void MatrixOperations::assign_scalar(MatrixData &a, float scalar, int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
     cl_int errorcode;
     size_t global_item_size = a.row*a.col;
     size_t local_item_size = a.row;
-    errorcode = clSetKernelArg(this->zero_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
-    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->zero_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode = clSetKernelArg(this->assign_scalar_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
+    errorcode |= clSetKernelArg(this->assign_scalar_kernel, 1, sizeof(float), (void *)&(scalar));
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->assign_scalar_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "Some error happened durring zeroing the elements of the matrix\n";

@@ -8,8 +8,10 @@
 
 using namespace std;
 
-#define InputRow 784
-#define InputCol 1
+/*#define InputRow 784
+#define InputCol 1*/
+#define InputRow 28
+#define InputCol 28
 
 #include "opencl_setup.h"
 #include "neuron/neuron.h"
@@ -41,11 +43,12 @@ int main()
     //OpenclSetup env;
     //Neuron n(&(env), SIGMOID);
     //n.neuron(m[0]->required_output);
-    LayerDescriptor *layers[2];
-    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 40);
-    layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    layers[2] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    Network n(3, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
+    LayerDescriptor *layers[4];
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 8);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 10);
+    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 70);
+    layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
+    Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
     //Network n("/home/andrej/myfiles/Asztal/net.bin");
     n.test(m, validation);
     input.close();

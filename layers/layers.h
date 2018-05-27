@@ -145,15 +145,17 @@ class Softmax : public FullyConnected {
 };
 
 class Convolutional : public Layer {
-    MatrixData **outputs, **flattened_output, **convolution_helper, **output_derivative, **layers_delta;
+    MatrixData **outputs, **flattened_output, **convolution_helper, **output_derivative, **layers_delta, **layers_delta_helper, *_2Dkernel;
+    cl_mem delta_helper;
     Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
     OpenclSetup *env;
-    cl_program convolutional_program;
-    inline void fulldepth_conv(MatrixData &helper, MatrixData &convolved, MatrixData **input, int map_index);
+    cl_program convolutional_program, general_program;
+    cl_kernel conv_and_add_kernel, fullconv_and_add_kernel, update_weights_kernel;
+    inline void fulldepth_conv(MatrixData **input, cl_kernel *opencl_kernel);
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, OpenclSetup *env, int stride = 1);
     ~Convolutional();

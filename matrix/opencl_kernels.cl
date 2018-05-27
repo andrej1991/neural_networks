@@ -149,11 +149,11 @@ __kernel void sameconv(const int KernRow, const int KernCol, const int DataCol,
     outp[globalRow*DataCol + globalCol] = acc;
 }
 
-__kernel void zero(__global float* outp) {
+__kernel void assign_scalar(__global float* outp, const float scalar) {
     
     const int globalId = get_global_id(0);
  
-    outp[globalId] = 0;
+    outp[globalId] = scalar;
 }
 
 /*for(int i = kernel.row-1; i < input.row; i += stride)

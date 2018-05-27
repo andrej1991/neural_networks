@@ -236,10 +236,10 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             {
                 for(int k = 0; k < this->nabla[i][0].fmap[j][0].get_mapdepth(); k++)
                 {
-                    this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->deltanabla[i][0].fmap[j][0].biases[k][0], 0, NULL, &events[0]);
-                    this->nabla[i][0].fmap[0][0].mtxop[0].zero(this->deltanabla[i][0].fmap[j][0].weights[k][0], 0, NULL, &events[1]);
-                    this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].biases[k][0], 0, NULL, &events[2]);
-                    this->deltanabla[i][0].fmap[0][0].mtxop[0].zero(this->nabla[i][0].fmap[j][0].weights[k][0], 0, NULL, &events[3]);
+                    this->nabla[i][0].fmap[0][0].mtxop[0].assign_scalar(this->deltanabla[i][0].fmap[j][0].biases[k][0], 0, 0, NULL, &events[0]);
+                    this->nabla[i][0].fmap[0][0].mtxop[0].assign_scalar(this->deltanabla[i][0].fmap[j][0].weights[k][0], 0, 0, NULL, &events[1]);
+                    this->deltanabla[i][0].fmap[0][0].mtxop[0].assign_scalar(this->nabla[i][0].fmap[j][0].biases[k][0], 0, 0, NULL, &events[2]);
+                    this->deltanabla[i][0].fmap[0][0].mtxop[0].assign_scalar(this->nabla[i][0].fmap[j][0].weights[k][0], 0, 0, NULL, &events[3]);
                     clWaitForEvents(4, events);
                 }
             }
@@ -434,7 +434,7 @@ void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
     //this->check_accuracy(v);
-    this->stochastic_gradient_descent(d, 3, 10, 0.3, true, 10, v, -1);
+    this->stochastic_gradient_descent(d, 5, 10, 0.03, true, 10, v, 50);
     //this->stochastic_gradient_descent(d, 1, 1, 0.3, true, 10, v, 1);
     //for(int i = 0; i < 30; i++)
     //    this->check_accuracy(v);

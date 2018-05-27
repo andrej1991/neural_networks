@@ -40,7 +40,7 @@ class MatrixOperations{
     cl_kernel fullconv_kernel;
     cl_kernel sameconv_kernel;
     cl_kernel multiply_with_transpose_kernel;
-    cl_kernel zero_kernel;
+    cl_kernel assign_scalar_kernel;
 
     cl_command_queue command_queue;
 
@@ -51,7 +51,7 @@ class MatrixOperations{
     void substract_matrices(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void transpose_and_multiply(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
-    void zero(MatrixData &a, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
+    void assign_scalar(MatrixData &a, float scalar=0.0, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void multiply_with_transpose(MatrixData &a, MatrixData &b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void scalar_add(MatrixData &a, float b, MatrixData &c, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
     void transpose(MatrixData &a, MatrixData &b, int num_events=0, cl_event *wait_for_events=NULL, cl_event *generated_event=NULL);
