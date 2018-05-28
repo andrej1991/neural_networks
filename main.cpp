@@ -44,8 +44,8 @@ int main()
     //Neuron n(&(env), SIGMOID);
     //n.neuron(m[0]->required_output);
     LayerDescriptor *layers[4];
-    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 8);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 10);
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 20);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 40);
     layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 70);
     layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
     Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);

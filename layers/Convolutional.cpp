@@ -20,6 +20,8 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->general_program = load_program("layers/GeneralKernels.cl", &(this->env->context), this->env->deviceIds);
     cl_int errorcode;
     this->fmap = new Feature_map* [map_count];
+    this->testfmap = new Feature_map* [1];
+    this->testfmap[0] = new Feature_map(this->kernel_row*map_count, this->kernel_col, input_channel_count, -1, env);
     this->outputs = new MatrixData* [map_count];
     this->convolution_helper = new MatrixData* [map_count];
     this->output_derivative = new MatrixData* [map_count];
@@ -28,6 +30,9 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->flattened_output = new MatrixData* [1];
     this->flattened_output[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
     this->flattened_output[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    this->flattened_outp_helper = new MatrixData* [1];
+    this->flattened_outp_helper[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
+    this->flattened_outp_helper[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     this->_2Dkernel = new MatrixData(this->output_row, this->output_col);
     this->_2Dkernel[0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     this->delta_helper = clCreateBuffer(this->env->context, CL_MEM_READ_WRITE, sizeof(float), NULL, &errorcode);
@@ -68,6 +73,12 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
         cerr << "unable to create OpenCL update weights kernel\n";
         throw exception();
     }
+    this->test_kernel = clCreateKernel(this->convolutional_program, "FullDepthConvolution", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL FullDepthConvolution kernel\n";
+        throw exception();
+    }
 }
 
 Convolutional::~Convolutional()
@@ -105,16 +116,6 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, MatrixData &kerne
     clEnqueueCopyBuffer(this->fmap[fmap_id][0].mtxop[0].command_queue, next_layers_fmap[0][0].weights[0][0].cl_mem_obj, kernel.cl_mem_obj,
                         src_offset, 0, kernelsize, 0, NULL, &event);
     clWaitForEvents(1, &event);
-    /*int endpos = starting_pos + kernelsize;
-    int index = starting_pos;
-    for(int col = 0; col < kernel.get_col(); col++)
-        {
-            for(int row = 0; row < kernel.get_row(); row++)
-                {
-                    kernel[row][col] = (next_layers_fmap[0][0].weights[0][0])[neuron_id][index];
-                    index++;
-                }
-        }*/
 }
 
 inline void calculate_delta_helper(MatrixData *padded_delta, MatrixData *delta_helper, MatrixData &kernel, MatrixData &helper)
@@ -145,25 +146,11 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
     {
         int delta_rc = 1;
         int next_layers_neuroncount = delta[0][0].get_row();
-        /*padded_delta = new MatrixData* [next_layers_neuroncount];
-        for(int i = 0; i < next_layers_neuroncount; i++)
-            {
-                padded_delta[i] = new MatrixData;
-                (padded_delta[i][0])[0][0] = (delta[0][0])[i][0];
-                padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
-                                                         (this->output_col-1)/2,
-                                                         (this->output_row-1)/2,
-                                                         (this->output_col-1)/2);
-            }
-        delta_helper = new MatrixData* [this->map_count];
-        MatrixData kernel(this->output_row, this->output_col);*/
         for(int i = 0; i < next_layers_neuroncount; i++)
         {
-            //delta_helper[i] = new MatrixData(this->output_row, this->output_col);
             for(int j = 0; j < this->map_count; j++)
             {
                 this->get_2D_weights(i, j, _2Dkernel[0], next_layers_fmaps);
-                //calculate_delta_helper(padded_delta[i], delta_helper[j], kernel, helper);
                 errorcode = clEnqueueWriteBuffer(this->fmap[j][0].mtxop[0].command_queue, this->delta_helper, CL_FALSE, 0, sizeof(float),
                                                  (void *)&((delta[0][0])[i][0]), 0, NULL, &write_events[j]);
                 errorcode |= clSetKernelArg(fullconv_and_add_kernel, 0, sizeof(int), (void*)&(this->_2Dkernel[0].row));
@@ -183,27 +170,13 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
             }
             clWaitForEvents(this->map_count, events);
         }
-        //delete_padded_delta(padded_delta, next_layers_neuroncount);
     }
     else
     {
-        /*padded_delta = new MatrixData* [next_layers_fmapcount];
-        for(int i = 0; i < next_layers_fmapcount; i++)
-            {
-                padded_delta[i] = new MatrixData;
-                padded_delta[i][0] = delta[i][0];
-                padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i][0].weights[0][0].get_row()-1)/2,
-                                                         (next_layers_fmaps[i][0].weights[0][0].get_col()-1)/2,
-                                                         (next_layers_fmaps[i][0].weights[0][0].get_row()-1)/2,
-                                                         (next_layers_fmaps[i][0].weights[0][0].get_col()-1)/2);
-            }
-        delta_helper = new MatrixData* [this->map_count];*/
         for(int i = 0; i < next_layers_fmapcount; i++)
         {
-            //delta_helper[i] = new MatrixData(this->output_row, this->output_col);
             for(int j = 0; j < this->map_count; j++)
             {
-                //calculate_delta_helper(padded_delta[j], delta_helper[i], next_layers_fmaps[j][0].weights[i][0], helper);
                 errorcode = clSetKernelArg(fullconv_and_add_kernel, 0, sizeof(int), (void*)&(next_layers_fmaps[i][0].weights[j][0].row));
                 errorcode |= clSetKernelArg(fullconv_and_add_kernel, 1, sizeof(int), (void*)&(next_layers_fmaps[i][0].weights[j][0].col));
                 errorcode |= clSetKernelArg(fullconv_and_add_kernel, 2, sizeof(int), (void*)&(delta[i][0].col));
@@ -221,7 +194,6 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
             }
             clWaitForEvents(this->map_count, events);
         }
-        //delete_padded_delta(padded_delta, next_layers_fmapcount);
     }
     cl_event event, events2[this->fmap[0][0].get_mapdepth()];
     for(int i = 0; i < this->map_count; i++)
@@ -232,37 +204,12 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
              this->fmap[i][0].mtxop[0].convolution(input[j][0], layers_delta[i][0], nabla[i][0].weights[j][0], 1, &event, &events2[j]);
         }
         clWaitForEvents(this->fmap[i][0].get_mapdepth(), events2);
-        //delete output_derivate[i];
-        //delete delta_helper[i];
     }
-    /*delete[] output_derivate;
-    for(int i = 0; i < next_layers_fmapcount; i++)
-        {
-            //delete delta_helper[i];
-            delete delta[i];
-        }
-    delete[] delta_helper;
-    delete[] delta;*/
     return this->layers_delta;
 }
 
 void Convolutional::update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer)
 {
-    /*for(int i = 0; i < this->map_count; i++)
-        {
-            for(int j = 0; j < this->fmap[i][0].get_mapdepth(); j++)
-                {
-                    for(int row = 0; row < this->kernel_row; row++)
-                        {
-                            for(int col = 0; col < this->kernel_col; col++)
-                                {
-                                    (this->fmap[i][0].weights[j][0])[row][col] =
-                                                    regularization_rate * (this->fmap[i][0].weights[j][0])[row][col] -
-                                                    learning_rate * (layer[0].fmap[i][0].weights[j][0])[row][col];
-                                }
-                        }
-                }
-        }*/
     cl_event events[this->fmap[0][0].get_mapdepth()];
     cl_int errorcode;
     for(int i = 0; i < this->map_count; i++)
@@ -290,14 +237,14 @@ inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_
 {
     cl_event eventset1[this->map_count];
     cl_int errorcode;
-    const size_t global[2] = {this->convolution_helper[0][0].row, this->convolution_helper[0][0].col};
-    for(int i=0; i<this->map_count; i++)
+    const size_t global[3] = {this->output_row, this->output_col, this->map_count};
+    /*for(int i=0; i<this->map_count; i++)
     {
         this->fmap[i][0].mtxop[0].assign_scalar(this->convolution_helper[i][0], (this->fmap[i][0].biases[0][0])[0][0], 0, NULL, &eventset1[i]);
     }
-    clWaitForEvents(this->map_count, eventset1);
+    clWaitForEvents(this->map_count, eventset1);*/
     cl_event eventset2[this->map_count];
-    for(int i=0; i<this->fmap[0][0].get_mapdepth(); i++)
+    /*for(int i=0; i<this->fmap[0][0].get_mapdepth(); i++)
     {
         for(int j=0; j<this->map_count; j++)
         {
@@ -316,16 +263,37 @@ inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_
             }
         }
         clWaitForEvents(this->map_count, eventset2);
-    }
+    }*/
+    cl_event event;
+    int mapdepth = this->fmap[0][0].get_mapdepth();
+    //for(int i = 0; i < this->map_count; i++)
+    //{
+        errorcode = clSetKernelArg(*opencl_kernel, 0, sizeof(int), (void*)&(this->kernel_row));
+        errorcode |= clSetKernelArg(*opencl_kernel, 1, sizeof(int), (void*)&(this->kernel_col));
+        errorcode |= clSetKernelArg(*opencl_kernel, 2, sizeof(int), (void*)&(this->input_col));
+        errorcode |= clSetKernelArg(*opencl_kernel, 3, sizeof(int), (void*)&(this->input_row));
+        errorcode |= clSetKernelArg(*opencl_kernel, 4, sizeof(int), (void*)&(mapdepth));
+        errorcode |= clSetKernelArg(*opencl_kernel, 5, sizeof(cl_mem), (void *)&(input[0][0].cl_mem_obj));
+        errorcode |= clSetKernelArg(*opencl_kernel, 6, sizeof(cl_mem), (void *)&(this->testfmap[0][0].weights[0][0].cl_mem_obj));
+        errorcode |= clSetKernelArg(*opencl_kernel, 7, sizeof(cl_mem), (void *)&(this->flattened_outp_helper[0][0].cl_mem_obj));
+        errorcode |= clEnqueueNDRangeKernel(this->testfmap[0][0].mtxop[0].command_queue, *opencl_kernel, 3, NULL, global, NULL, 0, NULL, &event);
+        if(errorcode != CL_SUCCESS)
+        {
+            cerr << "Some error happened durring full depth convolution\n the errorcode is: " << errorcode << endl;
+            throw exception();
+        }
+    //}
+    clWaitForEvents(1, &event);
 }
 
 inline void Convolutional::layers_output(MatrixData **input)
 {
-    this->fulldepth_conv(input, &(this->conv_and_add_kernel));
-    for(int i=0; i<this->map_count; i++)
+    this->fulldepth_conv(input, &(this->test_kernel));
+    this->neuron.activation(this->flattened_outp_helper[0][0], this->flattened_output[0][0]);
+    /*for(int i=0; i<this->map_count; i++)
     {
         this->neuron.activation(this->convolution_helper[i][0], this->outputs[i][0]);
-    }
+    }*/
 
 }
 
@@ -352,14 +320,6 @@ void Convolutional::flatten()
     cl_event events[this->map_count];
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
-        /*for(int col = 0; col < this->output_col; col++)
-            {
-                for(int row = 0; row < this->output_row; row++)
-                    {
-                        (this->flattened_output[0][0])[i][0] = (this->outputs[map_index][0])[row][col];
-                        i++;
-                    }
-            }*/
         size_to_copy = sizeof(float)*(this->outputs[map_index][0].row)*(this->outputs[map_index][0].col);
         clEnqueueCopyBuffer(this->fmap[map_index][0].mtxop[0].command_queue, this->outputs[map_index][0].cl_mem_obj, this->flattened_output[0][0].cl_mem_obj,
                             0, dst_offset, size_to_copy, 0, NULL, &events[map_index]);
@@ -395,7 +355,9 @@ inline MatrixData** Convolutional::get_output()
             return this->flattened_output;
         }
     else
-        return this->outputs;
+        //return this->outputs;
+        //this->flatten();
+        return this->flattened_output;
 }
 
 inline Feature_map** Convolutional::get_feature_maps()

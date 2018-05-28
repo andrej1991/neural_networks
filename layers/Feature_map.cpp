@@ -11,11 +11,11 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
         biascount = biascnt;
     else
         biascount = 1;
-    for(int i = 0; i < depth; i++)
-    {
-        this->weights[i] = new MatrixData(row, col);
-        this->biases[i] = new MatrixData(biascount, 1);
-    }
+    //for(int i = 0; i < depth; i++)
+    //{
+        this->weights[0/*i*/] = new MatrixData(depth * row, col);
+        this->biases[0/*i*/] = new MatrixData(biascount, 1);
+    //}
     if(env != NULL)
     {
         this->mtxop = new MatrixOperations(&(env->context), env->deviceIds);
@@ -26,11 +26,11 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
         }
         else
         {
-            for(int i = 0; i < this->mapdepth; i++)
-            {
-                this->biases[i][0].copy_to_opencl_buffer(&(env->context), &(this->mtxop[0].command_queue));
-                this->weights[i][0].copy_to_opencl_buffer(&(env->context), &(this->mtxop[0].command_queue));
-            }
+            //for(int i = 0; i < this->mapdepth; i++)
+            //{
+                this->biases[0/*i*/][0].copy_to_opencl_buffer(&(env->context), &(this->mtxop[0].command_queue));
+                this->weights[0/*i*/][0].copy_to_opencl_buffer(&(env->context), &(this->mtxop[0].command_queue));
+            //}
         }
     }
     else
@@ -39,7 +39,7 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
 
 Feature_map::~Feature_map()
 {
-    for(int i = 0; i < this->mapdepth; i++)
+    /*for(int i = 0; i < this->mapdepth; i++)
         {
             delete this->weights[i];
             delete this->biases[i];
@@ -47,7 +47,7 @@ Feature_map::~Feature_map()
     delete[] this->weights;
     delete[] this->biases;
     if(this->mtxop != NULL)
-        delete this->mtxop;
+        delete this->mtxop;*/
 }
 
 void Feature_map::initialize_biases(cl_context *context)
@@ -55,15 +55,15 @@ void Feature_map::initialize_biases(cl_context *context)
     std::ifstream random;
     random.open("/dev/urandom", std::ios::in);
     short int val;
-    for(int i = 0; i < this->mapdepth; i++)
-    {
-        for(int j = 0; j < this->biases[i][0].get_row(); j++)
+    //for(int i = 0; i < this->mapdepth; i++)
+    //{
+        for(int j = 0; j < this->biases[0/*i*/][0].get_row(); j++)
         {
             random.read((char*)(&val), 2);
-            (this->biases[i][0])[j][0] = (float)val/65000;
+            (this->biases[0/*i*/][0])[j][0] = (float)val/65000;
         }
-        this->biases[i][0].copy_to_opencl_buffer(context, &(this->mtxop[0].command_queue));
-    }
+        this->biases[0/*i*/][0].copy_to_opencl_buffer(context, &(this->mtxop[0].command_queue));
+    //}
     random.close();
 }
 
@@ -72,18 +72,18 @@ void Feature_map::initialize_weights(cl_context *context)
     std::ifstream random;
     random.open("/dev/urandom", std::ios::in);
     short int val;
-    for(int i = 0; i < this->mapdepth; i++)
-    {
-        for(int j = 0; j < this->weights[i][0].get_row(); j++)
+    //for(int i = 0; i < this->mapdepth; i++)
+    //{
+        for(int j = 0; j < this->weights[0/*i*/][0].get_row(); j++)
         {
-            for(int k = 0; k < this->weights[i][0].get_col(); k++)
+            for(int k = 0; k < this->weights[0/*i*/][0].get_col(); k++)
             {
                 random.read((char*)(&val), 2);
-                (this->weights[i][0])[j][k] = (float)val/65000;
+                (this->weights[0/*i*/][0])[j][k] = (float)val/65000;
             }
         }
-        this->weights[i][0].copy_to_opencl_buffer(context, &(this->mtxop[0].command_queue));
-    }
+        this->weights[0/*i*/][0].copy_to_opencl_buffer(context, &(this->mtxop[0].command_queue));
+    //}
     random.close();
 }
 
