@@ -185,7 +185,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
         {
             delta = this->layers[i][0].backpropagate(this->layers[i - 1][0].get_output(),
                                            this->layers[i + 1][0].get_feature_maps(), nabla[i][0].fmap, delta,
-                                           nabla[i+1][0].get_fmap_count());
+                                           this->layers[i+1][0].get_mapcount());
         }
 }
 
@@ -433,9 +433,9 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
-    this->check_accuracy(v);
-    //this->stochastic_gradient_descent(d, 5, 10, 0.03, true, 10, v, 50);
-    //this->stochastic_gradient_descent(d, 1, 1, 0.3, true, 10, v, 1);
+    //this->check_accuracy(v);
+    //this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 10, v, 50);
+    this->stochastic_gradient_descent(d, 1, 10, 0.3, true, 10, v, 1);
     //for(int i = 0; i < 30; i++)
     //    this->check_accuracy(v);
     //MatrixData o = this->get_output(v[0]->input);

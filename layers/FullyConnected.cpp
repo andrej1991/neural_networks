@@ -11,7 +11,7 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSet
         cerr << "Invalid value for OpenclSetup in FullyConnected layers constructor!\n";
         throw exception();
     }
-    this->fmap[0] = new Feature_map(row, prev_row, 1, row, env);
+    this->fmap[0] = new Feature_map(row, prev_row, 1, 1, row, env);
     this->output = new MatrixData*[1];
     this->output[0] = new MatrixData(this->outputlen, 1);
     this->output[0][0].copy_to_opencl_buffer(&(env->context), &(this->fmap[0][0].mtxop[0].command_queue));

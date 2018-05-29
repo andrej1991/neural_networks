@@ -336,7 +336,7 @@ void MatrixOperations::assign_scalar(MatrixData &a, float scalar, int num_events
     size_t local_item_size = a.row;
     errorcode = clSetKernelArg(this->assign_scalar_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
     errorcode |= clSetKernelArg(this->assign_scalar_kernel, 1, sizeof(float), (void *)&(scalar));
-    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->assign_scalar_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->assign_scalar_kernel, 1, NULL, &global_item_size, NULL/*&local_item_size*/, num_events, wait_for_events, generated_event);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "Some error happened durring zeroing the elements of the matrix\n";
@@ -419,6 +419,7 @@ void MatrixOperations::transpose_and_multiply(MatrixData &a, MatrixData &b, Matr
 
 void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int num_events, cl_event *wait_for_events, cl_event *generated_event)
 {
+    //cout << "hadamart\n";
     if((a.row != b.row) || (a.col != b.col) || (a.row != c.row) || (a.col != c.col))
     {
         cerr << "The calculation of the hadamart product is aborted because the matrices are not in the same size.\n";
@@ -430,7 +431,7 @@ void MatrixOperations::hadamart(MatrixData &a, MatrixData &b, MatrixData &c,int 
     errorcode = clSetKernelArg(this->hadamart_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
     errorcode |= clSetKernelArg(this->hadamart_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
     errorcode |= clSetKernelArg(this->hadamart_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
-    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->hadamart_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->hadamart_kernel, 1, NULL, &global_item_size, NULL/*&local_item_size*/, num_events, wait_for_events, generated_event);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "Some error happened durring calculating the hadamart product\n";

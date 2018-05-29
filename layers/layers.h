@@ -32,12 +32,12 @@ class LayerDescriptor{
 class Feature_map{
     void initialize_biases(cl_context *context);
     void initialize_weights(cl_context *context);
-    int row, col, mapdepth;
+    int row, col, mapdepth, mapcount;
     public:
     MatrixOperations *mtxop;
     MatrixData **weights, **biases;
     OpenclSetup *openclenv;
-    Feature_map(int row, int col, int mapdepth, int biascnt = -1, OpenclSetup *env=NULL, bool initialization_needed=true);
+    Feature_map(int row, int col, int mapdepth, int mapcount, int biascnt = -1, OpenclSetup *env=NULL, bool initialization_needed=true);
     int get_col();
     int get_row();
     int get_mapdepth();
@@ -145,16 +145,16 @@ class Softmax : public FullyConnected {
 };
 
 class Convolutional : public Layer {
-    MatrixData **outputs, **flattened_output, **convolution_helper, **output_derivative, **layers_delta, **layers_delta_helper, *_2Dkernel, **flattened_outp_helper;
+    MatrixData **outputs, **convolution_helper, **output_derivative, **layers_delta, **layers_delta_helper;
     cl_mem delta_helper;
-    Feature_map **fmap, **testfmap;
+    Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
     OpenclSetup *env;
     cl_program convolutional_program, general_program;
-    cl_kernel conv_and_add_kernel, fullconv_and_add_kernel, update_weights_kernel, test_kernel;
+    cl_kernel fulldepth_conv_kernel, fullconv_and_add_kernel, update_weights_kernel, fulldepth_fullconv_kernel, delta_weight_kernel;
     inline void fulldepth_conv(MatrixData **input, cl_kernel *opencl_kernel);
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, OpenclSetup *env, int stride = 1);

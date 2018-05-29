@@ -20,28 +20,29 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->general_program = load_program("layers/GeneralKernels.cl", &(this->env->context), this->env->deviceIds);
     cl_int errorcode;
     this->fmap = new Feature_map* [map_count];
-    this->testfmap = new Feature_map* [1];
-    this->testfmap[0] = new Feature_map(this->kernel_row*map_count, this->kernel_col, input_channel_count, -1, env);
     this->outputs = new MatrixData* [map_count];
     this->convolution_helper = new MatrixData* [map_count];
     this->output_derivative = new MatrixData* [map_count];
     this->layers_delta = new MatrixData* [map_count];
     this->layers_delta_helper = new MatrixData* [map_count];
-    this->flattened_output = new MatrixData* [1];
-    this->flattened_output[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
-    this->flattened_output[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
-    this->flattened_outp_helper = new MatrixData* [1];
-    this->flattened_outp_helper[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
-    this->flattened_outp_helper[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
-    this->_2Dkernel = new MatrixData(this->output_row, this->output_col);
-    this->_2Dkernel[0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     this->delta_helper = clCreateBuffer(this->env->context, CL_MEM_READ_WRITE, sizeof(float), NULL, &errorcode);
+    fmap[0] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, this->map_count, -1, env);
+    this->outputs[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
+    this->outputs[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    this->convolution_helper[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
+    this->convolution_helper[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    this->output_derivative[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
+    this->output_derivative[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    this->layers_delta[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
+    this->layers_delta[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    this->layers_delta_helper[0] = new MatrixData(this->map_count * this->output_row * this->output_col, 1);
+    this->layers_delta_helper[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL buffer. The error is:" << errorcode << endl;
         throw exception();
     }
-    for(int i = 0; i < map_count; i++)
+    /*for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, -1, env);
         this->outputs[i] = new MatrixData(this->output_row, this->output_col);
@@ -54,8 +55,8 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
         this->layers_delta[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
         this->layers_delta_helper[i] = new MatrixData(this->output_row, this->output_col);
         this->layers_delta_helper[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
-    }
-    this->conv_and_add_kernel = clCreateKernel(this->convolutional_program, "ConvolutionAndAdd", &errorcode);
+    }*/
+    this->fulldepth_conv_kernel = clCreateKernel(this->convolutional_program, "FullDepthConvolution", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL ConvolutionAndAdd kernel\n";
@@ -73,17 +74,23 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
         cerr << "unable to create OpenCL update weights kernel\n";
         throw exception();
     }
-    this->test_kernel = clCreateKernel(this->convolutional_program, "FullDepthConvolution", &errorcode);
+    this->fulldepth_fullconv_kernel = clCreateKernel(this->convolutional_program, "GetDeltaHelper", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
-        cerr << "unable to create OpenCL FullDepthConvolution kernel\n";
+        cerr << "unable to create OpenCL FullDepthFullConv kernel\n";
+        throw exception();
+    }
+    this->delta_weight_kernel = clCreateKernel(this->convolutional_program, "GettingDeltaWeights", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL GettingDeltaWeights kernel\n";
         throw exception();
     }
 }
 
 Convolutional::~Convolutional()
 {
-    delete flattened_output[0];
+    /*delete flattened_output[0];
     delete[] flattened_output;
     for(int i = 0; i < this->map_count; i++)
         {
@@ -91,7 +98,7 @@ Convolutional::~Convolutional()
             delete outputs[i];
         }
     delete[] fmap;
-    delete[] outputs;
+    delete[] outputs;*/
 }
 
 void Convolutional::sync_memory()
@@ -135,102 +142,94 @@ inline void delete_padded_delta(MatrixData **padded_delta, int limit)
 
 inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **delta, int next_layers_fmapcount)
 {
+    cout << "backpropagate\n";
     this->derivate_layers_output(input);
     MatrixData **delta_helper;
     MatrixData helper(this->output_row, this->output_col);
-    cl_event events[this->map_count];
     cl_int errorcode;
     cl_event write_events[this->map_count];
-    const size_t global[2] = {this->layers_delta_helper[0][0].row, this->layers_delta_helper[0][0].col};
+    const size_t global[3] = {this->layers_delta_helper[0][0].row, this->layers_delta_helper[0][0].col, this->map_count};
+    cl_event event1, event2, event3;
     if(this->next_layers_type != CONVOLUTIONAL)
     {
         int delta_rc = 1;
         int next_layers_neuroncount = delta[0][0].get_row();
-        for(int i = 0; i < next_layers_neuroncount; i++)
+        int delta_row = delta[0][0].row/next_layers_fmapcount;
+        int nextl_kern_row = next_layers_fmaps[0][0].get_row();
+        int nextl_kern_col = next_layers_fmaps[0][0].get_col();
+        errorcode = clSetKernelArg(this->fulldepth_fullconv_kernel, 0, sizeof(int), (void*)&(nextl_kern_row));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 1, sizeof(int), (void*)&(nextl_kern_col));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 2, sizeof(int), (void*)&(delta_rc));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 3, sizeof(int), (void*)&(delta_rc));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 4, sizeof(int), (void*)&(next_layers_neuroncount));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 5, sizeof(cl_mem), (void *)&(delta[0][0].cl_mem_obj));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 6, sizeof(cl_mem), (void *)&(next_layers_fmaps[0][0].weights[0][0].cl_mem_obj));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 7, sizeof(cl_mem), (void *)&(this->layers_delta_helper[0][0].cl_mem_obj));
+        errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->fulldepth_fullconv_kernel, 3, NULL, global, NULL, 0, NULL, &event1);
+        if(errorcode != CL_SUCCESS)
         {
-            for(int j = 0; j < this->map_count; j++)
-            {
-                this->get_2D_weights(i, j, _2Dkernel[0], next_layers_fmaps);
-                errorcode = clEnqueueWriteBuffer(this->fmap[j][0].mtxop[0].command_queue, this->delta_helper, CL_FALSE, 0, sizeof(float),
-                                                 (void *)&((delta[0][0])[i][0]), 0, NULL, &write_events[j]);
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 0, sizeof(int), (void*)&(this->_2Dkernel[0].row));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 1, sizeof(int), (void*)&(this->_2Dkernel[0].col));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 2, sizeof(int), (void*)&(delta_rc));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 3, sizeof(int), (void*)&(delta_rc));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 4, sizeof(int), (void*)&(this->layers_delta_helper[j][0].col));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 5, sizeof(cl_mem), (void *)&(this->delta_helper));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 6, sizeof(cl_mem), (void *)&(this->_2Dkernel[0].cl_mem_obj));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 7, sizeof(cl_mem), (void *)&(this->layers_delta_helper[j][0].cl_mem_obj));
-                errorcode |= clEnqueueNDRangeKernel(this->fmap[j][0].mtxop[0].command_queue, fullconv_and_add_kernel, 2, NULL, global, NULL, 1, &write_events[j], &events[j]);
-                if(errorcode != CL_SUCCESS)
-                {
-                    cerr << "Some error happened durring valid convolution\n";
-                    throw exception();
-                }
-            }
-            clWaitForEvents(this->map_count, events);
+            cerr << "Some error happened durring full depth convolution\n the errorcode is: " << errorcode << endl;
+            throw exception();
         }
     }
     else
     {
-        for(int i = 0; i < next_layers_fmapcount; i++)
+        int nextl_kern_row = next_layers_fmaps[0][0].get_row();
+        int nextl_kern_col = next_layers_fmaps[0][0].get_col();
+        int delta_row = delta[0][0].row/next_layers_fmapcount;
+        int delta_col = delta[0][0].col;
+        errorcode = clSetKernelArg(this->fulldepth_fullconv_kernel, 0, sizeof(int), (void*)&(nextl_kern_row));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 1, sizeof(int), (void*)&(nextl_kern_col));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 2, sizeof(int), (void*)&(delta_col));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 3, sizeof(int), (void*)&(delta_row));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 4, sizeof(int), (void*)&(next_layers_fmapcount));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 5, sizeof(cl_mem), (void *)&(delta[0][0].cl_mem_obj));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 6, sizeof(cl_mem), (void *)&(next_layers_fmaps[0][0].weights[0][0].cl_mem_obj));
+        errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 7, sizeof(cl_mem), (void *)&(this->layers_delta_helper[0][0].cl_mem_obj));
+        errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->fulldepth_fullconv_kernel, 3, NULL, global, NULL, 0, NULL, &event1);
+        if(errorcode != CL_SUCCESS)
         {
-            for(int j = 0; j < this->map_count; j++)
-            {
-                errorcode = clSetKernelArg(fullconv_and_add_kernel, 0, sizeof(int), (void*)&(next_layers_fmaps[i][0].weights[j][0].row));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 1, sizeof(int), (void*)&(next_layers_fmaps[i][0].weights[j][0].col));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 2, sizeof(int), (void*)&(delta[i][0].col));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 3, sizeof(int), (void*)&(delta[i][0].col));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 4, sizeof(int), (void*)&(this->layers_delta_helper[j][0].col));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 5, sizeof(cl_mem), (void *)&(delta[i][0].cl_mem_obj));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 6, sizeof(cl_mem), (void *)&(next_layers_fmaps[i][0].weights[j][0].cl_mem_obj));
-                errorcode |= clSetKernelArg(fullconv_and_add_kernel, 7, sizeof(cl_mem), (void *)&(this->layers_delta_helper[j][0].cl_mem_obj));
-                errorcode |= clEnqueueNDRangeKernel(this->fmap[j][0].mtxop[0].command_queue, fullconv_and_add_kernel, 2, NULL, global, NULL, 0, NULL, &events[j]);
-                if(errorcode != CL_SUCCESS)
-                {
-                    cerr << "Some error happened durring valid convolution\n";
-                    throw exception();
-                }
-            }
-            clWaitForEvents(this->map_count, events);
+            cerr << "Some error happened durring full depth convolution\n the errorcode is: " << errorcode << endl;
+            throw exception();
         }
     }
-    cl_event event, events2[this->fmap[0][0].get_mapdepth()];
-    for(int i = 0; i < this->map_count; i++)
-    {
-        this->fmap[i][0].mtxop[0].hadamart(this->layers_delta_helper[i][0], this->output_derivative[i][0], layers_delta[i][0], 0, NULL, &event);
-        for(int j = 0; j < this->fmap[i][0].get_mapdepth(); j++)
+    this->fmap[0][0].mtxop[0].hadamart(this->layers_delta_helper[0][0], this->output_derivative[0][0], layers_delta[0][0], 1, &event1, &event2);
+    errorcode = clSetKernelArg(this->delta_weight_kernel, 0, sizeof(int), (void*)&(this->output_row));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 1, sizeof(int), (void*)&(this->output_col));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 2, sizeof(int), (void*)&(this->input_col));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 3, sizeof(int), (void*)&(this->input_row));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 4, sizeof(int), (void*)&(this->map_count));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 5, sizeof(cl_mem), (void *)&(input[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 6, sizeof(cl_mem), (void *)&(layers_delta[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->delta_weight_kernel, 7, sizeof(cl_mem), (void *)&(nabla[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->delta_weight_kernel, 3, NULL, global, NULL, 1, &event2, &event3);
+    if(errorcode != CL_SUCCESS)
         {
-             this->fmap[i][0].mtxop[0].convolution(input[j][0], layers_delta[i][0], nabla[i][0].weights[j][0], 1, &event, &events2[j]);
+            cerr << "Some error happened durring calculating the delta weights of Convolutional layer\n the errorcode is: " << errorcode << endl;
+            throw exception();
         }
-        clWaitForEvents(this->fmap[i][0].get_mapdepth(), events2);
-    }
+    clWaitForEvents(1, &event3);
+    cout << "backpropagate end\n";
     return this->layers_delta;
 }
 
 void Convolutional::update_weights_and_biasses(float learning_rate, float regularization_rate, Layers_features *layer)
 {
-    cl_event events[this->fmap[0][0].get_mapdepth()];
     cl_int errorcode;
-    for(int i = 0; i < this->map_count; i++)
+    cl_event event;
+    size_t global_item_size = this->fmap[0][0].weights[0][0].row * this->fmap[0][0].weights[0][0].col;
+    size_t local_item_size = this->fmap[0][0].weights[0][0].row;
+    errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learning_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regularization_rate));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(layer[0].fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(this->update_weights_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, NULL/*&local_item_size*/, 0, NULL, &event);
+    if(errorcode != CL_SUCCESS)
     {
-        for(int j = 0; j < this->fmap[i][0].get_mapdepth(); j++)
-        {
-            size_t global_item_size = this->fmap[i][0].weights[j][0].row * this->fmap[i][0].weights[j][0].col;
-            size_t local_item_size = this->fmap[i][0].weights[j][0].row;
-            errorcode = clSetKernelArg(this->update_weights_kernel, 0, sizeof(float), (void *)&(learning_rate));
-            errorcode |= clSetKernelArg(this->update_weights_kernel, 1, sizeof(float), (void *)&(regularization_rate));
-            errorcode |= clSetKernelArg(this->update_weights_kernel, 2, sizeof(cl_mem), (void *)&(layer[0].fmap[i][0].weights[j][0].cl_mem_obj));
-            errorcode |= clSetKernelArg(this->update_weights_kernel, 3, sizeof(cl_mem), (void *)&(this->fmap[i][0].weights[j][0].cl_mem_obj));
-            errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, this->update_weights_kernel, 1, NULL, &global_item_size, &local_item_size, 0, NULL, &events[j]);
-            if(errorcode != CL_SUCCESS)
-            {
-                cerr << "Some error happened while updating the weights of the Convolutional layer\n" << errorcode << endl;
-                throw exception();
-            }
-        }
-        clWaitForEvents(this->fmap[0][0].get_mapdepth(), events);
+        cerr << "Some error happened while updating the weights of the Convolutional layer\n" << errorcode << endl;
+        throw exception();
     }
+    clWaitForEvents(1, &event);
 }
 
 inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_kernel)
@@ -238,62 +237,30 @@ inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_
     cl_event eventset1[this->map_count];
     cl_int errorcode;
     const size_t global[3] = {this->output_row, this->output_col, this->map_count};
-    /*for(int i=0; i<this->map_count; i++)
-    {
-        this->fmap[i][0].mtxop[0].assign_scalar(this->convolution_helper[i][0], (this->fmap[i][0].biases[0][0])[0][0], 0, NULL, &eventset1[i]);
-    }
-    clWaitForEvents(this->map_count, eventset1);*/
     cl_event eventset2[this->map_count];
-    /*for(int i=0; i<this->fmap[0][0].get_mapdepth(); i++)
-    {
-        for(int j=0; j<this->map_count; j++)
-        {
-            errorcode = clSetKernelArg(*opencl_kernel, 0, sizeof(int), (void*)&(this->fmap[j][0].weights[i][0].row));
-            errorcode |= clSetKernelArg(*opencl_kernel, 1, sizeof(int), (void*)&(this->fmap[j][0].weights[i][0].col));
-            errorcode |= clSetKernelArg(*opencl_kernel, 2, sizeof(int), (void*)&(input[i][0].col));
-            errorcode |= clSetKernelArg(*opencl_kernel, 3, sizeof(int), (void*)&(this->convolution_helper[j][0].col));
-            errorcode |= clSetKernelArg(*opencl_kernel, 4, sizeof(cl_mem), (void *)&(input[i][0].cl_mem_obj));
-            errorcode |= clSetKernelArg(*opencl_kernel, 5, sizeof(cl_mem), (void *)&(this->fmap[j][0].weights[i][0].cl_mem_obj));
-            errorcode |= clSetKernelArg(*opencl_kernel, 6, sizeof(cl_mem), (void *)&(this->convolution_helper[j][0].cl_mem_obj));
-            errorcode |= clEnqueueNDRangeKernel(this->fmap[j][0].mtxop[0].command_queue, *opencl_kernel, 2, NULL, global, NULL, 0, NULL, &eventset2[j]);
-            if(errorcode != CL_SUCCESS)
-            {
-                cerr << "Some error happened durring valid convolution\n";
-                throw exception();
-            }
-        }
-        clWaitForEvents(this->map_count, eventset2);
-    }*/
     cl_event event;
     int mapdepth = this->fmap[0][0].get_mapdepth();
-    //for(int i = 0; i < this->map_count; i++)
-    //{
-        errorcode = clSetKernelArg(*opencl_kernel, 0, sizeof(int), (void*)&(this->kernel_row));
-        errorcode |= clSetKernelArg(*opencl_kernel, 1, sizeof(int), (void*)&(this->kernel_col));
-        errorcode |= clSetKernelArg(*opencl_kernel, 2, sizeof(int), (void*)&(this->input_col));
-        errorcode |= clSetKernelArg(*opencl_kernel, 3, sizeof(int), (void*)&(this->input_row));
-        errorcode |= clSetKernelArg(*opencl_kernel, 4, sizeof(int), (void*)&(mapdepth));
-        errorcode |= clSetKernelArg(*opencl_kernel, 5, sizeof(cl_mem), (void *)&(input[0][0].cl_mem_obj));
-        errorcode |= clSetKernelArg(*opencl_kernel, 6, sizeof(cl_mem), (void *)&(this->testfmap[0][0].weights[0][0].cl_mem_obj));
-        errorcode |= clSetKernelArg(*opencl_kernel, 7, sizeof(cl_mem), (void *)&(this->flattened_outp_helper[0][0].cl_mem_obj));
-        errorcode |= clEnqueueNDRangeKernel(this->testfmap[0][0].mtxop[0].command_queue, *opencl_kernel, 3, NULL, global, NULL, 0, NULL, &event);
-        if(errorcode != CL_SUCCESS)
-        {
-            cerr << "Some error happened durring full depth convolution\n the errorcode is: " << errorcode << endl;
-            throw exception();
-        }
-    //}
+    errorcode = clSetKernelArg(*opencl_kernel, 0, sizeof(int), (void*)&(this->kernel_row));
+    errorcode |= clSetKernelArg(*opencl_kernel, 1, sizeof(int), (void*)&(this->kernel_col));
+    errorcode |= clSetKernelArg(*opencl_kernel, 2, sizeof(int), (void*)&(this->input_col));
+    errorcode |= clSetKernelArg(*opencl_kernel, 3, sizeof(int), (void*)&(this->input_row));
+    errorcode |= clSetKernelArg(*opencl_kernel, 4, sizeof(int), (void*)&(mapdepth));
+    errorcode |= clSetKernelArg(*opencl_kernel, 5, sizeof(cl_mem), (void *)&(input[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(*opencl_kernel, 6, sizeof(cl_mem), (void *)&(this->fmap[0][0].weights[0][0].cl_mem_obj));
+    errorcode |= clSetKernelArg(*opencl_kernel, 7, sizeof(cl_mem), (void *)&(this->convolution_helper[0][0].cl_mem_obj));
+    errorcode |= clEnqueueNDRangeKernel(this->fmap[0][0].mtxop[0].command_queue, *opencl_kernel, 3, NULL, global, NULL, 0, NULL, &event);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "Some error happened durring full depth convolution\n the errorcode is: " << errorcode << endl;
+        throw exception();
+    }
     clWaitForEvents(1, &event);
 }
 
 inline void Convolutional::layers_output(MatrixData **input)
 {
-    this->fulldepth_conv(input, &(this->test_kernel));
-    this->neuron.activation(this->flattened_outp_helper[0][0], this->flattened_output[0][0]);
-    /*for(int i=0; i<this->map_count; i++)
-    {
-        this->neuron.activation(this->convolution_helper[i][0], this->outputs[i][0]);
-    }*/
+    this->fulldepth_conv(input, &(this->fulldepth_conv_kernel));
+    this->neuron.activation(this->convolution_helper[0][0], this->outputs[0][0]);
 
 }
 
@@ -305,11 +272,8 @@ inline MatrixData** Convolutional::get_output_error(MatrixData **input, MatrixDa
 
 inline MatrixData** Convolutional::derivate_layers_output(MatrixData **input)
 {
-    this->fulldepth_conv(input, &(this->conv_and_add_kernel));
-    for(int i=0; i<this->map_count; i++)
-    {
-        this->neuron.activation_derivate(this->convolution_helper[i][0], this->outputs[i][0]);
-    }
+    this->fulldepth_conv(input, &(this->fulldepth_conv_kernel));
+    this->neuron.activation_derivate(this->convolution_helper[0][0], this->output_derivative[0][0]);
 }
 
 void Convolutional::flatten()
@@ -321,7 +285,7 @@ void Convolutional::flatten()
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
         size_to_copy = sizeof(float)*(this->outputs[map_index][0].row)*(this->outputs[map_index][0].col);
-        clEnqueueCopyBuffer(this->fmap[map_index][0].mtxop[0].command_queue, this->outputs[map_index][0].cl_mem_obj, this->flattened_output[0][0].cl_mem_obj,
+        clEnqueueCopyBuffer(this->fmap[map_index][0].mtxop[0].command_queue, this->outputs[map_index][0].cl_mem_obj, this->outputs[0][0].cl_mem_obj,
                             0, dst_offset, size_to_copy, 0, NULL, &events[map_index]);
         dst_offset += size_to_copy;
     }
@@ -349,15 +313,8 @@ inline MatrixData** Convolutional::get_output()
 {
     //print_mtx_list(outputs, this->map_count);
     //cout << "---------------------------" << endl;
-    if(next_layers_type == FULLY_CONNECTED)
-        {
-            this->flatten();
-            return this->flattened_output;
-        }
-    else
-        //return this->outputs;
-        //this->flatten();
-        return this->flattened_output;
+        return this->outputs;
+
 }
 
 inline Feature_map** Convolutional::get_feature_maps()

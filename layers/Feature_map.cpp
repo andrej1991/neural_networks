@@ -1,8 +1,8 @@
 #include "layers.h"
 #include "../opencl_setup.h"
 
-Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *env, bool initialization_needed):
-                mapdepth(depth), row(row), col(col), openclenv(env)
+Feature_map::Feature_map(int row, int col, int depth, int mapcount, int biascnt, OpenclSetup *env, bool initialization_needed):
+                mapdepth(depth), row(row), col(col), openclenv(env), mapcount(mapcount)
 {
     this->weights = new MatrixData* [depth];
     this->biases = new MatrixData* [depth];
@@ -13,7 +13,7 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, OpenclSetup *
         biascount = 1;
     //for(int i = 0; i < depth; i++)
     //{
-        this->weights[0/*i*/] = new MatrixData(depth * row, col);
+        this->weights[0/*i*/] = new MatrixData(mapcount * depth * row, col);
         this->biases[0/*i*/] = new MatrixData(biascount, 1);
     //}
     if(env != NULL)
