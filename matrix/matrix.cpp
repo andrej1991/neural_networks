@@ -259,7 +259,7 @@ void MatrixOperations::add_matrices(MatrixData &a, MatrixData &b, MatrixData &c,
     errorcode = clSetKernelArg(this->matrice_add_kernel, 0, sizeof(cl_mem), (void *)&(a.cl_mem_obj));
     errorcode |= clSetKernelArg(this->matrice_add_kernel, 1, sizeof(cl_mem), (void *)&(b.cl_mem_obj));
     errorcode |= clSetKernelArg(this->matrice_add_kernel, 2, sizeof(cl_mem), (void *)&(c.cl_mem_obj));
-    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, generated_event);
+    errorcode |= clEnqueueNDRangeKernel(this->command_queue, this->matrice_add_kernel, 1, NULL, &global_item_size, NULL, num_events, wait_for_events, generated_event);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "Some error happened durring matrix addition \n";

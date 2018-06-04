@@ -108,7 +108,7 @@ class FullyConnected : public Layer {
     FullyConnected(int row, int prev_row, int neuron_type, OpenclSetup *env);
     ~FullyConnected();
     virtual inline MatrixData** backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount);
-    virtual inline void layers_output(MatrixData **input);
+    inline void layers_output(MatrixData **input);
     virtual void sync_memory();
     virtual inline MatrixData** get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type);
     virtual inline MatrixData** derivate_layers_output(MatrixData **input);
@@ -181,7 +181,6 @@ class Convolutional : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
-    void get_2D_weights(int neuron_id, int fmap_id, MatrixData &kernel, Feature_map **next_layers_fmap);
     void store(std::ofstream &params);
     void load(std::ifstream &params);
 };

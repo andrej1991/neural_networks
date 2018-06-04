@@ -63,7 +63,7 @@ Network::Network(char *data): openclenv(), nabla(NULL), deltanabla(NULL)
         }
     else
         {
-            cerr << "Unable to open the file:" << '"' << file << '"' << endl;
+            cerr << "Unable to open the file:" << '"' << data << '"' << endl;
             throw exception();
         }
 }
@@ -371,7 +371,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                     if(monitor_learning_cost)
                         {
                             cout << "total cost: " << learning_cost << endl;
-                            if(abs(learning_cost) > abs(previoius_learning_cost))
+                            if(abs((long long int)learning_cost) > abs((long long int)previoius_learning_cost))
                                 learnig_cost_counter++;
                             if(learnig_cost_counter == 10)
                                 {
@@ -424,7 +424,7 @@ void Network::check_accuracy(MNIST_data **test_data)
     if(monitor_learning_cost)
         {
             cout << "total cost: " << learning_cost << endl;
-            if(abs(learning_cost) > abs(previoius_learning_cost))
+            if(abs((long long int)learning_cost) > abs((long long int)previoius_learning_cost))
                 learnig_cost_counter++;
             previoius_learning_cost = learning_cost;
         }
@@ -433,9 +433,9 @@ void Network::check_accuracy(MNIST_data **test_data)
 void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
-    //this->check_accuracy(v);
+    this->check_accuracy(v);
     //this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 10, v, 50);
-    this->stochastic_gradient_descent(d, 1, 10, 0.3, true, 10, v, 1);
+    //this->stochastic_gradient_descent(d, 1, 1, 0.03, true, 10, NULL, 1);
     //for(int i = 0; i < 30; i++)
     //    this->check_accuracy(v);
     //MatrixData o = this->get_output(v[0]->input);

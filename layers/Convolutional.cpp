@@ -1,6 +1,8 @@
 #include "layers.h"
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col,
                              int map_count, int neuron_type, int next_layers_type, Padding &p, OpenclSetup *env, int stride):
@@ -42,21 +44,7 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
         cerr << "unable to create OpenCL buffer. The error is:" << errorcode << endl;
         throw exception();
     }
-    /*for(int i = 0; i < map_count; i++)
-    {
-        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, -1, env);
-        this->outputs[i] = new MatrixData(this->output_row, this->output_col);
-        this->outputs[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
-        this->convolution_helper[i] = new MatrixData(this->output_row, this->output_col);
-        this->convolution_helper[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
-        this->output_derivative[i] = new MatrixData(this->output_row, this->output_col);
-        this->output_derivative[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
-        this->layers_delta[i] = new MatrixData(this->output_row, this->output_col);
-        this->layers_delta[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
-        this->layers_delta_helper[i] = new MatrixData(this->output_row, this->output_col);
-        this->layers_delta_helper[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[i][0].mtxop[0].command_queue));
-    }*/
-    this->fulldepth_conv_kernel = clCreateKernel(this->convolutional_program, "FullDepthConvolution", &errorcode);
+    this->fulldepth_conv_kernel = clCreateKernel(this->convolutional_program, /*"FullDepthConvolution"*/"GetDeltaHelper", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL ConvolutionAndAdd kernel\n";
@@ -74,7 +62,7 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
         cerr << "unable to create OpenCL update weights kernel\n";
         throw exception();
     }
-    this->fulldepth_fullconv_kernel = clCreateKernel(this->convolutional_program, "GetDeltaHelper", &errorcode);
+    this->fulldepth_fullconv_kernel = clCreateKernel(this->convolutional_program, /*"GetDeltaHelper"*/"FullDepthConvolution", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
         cerr << "unable to create OpenCL FullDepthFullConv kernel\n";
@@ -115,21 +103,6 @@ void Convolutional::sync_memory()
     clWaitForEvents(this->map_count, events);
 }
 
-void Convolutional::get_2D_weights(int neuron_id, int fmap_id, MatrixData &kernel, Feature_map **next_layers_fmap)
-{
-    int kernelsize = kernel.row * kernel.col * sizeof(float);
-    int src_offset = kernelsize * fmap_id;
-    cl_event event;
-    clEnqueueCopyBuffer(this->fmap[fmap_id][0].mtxop[0].command_queue, next_layers_fmap[0][0].weights[0][0].cl_mem_obj, kernel.cl_mem_obj,
-                        src_offset, 0, kernelsize, 0, NULL, &event);
-    clWaitForEvents(1, &event);
-}
-
-inline void calculate_delta_helper(MatrixData *padded_delta, MatrixData *delta_helper, MatrixData &kernel, MatrixData &helper)
-{
-    /*convolution(padded_delta[0],kernel, helper);
-    delta_helper[0] += helper;*/
-}
 
 inline void delete_padded_delta(MatrixData **padded_delta, int limit)
 {
@@ -140,15 +113,22 @@ inline void delete_padded_delta(MatrixData **padded_delta, int limit)
         delete[] padded_delta;
 }
 
+void print_execution_time(high_resolution_clock::time_point t1, high_resolution_clock::time_point t2)
+{
+    auto duration = duration_cast<microseconds>( t2 - t1 ).count();
+    cout << "The execution time was: " << duration << "us" << endl;;
+}
+
 inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **delta, int next_layers_fmapcount)
 {
-    cout << "backpropagate\n";
     this->derivate_layers_output(input);
     MatrixData **delta_helper;
     MatrixData helper(this->output_row, this->output_col);
     cl_int errorcode;
     cl_event write_events[this->map_count];
-    const size_t global[3] = {this->layers_delta_helper[0][0].row, this->layers_delta_helper[0][0].col, this->map_count};
+    //const size_t global[3] = {this->layers_delta_helper[0][0].row, this->layers_delta_helper[0][0].col, this->map_count};
+    const size_t global[3] = {this->output_row, this->output_col, this->map_count};
+    //const size_t global[3] = {1, 1, 1};
     cl_event event1, event2, event3;
     if(this->next_layers_type != CONVOLUTIONAL)
     {
@@ -176,8 +156,8 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
     {
         int nextl_kern_row = next_layers_fmaps[0][0].get_row();
         int nextl_kern_col = next_layers_fmaps[0][0].get_col();
-        int delta_row = delta[0][0].row/next_layers_fmapcount;
-        int delta_col = delta[0][0].col;
+        int delta_row = this->output_row;//delta[0][0].row/next_layers_fmapcount;
+        int delta_col = this->output_col;//delta[0][0].col;
         errorcode = clSetKernelArg(this->fulldepth_fullconv_kernel, 0, sizeof(int), (void*)&(nextl_kern_row));
         errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 1, sizeof(int), (void*)&(nextl_kern_col));
         errorcode |= clSetKernelArg(this->fulldepth_fullconv_kernel, 2, sizeof(int), (void*)&(delta_col));
@@ -194,6 +174,8 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
         }
     }
     this->fmap[0][0].mtxop[0].hadamart(this->layers_delta_helper[0][0], this->output_derivative[0][0], layers_delta[0][0], 1, &event1, &event2);
+    clWaitForEvents(1, &event2);
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
     errorcode = clSetKernelArg(this->delta_weight_kernel, 0, sizeof(int), (void*)&(this->output_row));
     errorcode |= clSetKernelArg(this->delta_weight_kernel, 1, sizeof(int), (void*)&(this->output_col));
     errorcode |= clSetKernelArg(this->delta_weight_kernel, 2, sizeof(int), (void*)&(this->input_col));
@@ -209,7 +191,9 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
             throw exception();
         }
     clWaitForEvents(1, &event3);
-    cout << "backpropagate end\n";
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+        cout << "delta helper";
+        print_execution_time(t1, t2);
     return this->layers_delta;
 }
 

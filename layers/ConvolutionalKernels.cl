@@ -128,13 +128,13 @@ __kernel void GetDeltaHelper(const int KernRow, const int KernCol, const int Inp
         {
             for(int j=kcol; j>=0; j--)
             {
-                if((globalRow >= i) && (globalCol >= j) && ((globalRow -i) < InpRow)&&((globalCol-j) < InpCol))
+                if((globalRow >= i) && (globalCol >= j) && ((globalRow -i) < InpRow) && ((globalCol-j) < InpCol))
                     acc += kern[kernelIndex + i*KernCol+j] * inp[inputIndex + (globalRow-i)*InpCol + globalCol-j];
             }
         }
     }
  
-    outp[OutpRow*OutpCol*fmap_id + globalRow*OutpCol + globalCol] += acc;
+    outp[OutpRow*OutpCol*fmap_id + globalRow*OutpCol + globalCol] = acc;
 }
 
 
@@ -168,5 +168,15 @@ __kernel void GettingDeltaWeights(const int KernRow, const int KernCol, const in
         outp[OutpSize*(k+mapdepth) + globalRow*OutpCol + globalCol] = acc;
         acc = 0.0f;
     }
- 
 }
+
+
+
+
+
+
+
+
+
+
+
