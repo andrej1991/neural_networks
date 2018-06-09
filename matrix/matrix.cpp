@@ -144,6 +144,7 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
         this->load_matrice_operations_programs(context, deviceIds);
     instance_count++;
     cl_int errorcode;
+    //this->command_queue = clCreateCommandQueue(*context, deviceIds[0], CL_QUEUE_PROFILING_ENABLE, &errorcode);
     this->command_queue = clCreateCommandQueue(*context, deviceIds[0], 0, &errorcode);
     if(errorcode != CL_SUCCESS)
     {
