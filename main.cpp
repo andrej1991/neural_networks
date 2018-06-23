@@ -8,6 +8,12 @@
 
 using namespace std;
 
+#define InputRow 28
+#define InputCol 28
+
+/*#define InputRow 784
+#define InputCol 1*/
+
 
 int main()
 {
@@ -21,26 +27,26 @@ int main()
     MNIST_data *validation[10000];
     for(int i = 0; i < 50000; i++)
         {
-            m[i] = new MNIST_data(784, 1, 10, 1);
+            m[i] = new MNIST_data(InputRow, InputCol, 10, 1);
             m[i]->load_data(input, required_output);
         }
     for(int i = 0; i < 10000; i++)
         {
-            validation[i] = new MNIST_data(784, 1, 1, 1);
+            validation[i] = new MNIST_data(InputRow, InputCol, 1, 1);
             validation[i]->load_data(validation_input, validation_output);
             //cout << validation[i]->required_output[0][0];
         }
     cout << "the training data and the validation data is loaded\n";
     LayerDescriptor *layers[4];
-    /*layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 7);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 7);
-    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 12);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 20);
+    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 100);
     layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    //Network n(2, layers, 784, 1, 1, LOG_LIKELIHOOD_CF);
-    Network n(4, layers, 28, 28, 1, QUADRATIC_CF);*/
-    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    Network n(2, layers, 784, 1, 1, QUADRATIC_CF);
+    //Network n(2, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
+    Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
+    //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    //layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
+    //Network n(2, layers, 784, 1, 1, QUADRATIC_CF);
     n.test(m, validation);
     input.close();
     required_output.close();

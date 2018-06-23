@@ -72,7 +72,7 @@ void InputLayer::set_input(Matrice **input)
                         {
                             for(int j = 0; j < this->col; j++)
                                 {
-                                    this->outputs[l][0].data[i][j] = input[l][0].data[i * this->row + j][0];
+                                    this->outputs[l][0].data[i][j] = input[l][0].data[i][j];
                                 }
                         }
                 }
