@@ -171,6 +171,39 @@ __kernel void GettingDeltaWeights(const int KernRow, const int KernCol, const in
 }
 
 
+__kernel void FullDepthCrossCorrelation(const int KernRow, const int KernCol, const int InpCol, const int InpRow, const int mapdepth,
+                      const __global float* inp,
+                      const __global float* kern,
+                      __global float* outp) {
+    
+    const int globalRow = get_global_id(0);
+    const int globalCol = get_global_id(1);
+    const int fmap_id = get_global_id(2);
+ 
+    float acc = 0.0f;
+    int krow = KernRow-1;
+    int kcol = KernCol-1;
+    const int OutpCol = InpCol - KernCol + 1;
+    const int OutpRow = InpRow - KernRow + 1;
+    const int OutpSize = OutpRow*OutpCol;
+    const int map_offset = mapdepth*fmap_id;
+    for(int k=0; k<mapdepth; k++)
+    {
+        int kernelIndex = KernRow*KernCol*(k + map_offset);
+        int inputIndex = InpRow*InpCol*k;
+        for(int i=0; i<KernRow; i++) 
+        {
+            for(int j=0; j<KernCol; j++)
+            {
+                acc += kern[kernelIndex + i*KernCol+j] * inp[inputIndex + (globalRow+i)*InpCol + globalCol+j];
+            }
+        }
+    }
+ 
+    outp[OutpRow*OutpCol*fmap_id + globalRow*OutpCol + globalCol] = acc;
+}
+
+
 
 
 

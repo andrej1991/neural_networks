@@ -50,6 +50,12 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
         cerr << "unable to create OpenCL ConvolutionAndAdd kernel\n";
         throw exception();
     }
+    this->fulldepth_correlation_kernel = clCreateKernel(this->convolutional_program, "FullDepthCrossCorrelation", &errorcode);
+    if(errorcode != CL_SUCCESS)
+    {
+        cerr << "unable to create OpenCL FullDepthCrossCorrelation kernel\n";
+        throw exception();
+    }
     this->fullconv_and_add_kernel = clCreateKernel(this->convolutional_program, "FullConvAndAdd", &errorcode);
     if(errorcode != CL_SUCCESS)
     {
@@ -253,7 +259,8 @@ inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_
 
 inline void Convolutional::layers_output(MatrixData **input)
 {
-    this->fulldepth_conv(input, &(this->fulldepth_conv_kernel));
+    this->fulldepth_conv(input, &(this->fulldepth_correlation_kernel));
+    //this->fulldepth_conv(input, &(this->fulldepth_conv_kernel));
     this->neuron.activation(this->convolution_helper[0][0], this->outputs[0][0]);
 
 }

@@ -154,7 +154,7 @@ class Convolutional : public Layer {
     Neuron neuron;
     OpenclSetup *env;
     cl_program convolutional_program, general_program;
-    cl_kernel fulldepth_conv_kernel, fullconv_and_add_kernel, update_weights_kernel, fulldepth_fullconv_kernel, delta_weight_kernel;
+    cl_kernel fulldepth_conv_kernel, fulldepth_correlation_kernel, fullconv_and_add_kernel, update_weights_kernel, fulldepth_fullconv_kernel, delta_weight_kernel;
     inline void fulldepth_conv(MatrixData **input, cl_kernel *opencl_kernel);
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, OpenclSetup *env, int stride = 1);
