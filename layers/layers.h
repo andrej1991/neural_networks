@@ -146,7 +146,7 @@ class Softmax : public FullyConnected {
 
 class Convolutional : public Layer {
     MatrixData **outputs, **convolution_helper, **output_derivative, **layers_delta, **layers_delta_helper;
-    cl_mem delta_helper;
+    //cl_mem delta_helper;
     Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
@@ -176,7 +176,6 @@ class Convolutional : public Layer {
     inline int get_output_col();
     void set_weights(MatrixData *w);
     void set_biases(MatrixData *b);
-    void flatten();
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();

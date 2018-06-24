@@ -62,10 +62,28 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type, OpenclSet
 
 FullyConnected::~FullyConnected()
 {
+    clReleaseKernel(this->update_weights_kernel);
+    clReleaseKernel(this->update_biases_kernel);
+    clReleaseKernel(this->get_act_input_kernel);
+    clReleaseKernel(this->get_layers_delta_kernel);
+    clReleaseKernel(this->out_err_quad_cf_kernel);
+    clReleaseProgram(this->fully_connected_program);
     delete this->output[0];
+    delete this->output_derivative[0];
+    delete this->output_error[0];
     delete[] this->output;
+    delete[] this->output_derivative;
+    delete[] this->output_error;
     delete this->fmap[0];
     delete[] this->fmap;
+    for(int i=0; i<FullyConnectedFuncVarCount; i++)
+    {
+        if(this->function_variables[i] != NULL)
+        {
+            delete this->function_variables[i];
+        }
+    }
+    //delete[] this->function_variables;
 }
 
 inline void FullyConnected::layers_output(MatrixData **input)
@@ -103,7 +121,7 @@ void FullyConnected::sync_memory()
 
 inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
 {
-    ///TODO create extra cernels for costfunction!!!
+    ///TODO create extra kernels for costfunction!!!
     if(this->function_variables[1] == NULL)
     {
         this->function_variables[1] = new MatrixData;

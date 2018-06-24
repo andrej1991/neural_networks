@@ -30,10 +30,10 @@ Softmax::Softmax(int row, int col, OpenclSetup *env): FullyConnected(row, col, -
 
 Softmax::~Softmax()
 {
-    /*delete this->output[0];
-    delete[] this->output;
-    delete this->fmap[0];
-    delete[] this->fmap;*/
+    clReleaseKernel(this->softmax_kernel);
+    clReleaseKernel(this->softmax_derivative_kernel);
+    clReleaseKernel(this->softmax_helper_kernel);
+    clReleaseProgram(this->softmax_program);
 }
 
 inline MatrixData** Softmax::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount)
@@ -85,10 +85,12 @@ inline MatrixData** Softmax::get_output_error(MatrixData **input, MatrixData &re
     {
         this->function_variables[2] = new MatrixData(this->outputlen, 1);
         this->function_variables[2]->copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
-        this->function_variables[3] = new MatrixData;
+        this->function_variables[3] = new MatrixData(required_output.row, required_output.col);
+        this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     }
-    this->function_variables[3][0] = required_output;
-    this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    //this->function_variables[3][0] = required_output;
+    //this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->function_variables[3][0].cl_mem_obj, CL_TRUE, 0, required_output.row*required_output.col, (void*)required_output.data, 0, NULL, NULL);
     switch(costfunction_type)
         {
         /*case QUADRATIC_CF:

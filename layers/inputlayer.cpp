@@ -10,12 +10,15 @@ InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_typ
     cl_int errorcode;
     this->q = clCreateCommandQueue(env->context, env->deviceIds[0], 0, &errorcode);
     this->layer_type = INPUTLAYER;
-    this->outputs = new MatrixData* [input_channel_count];
+    this->outputs = new MatrixData* [1];
+    this->outputs[0] = new MatrixData(input_channel_count * this->row * this->col, 1);
+    this->outputs[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
+    /*this->outputs = new MatrixData* [input_channel_count];
     for(int i = 0; i < input_channel_count; i++)
         {
             outputs[i] = new MatrixData(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
             outputs[i][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
-        }
+        }*/
 }
 
 InputLayer::~InputLayer()
@@ -34,7 +37,10 @@ inline void InputLayer::layers_output(MatrixData **input)
 
 void InputLayer::sync_memory()
 {
-    ;
+    int row = this->outputs[0][0].get_row();
+    int col = this->outputs[0][0].get_col();
+    size_t s = row * col * sizeof(float);
+    clEnqueueReadBuffer(this->q, this->outputs[0][0].cl_mem_obj, CL_TRUE, 0, s, this->outputs[0][0].data, 0, NULL, NULL);
 }
 
 inline MatrixData** InputLayer::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
@@ -66,37 +72,20 @@ void InputLayer::set_input(MatrixData **input)
 {
     //std::cout << "starting to set the input\n";
     ///TODO modify this function to work with FC layer and convolutional layer
-    /*if(this->next_layers_type == FULLY_CONNECTED)
-        {*/
-            for(int l = 0; l < this->input_channel_count; l++)
-                {
-                    //int debug1 = this->outputs[l]->get_col();
-                    //int debug2 = this->outputs[l]->get_row();
-                    for(int i = 0; i < this->row; i++)
-                        {
-                            for(int j = 0; j < this->col; j++)
-                                {
-                                    (this->outputs[l][0])[i][j] = (input[l][0])[i][j];
-                                }
-                        }
-                    this->outputs[l][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
-                }
-        /*}
-    else if(this->next_layers_type == CONVOLUTIONAL)
-        {
-            for(int l = 0; l < this->input_channel_count; l++)
-                {
-                    //int debug1 = this->outputs[l]->get_col();
-                    //int debug2 = this->outputs[l]->get_row();
-                    for(int i = 0; i < this->row; i++)
-                        {
-                            for(int j = 0; j < this->col; j++)
-                                {
-                                    (this->outputs[l][0])[i][j] = (input[l][0])[i * this->row + j][0];
-                                }
-                        }
-                }
-        }*/
+    for(int l = 0; l < this->input_channel_count; l++)
+    {
+        //int debug1 = this->outputs[l]->get_col();
+        //int debug2 = this->outputs[l]->get_row();
+        for(int i = 0; i < this->row; i++)
+            {
+                for(int j = 0; j < this->col; j++)
+                    {
+                        (this->outputs[l][0])[i][j] = (input[l][0])[i][j];
+                    }
+            }
+        this->outputs[l][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
+    }
+    //clEnqueueWriteBuffer(this->q, this->outputs[0][0].cl_mem_obj, CL_TRUE, 0, (this->outputs[0][0].row)*(this->outputs[0][0].col), (void*)input[0][0].data, 0, NULL, NULL);
 }
 
 inline MatrixData** InputLayer::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **next_layers_error, int next_layers_fmapcount)

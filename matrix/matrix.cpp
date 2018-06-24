@@ -228,6 +228,7 @@ MatrixOperations::MatrixOperations(cl_context *context, cl_device_id *deviceIds)
 MatrixOperations::~MatrixOperations()
 {
     clReleaseKernel(this->matrice_add_kernel);
+    clReleaseKernel(this->matrice_substract_kernel);
     clReleaseKernel(this->scalar_add_kernel);
     clReleaseKernel(this->transpose_kernel);
     clReleaseKernel(this->multiply_kernel);
@@ -236,6 +237,7 @@ MatrixOperations::~MatrixOperations()
     clReleaseKernel(this->fullconv_kernel);
     clReleaseKernel(this->sameconv_kernel);
     clReleaseKernel(this->multiply_with_transpose_kernel);
+    clReleaseKernel(this->transpose_and_multiply_kernel);
     clReleaseKernel(this->assign_scalar_kernel);
     clFlush(this->command_queue);
     clFinish(this->command_queue);
