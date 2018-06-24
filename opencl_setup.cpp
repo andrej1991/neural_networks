@@ -20,7 +20,7 @@ OpenclSetup::OpenclSetup()
 
 OpenclSetup::~OpenclSetup()
 {
-    ;
+    clReleaseContext(this->context);
 }
 
 void OpenclSetup::print_opencl_platform_info(cl_platform_id &platformid, cl_platform_info name)
