@@ -85,12 +85,12 @@ inline MatrixData** Softmax::get_output_error(MatrixData **input, MatrixData &re
     {
         this->function_variables[2] = new MatrixData(this->outputlen, 1);
         this->function_variables[2]->copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
-        this->function_variables[3] = new MatrixData(required_output.row, required_output.col);
-        this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+        this->function_variables[3] = new MatrixData;
+        //this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     }
-    //this->function_variables[3][0] = required_output;
-    //this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
-    clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->function_variables[3][0].cl_mem_obj, CL_TRUE, 0, required_output.row*required_output.col, (void*)required_output.data, 0, NULL, NULL);
+    this->function_variables[3][0] = required_output;
+    this->function_variables[3][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    //clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->function_variables[3][0].cl_mem_obj, CL_TRUE, 0, required_output.row*required_output.col, (void*)required_output.data, 0, NULL, NULL);
     switch(costfunction_type)
         {
         /*case QUADRATIC_CF:

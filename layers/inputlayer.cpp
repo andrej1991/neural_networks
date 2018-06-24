@@ -80,11 +80,12 @@ void InputLayer::set_input(MatrixData **input)
             {
                 for(int j = 0; j < this->col; j++)
                     {
-                        (this->outputs[l][0])[i][j] = (input[l][0])[i][j];
+                        (this->outputs[0][0])[l*this->row + i][j] = (input[l][0])[i][j];
                     }
             }
-        this->outputs[l][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
+        //this->outputs[l][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
     }
+    this->outputs[0][0].copy_to_opencl_buffer(&(this->env->context), &(this->q));
     //clEnqueueWriteBuffer(this->q, this->outputs[0][0].cl_mem_obj, CL_TRUE, 0, (this->outputs[0][0].row)*(this->outputs[0][0].col), (void*)input[0][0].data, 0, NULL, NULL);
 }
 

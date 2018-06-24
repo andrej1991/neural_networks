@@ -8,13 +8,11 @@
 
 using namespace std;
 
-/*#define InputRow 784
-#define InputCol 1*/
-#define InputRow 28
-#define InputCol 28
+#define InputRow 784
+#define InputCol 1
+/*#define InputRow 28
+#define InputCol 28*/
 
-#include "opencl_setup.h"
-#include "neuron/neuron.h"
 
 
 
@@ -41,18 +39,17 @@ int main()
         }
     cout << "the training data and the validation data is loaded\n";
 
-    LayerDescriptor *layers[4];
+    /*LayerDescriptor *layers[4];
     layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 5);
     layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 5);
     layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
     layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
+    Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);*/
 
-    /*LayerDescriptor *layers[4];
-    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 100);
-    layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    Network n(3, layers, InputRow, InputCol, 1, QUADRATIC_CF);*/
+    LayerDescriptor *layers[2];
+    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[1] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
+    Network n(2, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
 
     //Network n("/home/andrej/myfiles/Asztal/net.bin");
     cout << "the layers are constructed\n";

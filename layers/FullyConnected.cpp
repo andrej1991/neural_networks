@@ -125,9 +125,11 @@ inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixD
     if(this->function_variables[1] == NULL)
     {
         this->function_variables[1] = new MatrixData;
+        //this->function_variables[1][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
     }
     this->function_variables[1][0] = required_output;
     this->function_variables[1][0].copy_to_opencl_buffer(&(this->env->context), &(this->fmap[0][0].mtxop[0].command_queue));
+    //clEnqueueWriteBuffer(this->fmap[0][0].mtxop[0].command_queue, this->function_variables[1][0].cl_mem_obj, CL_TRUE, 0, required_output.row*required_output.col, (void*)required_output.data, 0, NULL, NULL);
     cl_event event;
     cl_int errorcode;
     size_t global;
