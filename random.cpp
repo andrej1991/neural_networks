@@ -3,7 +3,7 @@
 
 using namespace std;
 
-inline int random(int start, int end, ifstream &rnd)
+int random(int start, int end, std::ifstream &rnd)
 {
     int range = end - start;
     int rand_num;
