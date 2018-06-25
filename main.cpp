@@ -12,7 +12,7 @@ using namespace std;
 #define InputCol 28
 
 /*#define InputRow 784
-#define InputCol 1*/
+#dfine InputCol 1*/
 
 
 int main()
@@ -38,15 +38,15 @@ int main()
         }
     cout << "the training data and the validation data is loaded\n";
     LayerDescriptor *layers[4];
-    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 12);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 20);
+    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 20);
+    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 40);
     layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 100);
     layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
     //Network n(2, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
     Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
-    //layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    //layers[1] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 10);
-    //Network n(2, layers, 784, 1, 1, QUADRATIC_CF);
+    /*layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
+    layers[1] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
+    Network n(2, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);*/
     n.test(m, validation);
     input.close();
     required_output.close();
