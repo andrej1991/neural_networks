@@ -64,7 +64,7 @@ Network::Network(char *data)
         }
     else
         {
-            cerr << "Unable to open the file:" << '"' << file << '"' << endl;
+            cerr << "Unable to open the file:" << '"' << data << '"' << endl;
             throw exception();
         }
 }
