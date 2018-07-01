@@ -34,7 +34,7 @@ inline int get_neuron_type(YAML::Node &config, int i, string &layerstr)
 
 int main()
 {
-    YAML::Node config = YAML::LoadFile("../data/config.yaml");
+    YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
     string training_input = config["training_input"].as<string>();
     string required_training_output = config["required_training_output"].as<string>();
     string validation_input = config["validation_input"].as<string>();
@@ -48,6 +48,11 @@ int main()
     int layer_count = config["layer_count"].as<int>();
     string cf = config["cost_function_type"].as<string>();
     int costfunction_type = -1;
+    int epochs = config["epochs"].as<int>();
+    int minibatch_len = config["minibatch_len"].as<int>();
+    double learning_rate = config["learning_rate"].as<double>();
+    double regularization_rate = config["regularization_rate"].as<double>();
+    int minibatch_count = config["minibatch_count"].as<int>();
     if(cf.compare("log_likelihood"))
     {
         costfunction_type = LOG_LIKELIHOOD_CF;
@@ -115,7 +120,7 @@ int main()
         }
     Network n(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
-    n.test(m, validation);
+    n.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();
