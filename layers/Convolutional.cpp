@@ -14,13 +14,19 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->layer_type = CONVOLUTIONAL;
     this->fmap = new Feature_map* [map_count];
     this->outputs = new Matrice* [map_count];
+    this->output_derivative = new Matrice* [map_count];
+    this->layers_delta = new Matrice* [map_count];
+    this->layers_delta_helper = new Matrice* [map_count];
     this->flattened_output = new Matrice* [1];
     this->flattened_output[0] = new Matrice(this->map_count * this->output_row * this->output_col, 1);
     for(int i = 0; i < map_count; i++)
-        {
-            fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);
-            this->outputs[i] = new Matrice(this->output_row, this->output_col);
-        }
+    {
+        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);
+        this->outputs[i] = new Matrice(this->output_row, this->output_col);
+        this->output_derivative[i] = new Matrice(this->output_row, this->output_col);
+        this->layers_delta[i] = new Matrice(this->output_row, this->output_col);
+        this->layers_delta_helper[i] = new Matrice(this->output_row, this->output_col);
+    }
 }
 
 Convolutional::~Convolutional()
@@ -28,10 +34,10 @@ Convolutional::~Convolutional()
     delete flattened_output[0];
     delete[] flattened_output;
     for(int i = 0; i < this->map_count; i++)
-        {
-            delete fmap[i];
-            delete outputs[i];
-        }
+    {
+        delete fmap[i];
+        delete outputs[i];
+    }
     delete[] fmap;
     delete[] outputs;
 }
@@ -43,135 +49,141 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, 
     int endpos = starting_pos + kernelsize;
     int index = starting_pos;
     for(int col = 0; col < kernel.get_col(); col++)
+    {
+        for(int row = 0; row < kernel.get_row(); row++)
         {
-            for(int row = 0; row < kernel.get_row(); row++)
-                {
-                    kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
-                    index++;
-                }
+            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
+            index++;
         }
+    }
 }
 
 inline void calculate_delta_helper(Matrice *padded_delta, Matrice *delta_helper, Matrice &kernel, Matrice &helper)
 {
     convolution(padded_delta[0],kernel, helper);
+    cout << "shit\n";
+    print_mtx(padded_delta[0]);
     delta_helper[0] += helper;
 }
 
 inline void delete_padded_delta(Matrice **padded_delta, int limit)
 {
     for(int i = 0; i < limit; i++)
-            {
-                delete padded_delta[i];
-            }
-        delete[] padded_delta;
+    {
+        delete padded_delta[i];
+    }
+    delete[] padded_delta;
 }
 
 inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **delta, int next_layers_fmapcount)
 {
-    Matrice **layers_delta = new Matrice* [this->map_count];
-    Matrice **output_derivate;
-    output_derivate = this->derivate_layers_output(input);
-    Matrice **delta_helper;
+    //Matrice **layers_delta = new Matrice* [this->map_count];
+    //Matrice **output_derivate;
+    this->derivate_layers_output(input);
+    //Matrice **delta_helper;
     Matrice **padded_delta;
     Matrice helper(this->output_row, this->output_col);
     if(this->next_layers_type != CONVOLUTIONAL)
+    {
+        int next_layers_neuroncount = delta[0]->get_row();
+        padded_delta = new Matrice* [next_layers_neuroncount];
+        for(int i = 0; i < next_layers_neuroncount; i++)
         {
-            int next_layers_neuroncount = delta[0]->get_row();
-            padded_delta = new Matrice* [next_layers_neuroncount];
-            for(int i = 0; i < next_layers_neuroncount; i++)
-                {
-                    padded_delta[i] = new Matrice;
-                    padded_delta[i][0].data[0][0] = delta[0][0].data[i][0];
-                    padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
-                                                             (this->output_col-1)/2,
-                                                             (this->output_row-1)/2,
-                                                             (this->output_col-1)/2);
-                }
-            delta_helper = new Matrice* [this->map_count];
-            Matrice kernel(this->output_row, this->output_col);
-            for(int i = 0; i < this->map_count; i++)
-                {
-                    delta_helper[i] = new Matrice(this->output_row, this->output_col);
-                    for(int j = 0; j < next_layers_neuroncount; j++)
-                        {
-                            this->get_2D_weights(j, i, kernel, next_layers_fmaps);
-                            calculate_delta_helper(padded_delta[j], delta_helper[i], kernel, helper);
-                        }
-                }
-            delete_padded_delta(padded_delta, next_layers_neuroncount);
+            padded_delta[i] = new Matrice;
+            padded_delta[i][0].data[0][0] = delta[0][0].data[i][0];
+            padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
+                                                     (this->output_col-1)/2,
+                                                     (this->output_row-1)/2,
+                                                     (this->output_col-1)/2);
         }
+        //delta_helper = new Matrice* [this->map_count];
+        Matrice kernel(this->output_row, this->output_col);
+        for(int i = 0; i < this->map_count; i++)
+        {
+            //delta_helper[i] = new Matrice(this->output_row, this->output_col);
+            this->layers_delta_helper[i][0].zero();
+            for(int j = 0; j < next_layers_neuroncount; j++)
+            {
+                this->get_2D_weights(j, i, kernel, next_layers_fmaps);
+                calculate_delta_helper(padded_delta[j], layers_delta_helper[i], kernel, helper);
+                cout << "fuck\n";
+                print_mtx(padded_delta[j][0]);
+            }
+        }
+        delete_padded_delta(padded_delta, next_layers_neuroncount);
+    }
     else
+    {
+        padded_delta = new Matrice* [next_layers_fmapcount];
+        for(int i = 0; i < next_layers_fmapcount; i++)
         {
-            padded_delta = new Matrice* [next_layers_fmapcount];
-            for(int i = 0; i < next_layers_fmapcount; i++)
-                {
-                    padded_delta[i] = new Matrice;
-                    padded_delta[i][0] = delta[i][0];
-                    padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-                                                             (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
-                                                             (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-                                                             (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
-                }
-            delta_helper = new Matrice* [this->map_count];
-            for(int i = 0; i < this->map_count; i++)
-                {
-                    delta_helper[i] = new Matrice(this->output_row, this->output_col);
-                    for(int j = 0; j < next_layers_fmapcount; j++)
-                        {
-                            calculate_delta_helper(padded_delta[j], delta_helper[i], next_layers_fmaps[j]->weights[i][0], helper);
-                        }
-                }
-            delete_padded_delta(padded_delta, next_layers_fmapcount);
+            padded_delta[i] = new Matrice;
+            padded_delta[i][0] = delta[i][0];
+            padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+                                                     (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
+                                                     (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+                                                     (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
         }
+        //delta_helper = new Matrice* [this->map_count];
+        for(int i = 0; i < this->map_count; i++)
+        {
+            //delta_helper[i] = new Matrice(this->output_row, this->output_col);
+            this->layers_delta_helper[i][0].zero();
+            for(int j = 0; j < next_layers_fmapcount; j++)
+            {
+                calculate_delta_helper(padded_delta[j], this->layers_delta_helper[i], next_layers_fmaps[j]->weights[i][0], helper);
+            }
+        }
+        delete_padded_delta(padded_delta, next_layers_fmapcount);
+    }
     for(int i = 0; i < this->map_count; i++)
+    {
+        //layers_delta[i] = new Matrice;
+        this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
+        for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
-            layers_delta[i] = new Matrice;
-            layers_delta[i][0] = hadamart_product(delta_helper[i][0], output_derivate[i][0]);
-            for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
-                {
-                     convolution(input[j][0], layers_delta[i][0], nabla[i]->weights[j][0]);
-                }
-            delete output_derivate[i];
-            delete delta_helper[i];
+             convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
         }
-    delete[] output_derivate;
-    for(int i = 0; i < next_layers_fmapcount; i++)
-        {
-            //delete delta_helper[i];
-            delete delta[i];
-        }
-    delete[] delta_helper;
-    delete[] delta;
-    return layers_delta;
+        //delete output_derivate[i];
+        //delete delta_helper[i];
+    }
+    //delete[] output_derivate;
+    /*for(int i = 0; i < next_layers_fmapcount; i++)
+    {
+        //delete delta_helper[i];
+        //delete delta[i];
+    }*/
+    //delete[] delta_helper;
+    //delete[] delta;
+    return this->layers_delta;
 }
 
 void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
     for(int i = 0; i < this->map_count; i++)
+    {
+        for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
-            for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
+            for(int row = 0; row < this->kernel_row; row++)
+            {
+                for(int col = 0; col < this->kernel_col; col++)
                 {
-                    for(int row = 0; row < this->kernel_row; row++)
-                        {
-                            for(int col = 0; col < this->kernel_col; col++)
-                                {
-                                    this->fmap[i]->weights[j]->data[row][col] =
-                                                    regularization_rate * this->fmap[i]->weights[j]->data[row][col] -
-                                                    learning_rate * layer->fmap[i]->weights[j]->data[row][col];
-                                }
-                        }
+                    this->fmap[i]->weights[j]->data[row][col] =
+                                    regularization_rate * this->fmap[i]->weights[j]->data[row][col] -
+                                    learning_rate * layer->fmap[i]->weights[j]->data[row][col];
                 }
+            }
         }
+    }
 }
 
 inline void Convolutional::fulldepth_conv(Matrice &helper, Matrice &convolved, Matrice **input, int map_index)
 {
     for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
-        {
-            convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->stride);
-            helper += convolved;
-        }
+    {
+        convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->stride);
+        helper += convolved;
+    }
     helper+=this->fmap[map_index]->biases[0][0].data[0][0];
 }
 
@@ -179,14 +191,14 @@ inline void Convolutional::layers_output(Matrice **input)
 {
     Matrice convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
     for(int map_index = 0; map_index < this->map_count; map_index++)
-        {
-            this->fulldepth_conv(helper, convolved, input, map_index);
-            this->outputs[map_index][0] = this->neuron.neuron(helper);
-            helper.zero();
-        }
+    {
+        this->fulldepth_conv(helper, convolved, input, map_index);
+        this->neuron.neuron(helper, this->outputs[map_index][0]);
+        helper.zero();
+    }
 }
 
-inline Matrice Convolutional::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline Matrice** Convolutional::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
     cerr << "currently the convolutional neural network needs to have atleest one fully connected layer at the output";
     throw exception();
@@ -195,18 +207,18 @@ inline Matrice Convolutional::get_output_error(Matrice **input, Matrice &require
 inline Matrice** Convolutional::derivate_layers_output(Matrice **input)
 {
     Matrice convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
-    Matrice **ret = new Matrice* [this->map_count];
+    /*Matrice **ret = new Matrice* [this->map_count];
     for(int i = 0; i < this->map_count; i++)
-        {
-            ret[i] = new Matrice(this->output_row, this->output_col);
-        }
+    {
+        ret[i] = new Matrice(this->output_row, this->output_col);
+    }*/
     for(int map_index = 0; map_index < this->map_count; map_index++)
-        {
-            this->fulldepth_conv(helper, convolved, input, map_index);
-            ret[map_index][0] = this->neuron.neuron_derivate(helper);
-            helper.zero();
-        }
-    return ret;
+    {
+        this->fulldepth_conv(helper, convolved, input, map_index);
+        this->neuron.neuron_derivative(helper, output_derivative[map_index][0]);
+        helper.zero();
+    }
+    return output_derivative;
 }
 
 void Convolutional::flatten()
@@ -214,16 +226,16 @@ void Convolutional::flatten()
     ///TODO rewrite this if the feature maps can have different kernel size;
     int i = 0;
     for(int map_index = 0; map_index < this->map_count; map_index++)
+    {
+        for(int col = 0; col < this->output_col; col++)
         {
-            for(int col = 0; col < this->output_col; col++)
-                {
-                    for(int row = 0; row < this->output_row; row++)
-                        {
-                            this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
-                            i++;
-                        }
-                }
+            for(int row = 0; row < this->output_row; row++)
+            {
+                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
+                i++;
+            }
         }
+    }
 }
 
 
@@ -248,10 +260,10 @@ inline Matrice** Convolutional::get_output()
     //print_mtx_list(outputs, this->map_count);
     //cout << "---------------------------" << endl;
     if(next_layers_type == FULLY_CONNECTED)
-        {
-            this->flatten();
-            return this->flattened_output;
-        }
+    {
+        this->flatten();
+        return this->flattened_output;
+    }
     else
         return this->outputs;
 }
@@ -314,14 +326,14 @@ int Convolutional::get_weights_col()
 void Convolutional::store(std::ofstream &params)
 {
     for(int i = 0; i < this->map_count; i++)
-        {
-            this->fmap[i]->store(params);
-        }
+    {
+        this->fmap[i]->store(params);
+    }
 }
 void Convolutional::load(std::ifstream &params)
 {
     for(int i = 0; i < this->map_count; i++)
-        {
-            this->fmap[i]->load(params);
-        }
+    {
+        this->fmap[i]->load(params);
+    }
 }

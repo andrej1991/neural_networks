@@ -65,7 +65,7 @@ class Layer{
     virtual ~Layer();
     virtual inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount) = 0;
     virtual inline void layers_output(Matrice **input) = 0;
-    virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type) = 0;
+    virtual inline Matrice** get_output_error(Matrice **input, Matrice &required_output, int costfunction_type) = 0;
     virtual inline Matrice** derivate_layers_output(Matrice **input) = 0;
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
     virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes) = 0;
@@ -90,7 +90,7 @@ class Layer{
 
 class FullyConnected : public Layer {
     friend class Softmax;
-    Matrice **output;
+    Matrice **output, **output_derivative, **output_error, **output_error_helper;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
@@ -100,7 +100,7 @@ class FullyConnected : public Layer {
     ~FullyConnected();
     virtual inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     virtual inline void layers_output(Matrice **input);
-    virtual inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
+    virtual inline Matrice** get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     virtual inline Matrice** derivate_layers_output(Matrice **input);
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     virtual inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
@@ -128,12 +128,12 @@ class Softmax : public FullyConnected {
     ~Softmax();
     inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
-    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
+    inline Matrice** get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
 };
 
 class Convolutional : public Layer {
-    Matrice **outputs, **flattened_output;
+    Matrice **outputs, **flattened_output, **layers_delta, **output_derivative, **layers_delta_helper;
     Feature_map **fmap;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
@@ -145,7 +145,7 @@ class Convolutional : public Layer {
     ~Convolutional();
     inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
-    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
+    inline Matrice** get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
@@ -180,7 +180,7 @@ class InputLayer : public Layer {
     ~InputLayer();
     inline Matrice** backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrice **input);
-    inline Matrice get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
+    inline Matrice** get_output_error(Matrice **input, Matrice &required_output, int costfunction_type);
     inline Matrice** derivate_layers_output(Matrice **input);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);

@@ -34,7 +34,8 @@ inline int get_neuron_type(YAML::Node &config, int i, string &layerstr)
 
 int main()
 {
-    YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
+    //YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
+    YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
     string training_input = config["training_input"].as<string>();
     string required_training_output = config["required_training_output"].as<string>();
     string validation_input = config["validation_input"].as<string>();
@@ -109,15 +110,15 @@ int main()
     MNIST_data *m[traninig_data_len];
     MNIST_data *validation[validation_data_len];
     for(int i = 0; i < traninig_data_len; i++)
-        {
-            m[i] = new MNIST_data(input_row, input_col, output_size, 1);
-            m[i]->load_data(input, required_output);
-        }
+    {
+        m[i] = new MNIST_data(input_row, input_col, output_size, 1);
+        m[i]->load_data(input, required_output);
+    }
     for(int i = 0; i < validation_data_len; i++)
-        {
-            validation[i] = new MNIST_data(input_row, input_col, 1, 1);
-            validation[i]->load_data(validation_input_data, validation_output_data);
-        }
+    {
+        validation[i] = new MNIST_data(input_row, input_col, 1, 1);
+        validation[i]->load_data(validation_input_data, validation_output_data);
+    }
     Network n(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
     n.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);

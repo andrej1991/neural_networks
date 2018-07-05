@@ -9,16 +9,16 @@
 
 class Neuron{
     int neuron_type;
-    inline Matrice sigmoid(Matrice &input);
-    inline Matrice sigmoid_derivate(Matrice &input);
-    inline Matrice relu(Matrice &input);
-    inline Matrice leaky_relu(Matrice &input);
-    inline Matrice relu_derivate(Matrice &input);
-    inline Matrice leaky_relu_derivate(Matrice &input);
+    inline void sigmoid(Matrice &input, Matrice &output);
+    inline void sigmoid_derivative(Matrice &input, Matrice &output);
+    inline void relu(Matrice &input, Matrice &output);
+    inline void leaky_relu(Matrice &input, Matrice &output);
+    inline void relu_derivative(Matrice &input, Matrice &output);
+    inline void leaky_relu_derivative(Matrice &input, Matrice &output);
     public:
     Neuron(int neuron_type = SIGMOID);
-    Matrice neuron(Matrice &inputs);
-    Matrice neuron_derivate(Matrice &inputs);
+    void neuron(Matrice &inputs, Matrice &outputs);
+    void neuron_derivative(Matrice &inputs, Matrice &outputs);
     void test();
 };
 

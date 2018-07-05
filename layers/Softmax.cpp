@@ -5,6 +5,8 @@
 Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
 {
     this->layer_type = SOFTMAX;
+    delete this->output_derivative[0];
+    this->output_derivative[0] = new Matrice(this->outputlen, this->outputlen);
 }
 
 Softmax::~Softmax()
@@ -39,29 +41,29 @@ inline void Softmax::layers_output(Matrice **input)
         }
 }
 
-inline Matrice Softmax::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline Matrice** Softmax::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
-    Matrice mtx(this->outputlen, 1);
-    Matrice delta(this->outputlen, 1);
-    Matrice **output_derivate;
+    //Matrice mtx(this->outputlen, 1);
+    //Matrice delta(this->outputlen, 1);
+    //Matrice **output_derivate;
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                    this->output_error_helper[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
                 }
-            output_derivate = this->derivate_layers_output(input);
-            delta = output_derivate[0][0] * mtx;
-            delete output_derivate[0];
-            delete[] output_derivate;
-            return delta;
+            this->derivate_layers_output(input);
+            this->output_error[0][0] = this->output_derivative[0][0] * this->output_error_helper[0][0];
+            //delete output_derivate[0];
+            //delete[] output_derivate;
+            return this->output_error;
         case LOG_LIKELIHOOD_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                    this->output_error[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
                 }
-            return mtx;
+            return this->output_error;
         default:
             cerr << "Unknown cost function\n";
             throw exception();
@@ -70,9 +72,9 @@ inline Matrice Softmax::get_output_error(Matrice **input, Matrice &required_outp
 
 inline Matrice** Softmax::derivate_layers_output(Matrice **input)
 {
-    Matrice **mtx;
-    mtx = new Matrice* [1];
-    mtx[0] = new Matrice(this->outputlen, this->outputlen);
+    //Matrice **mtx;
+    //mtx = new Matrice* [1];
+    //mtx[0] = new Matrice(this->outputlen, this->outputlen);
     this->layers_output(input);
     for(int row = 0; row < this->outputlen; row ++)
         {
@@ -80,15 +82,15 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
                 {
                     if(row == col)
                         {
-                            mtx[0]->data[row][col] = this->output[0]->data[row][0] * (1 - this->output[0]->data[col][0]);
+                            this->output_derivative[0]->data[row][col] = this->output[0]->data[row][0] * (1 - this->output[0]->data[col][0]);
                         }
                     else
                         {
-                            mtx[0]->data[row][col] = -1 * this->output[0]->data[row][0] * this->output[0]->data[col][0];
+                            this->output_derivative[0]->data[row][col] = -1 * this->output[0]->data[row][0] * this->output[0]->data[col][0];
                         }
                 }
         }
-    return mtx;
+    return this->output_derivative;
 }
 
 
