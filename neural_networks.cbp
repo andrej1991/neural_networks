@@ -34,9 +34,11 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 			<Add directory="/usr/include/CL/" />
+			<Add directory="/usr/include/yaml-cpp" />
 		</Compiler>
 		<Linker>
 			<Add option="-lOpenCL" />
+			<Add option="-lyaml-cpp" />
 			<Add directory="/usr/lib/x86_64-linux-gnu/" />
 		</Linker>
 		<Unit filename="MNIST_data.cpp" />

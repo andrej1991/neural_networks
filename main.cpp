@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <yaml.h>
+#include <string>
 #include "MNIST_data.h"
 #include "network.h"
 #include "matrix/matrix.h"
@@ -8,54 +10,122 @@
 
 using namespace std;
 
-/*#define InputRow 784
-#define InputCol 1*/
-#define InputRow 28
-#define InputCol 28
 
-
+inline int get_neuron_type(YAML::Node &config, int i, string &layerstr)
+{
+    string nt = config["layers"][i][layerstr]["neuron_type"].as<string>();
+    if(nt.compare("sigmoid") == 0)
+    {
+        return SIGMOID;
+    }else if(nt.compare("relu") == 0)
+    {
+        return RELU;
+    }else if(nt.compare("leaky_relu") == 0)
+    {
+        return LEAKY_RELU;
+    }
+    else
+    {
+        cerr << "Unknown neuron type found in your config file\n";
+        throw exception();
+    }
+}
 
 
 int main()
 {
-    ifstream input, required_output, validation_input, validation_output;
-    input.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/input.dat", ios::in|ios::binary);
-    required_output.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/required_output.dat", ios::in|ios::binary);
-    validation_input.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/validation_input.dat", ios::in|ios::binary);
-    validation_output.open("/home/andrej/hdd/Dokumentumok/neural_networks/data/training_data/validation_output.dat", ios::in|ios::binary);
-    cout << "the required files are opened\n";
-    MNIST_data *m[50000];
-    MNIST_data *validation[10000];
-    for(int i = 0; i < 50000; i++)
+    YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
+    string training_input = config["training_input"].as<string>();
+    string required_training_output = config["required_training_output"].as<string>();
+    string validation_input = config["validation_input"].as<string>();
+    string required_validation_output = config["required_validation_output"].as<string>();
+    int input_row = config["input_row"].as<int>();
+    int input_col = config["input_col"].as<int>();
+    int input_channel_count = config["input_channel_count"].as<int>();
+    int output_size = config["output_size"].as<int>();
+    int traninig_data_len = config["traninig_data_len"].as<int>();
+    int validation_data_len = config["validation_data_len"].as<int>();
+    int layer_count = config["layer_count"].as<int>();
+    string cf = config["cost_function_type"].as<string>();
+    int costfunction_type = -1;
+    int epochs = config["epochs"].as<int>();
+    int minibatch_len = config["minibatch_len"].as<int>();
+    double learning_rate = config["learning_rate"].as<double>();
+    double regularization_rate = config["regularization_rate"].as<double>();
+    int minibatch_count = config["minibatch_count"].as<int>();
+    if(cf.compare("log_likelihood") == 0)
+    {
+        costfunction_type = LOG_LIKELIHOOD_CF;
+    }else if(cf.compare("quadratic") == 0)
+    {
+        costfunction_type = QUADRATIC_CF;
+    }else if(cf.compare("cross_entropy") == 0)
+    {
+        costfunction_type = CROSS_ENTROPY_CF;
+    }
+    else
+    {
+        cerr << "Unknown cost function found in you configfile!\n";
+        throw exception();
+    }
+    string lt;
+    int neuron_type;
+    LayerDescriptor *layers[layer_count];
+    for(int i=0; i<layer_count; i++)
+    {
+        string layerstr = string("layer-") + to_string(i);
+        lt = config["layers"][i][layerstr]["layer_type"].as<string>();
+        if(lt.compare("convolutional") == 0)
         {
-            m[i] = new MNIST_data(InputRow, InputCol, 10, 1);
+            neuron_type = get_neuron_type(config, i, layerstr);
+            layers[i] = new LayerDescriptor(CONVOLUTIONAL, neuron_type, config["layers"][i][layerstr]["weights_row"].as<int>(),
+                                            config["layers"][i][layerstr]["weights_col"].as<int>(),
+                                            config["layers"][i][layerstr]["feature_map_count"].as<int>());
+        }else if(lt.compare("fully_connected") == 0)
+        {
+            neuron_type = get_neuron_type(config, i, layerstr);
+            layers[i] = new LayerDescriptor(FULLY_CONNECTED, neuron_type, config["layers"][i][layerstr]["weights_row"].as<int>());
+        }else if(lt.compare("softmax") == 0)
+        {
+            layers[i] = new LayerDescriptor(SOFTMAX, SIGMOID, config["layers"][i][layerstr]["weights_row"].as<int>());
+        }
+        else
+        {
+            cerr << "Unknown layer type found in your configfile!\n";
+            throw exception();
+        }
+
+    }
+    if(layers[layer_count - 1]->row != output_size)
+    {
+        cerr << "The output size and the neuron count in your output layer isn't equal!\n";
+        throw exception();
+    }
+    ifstream input, required_output, validation_input_data, validation_output_data;
+    input.open(training_input, ios::in|ios::binary);
+    required_output.open(required_training_output, ios::in|ios::binary);
+    validation_input_data.open(validation_input, ios::in|ios::binary);
+    validation_output_data.open(required_validation_output, ios::in|ios::binary);
+    MNIST_data *m[traninig_data_len];
+    MNIST_data *validation[validation_data_len];
+    for(int i = 0; i < traninig_data_len; i++)
+        {
+            m[i] = new MNIST_data(input_row, input_col, output_size, 1);
             m[i]->load_data(input, required_output);
         }
-    for(int i = 0; i < 10000; i++)
+    for(int i = 0; i < validation_data_len; i++)
         {
-            validation[i] = new MNIST_data(InputRow, InputCol, 1, 1);
-            validation[i]->load_data(validation_input, validation_output);
-            //cout << validation[i]->required_output[0][0];
+            validation[i] = new MNIST_data(input_row, input_col, 1, 1);
+            validation[i]->load_data(validation_input_data, validation_output_data);
         }
-    cout << "the training data and the validation data is loaded\n";
+    Network n(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
-    LayerDescriptor *layers[4];
-    layers[0] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 12);
-    layers[1] = new LayerDescriptor(CONVOLUTIONAL, SIGMOID, 5, 5, 20);
-    layers[2] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 70);
-    layers[3] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    Network n(4, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);
+    n.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
-    /*LayerDescriptor *layers[2];
-    layers[0] = new LayerDescriptor(FULLY_CONNECTED, SIGMOID, 30);
-    layers[1] = new LayerDescriptor(SOFTMAX, SIGMOID, 10);
-    Network n(2, layers, InputRow, InputCol, 1, LOG_LIKELIHOOD_CF);*/
 
-    //Network n("/home/andrej/myfiles/Asztal/net.bin");
-    cout << "the layers are constructed\n";
-    n.test(m, validation);
     input.close();
     required_output.close();
-    cout << "Hello world\n";
+    validation_input_data.close();
+    validation_output_data.close();
     return 0;
 }

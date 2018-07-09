@@ -169,7 +169,7 @@ void Neuron::activation(MatrixData &inputs, MatrixData &outputs, int num_events,
         this->leaky_relu(inputs);
         break;*/
     default:
-        std::cerr << "Unknown neuron type;";
+        std::cerr << "Unknown neuron type: " << this->neuron_type << endl;
         throw std::exception();
     }
 }
