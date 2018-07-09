@@ -65,6 +65,7 @@ inline void Neuron::sigmoid(MatrixData &inputs, MatrixData &outputs, int num_eve
     errorcode = clSetKernelArg(this->sigmoid_kernel, 1, sizeof(cl_mem), (void *)&(outputs.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sigmoid_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, &event);
     errorcode = clWaitForEvents(1, &event);
+    clReleaseEvent(event);
 }
 
 inline void Neuron::sigmoid_derivate(MatrixData &inputs, MatrixData &outputs, int num_events, cl_event *wait_for_events)
@@ -81,6 +82,7 @@ inline void Neuron::sigmoid_derivate(MatrixData &inputs, MatrixData &outputs, in
     errorcode = clSetKernelArg(this->sigmoid_derivate_kernel, 1, sizeof(cl_mem), (void *)&(outputs.cl_mem_obj));
     errorcode = clEnqueueNDRangeKernel(this->command_queue, this->sigmoid_derivate_kernel, 1, NULL, &global_item_size, &local_item_size, num_events, wait_for_events, &event);
     errorcode = clWaitForEvents(1, &event);
+    clReleaseEvent(event);
 }
 
 /*inline MatrixData Neuron::relu(MatrixData &inputs)

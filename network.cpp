@@ -192,6 +192,8 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     nabla[this->layers_num - 1][0].fmap[0][0].mtxop[0].multiply_with_transpose(delta[0][0], this->layers[this->layers_num - 2][0].get_output()[0][0],
                                                                                nabla[this->layers_num - 1][0].fmap[0][0].weights[0][0], 0, NULL, &event[1]);
     clWaitForEvents(2, event);
+    clReleaseEvent(event[0]);
+    clReleaseEvent(event[1]);
     ///*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
         {
@@ -249,6 +251,10 @@ void Network::update_weights_and_biasses(MNIST_data **training_data, int trainin
             this->deltanabla[i][0].fmap[0][0].mtxop[0].assign_scalar(this->nabla[i][0].fmap[0][0].biases[0][0], 0, 0, NULL, &events[2]);
             this->deltanabla[i][0].fmap[0][0].mtxop[0].assign_scalar(this->nabla[i][0].fmap[0][0].weights[0][0], 0, 0, NULL, &events[3]);
             clWaitForEvents(4, events);
+            clReleaseEvent(events[0]);
+            clReleaseEvent(events[1]);
+            clReleaseEvent(events[2]);
+            clReleaseEvent(events[3]);
         }
     }
     for(int i = 0; i < training_data_len; i++)
@@ -440,7 +446,7 @@ void Network::test(MNIST_data **d, MNIST_data **v)
 {
     ///(training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate, test_data, minibatch_count, test_data_len, trainingdata_len)
     //this->check_accuracy(v);
-    this->stochastic_gradient_descent(d, 3, 10, 0.3, true, 10, v, -1);
+    this->stochastic_gradient_descent(d, 3, 10, 0.03, true, 10, v, 50);
     //this->stochastic_gradient_descent(d, 1, 1, 0.03, true, 10, v, 1);
     /*for(int i = 0; i < 30000; i++)
         this->get_output(v[0]->input);*/

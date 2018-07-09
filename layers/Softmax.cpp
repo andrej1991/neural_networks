@@ -77,6 +77,9 @@ inline void Softmax::layers_output(MatrixData **input)
         throw exception();
     }
     clWaitForEvents(1, &events[2]);
+    clReleaseEvent(events[0]);
+    clReleaseEvent(events[1]);
+    clReleaseEvent(events[2]);
 }
 
 inline MatrixData** Softmax::get_output_error(MatrixData **input, MatrixData &required_output, int costfunction_type)
@@ -107,6 +110,7 @@ inline MatrixData** Softmax::get_output_error(MatrixData **input, MatrixData &re
             cl_event event;
             this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[3][0], this->output_error[0][0], 0, NULL, &event);
             clWaitForEvents(1, &event);
+            clReleaseEvent(event);
             return this->output_error;
         default:
             cerr << "Unknown cost function\n";
@@ -131,6 +135,7 @@ inline MatrixData** Softmax::derivate_layers_output(MatrixData **input)
         throw exception();
     }
     clWaitForEvents(1, &event);
+    clReleaseEvent(event);
     return this->output_derivative;
 }
 

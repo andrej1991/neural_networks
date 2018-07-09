@@ -58,6 +58,8 @@ void Layers_features::operator+= (Layers_features &layer)
                                                    this->fmap[0][0].biases[0][0],
                                                    0, NULL, &events[1]);
     clWaitForEvents(2, events);
+    clReleaseEvent(events[0]);
+    clReleaseEvent(events[1]);
 }
 
 int Layers_features::get_fmap_count()

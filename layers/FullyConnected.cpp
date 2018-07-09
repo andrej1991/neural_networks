@@ -109,6 +109,7 @@ inline void FullyConnected::layers_output(MatrixData **input)
         throw exception();
     }
     this->neuron.activation(this->function_variables[0][0], this->output[0][0], 1, &event);
+    clReleaseEvent(event);
 }
 
 void FullyConnected::sync_memory()
@@ -149,10 +150,12 @@ inline MatrixData** FullyConnected::get_output_error(MatrixData **input, MatrixD
                 throw exception();
             }
             clWaitForEvents(1, &event);
+            clReleaseEvent(event);
             return (this->output_error);
         case CROSS_ENTROPY_CF:
             this->fmap[0][0].mtxop[0].substract_matrices(this->output[0][0], this->function_variables[1][0], this->output_error[0][0], 0, NULL, &event);
             clWaitForEvents(1, &event);
+            clReleaseEvent(event);
             return (this->output_error);
             /*switch(this->neuron_type)
                 {
@@ -198,6 +201,7 @@ inline MatrixData** FullyConnected::derivate_layers_output(MatrixData **input)
         throw exception();
     }
     this->neuron.activation_derivate(this->function_variables[2][0], this->output_derivative[0][0], 1, &event);
+    clReleaseEvent(event);
     return (this->output_derivative);
 }
 
@@ -232,6 +236,8 @@ void FullyConnected::update_weights_and_biasses(float learning_rate, float regul
         throw exception();
     }
     clWaitForEvents(2, events);
+    clReleaseEvent(events[0]);
+    clReleaseEvent(events[1]);
 }
 
 inline void FullyConnected::remove_some_neurons(MatrixData ***w_bckup, MatrixData ***b_bckup, int **layers_bckup, int ***indexes)
@@ -286,6 +292,8 @@ inline MatrixData** FullyConnected::backpropagate(MatrixData **input, Feature_ma
     }
     this->fmap[0][0].mtxop[0].multiply_with_transpose(this->function_variables[3][0], input[0][0], nabla[0][0].weights[0][0], 1, &events[0], &events[1]);
     cl_int err = clWaitForEvents(1, &events[1]);
+    clReleaseEvent(events[0]);
+    clReleaseEvent(events[1]);
     return &(this->function_variables[3]);
 }
 

@@ -119,6 +119,10 @@ void Convolutional::sync_memory()
         clEnqueueReadBuffer(this->fmap[i][0].mtxop[0].command_queue, this->outputs[i][0].cl_mem_obj, CL_FALSE, 0, s, this->outputs[i][0].data, 0, NULL, &events[i]);
     }
     clWaitForEvents(this->map_count, events);
+    for(int i=0; i<this->map_count; i++)
+    {
+        clReleaseEvent(events[i]);
+    }
 }
 
 inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map** next_layers_fmaps, Feature_map** nabla, MatrixData **delta, int next_layers_fmapcount)
@@ -127,7 +131,7 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
     MatrixData **delta_helper;
     MatrixData helper(this->output_row, this->output_col);
     cl_int errorcode;
-    cl_event write_events[this->map_count];
+    //cl_event write_events[this->map_count];
     cl_ulong kernel_start, kernel_end;
     const size_t global[3] = {this->output_row, this->output_col, this->map_count};
     cl_event event1, event2, event3;
@@ -190,6 +194,9 @@ inline MatrixData** Convolutional::backpropagate(MatrixData **input, Feature_map
             throw exception();
         }
     clWaitForEvents(1, &event3);
+    clReleaseEvent(event1);
+    clReleaseEvent(event2);
+    clReleaseEvent(event3);
     return this->layers_delta;
 }
 
@@ -210,11 +217,12 @@ void Convolutional::update_weights_and_biasses(float learning_rate, float regula
         throw exception();
     }
     clWaitForEvents(1, &event);
+    clReleaseEvent(event);
 }
 
 inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_kernel)
 {
-    cl_event eventset1[this->map_count];
+    //cl_event eventset1[this->map_count];
     cl_int errorcode;
     const size_t global[3] = {this->output_row, this->output_col, this->map_count};
     cl_event eventset2[this->map_count];
@@ -235,6 +243,7 @@ inline void Convolutional::fulldepth_conv(MatrixData **input, cl_kernel *opencl_
         throw exception();
     }
     clWaitForEvents(1, &event);
+    clReleaseEvent(event);
 }
 
 inline void Convolutional::layers_output(MatrixData **input)
