@@ -14,13 +14,13 @@ using namespace std;
 inline int get_neuron_type(YAML::Node &config, int i, string &layerstr)
 {
     string nt = config["layers"][i][layerstr]["neuron_type"].as<string>();
-    if(nt.compare("sigmoid"))
+    if(nt.compare("sigmoid") == 0)
     {
         return SIGMOID;
-    }else if(nt.compare("relu"))
+    }else if(nt.compare("relu") == 0)
     {
         return RELU;
-    }else if(nt.compare("leaky_relu"))
+    }else if(nt.compare("leaky_relu") == 0)
     {
         return LEAKY_RELU;
     }
@@ -54,13 +54,13 @@ int main()
     double learning_rate = config["learning_rate"].as<double>();
     double regularization_rate = config["regularization_rate"].as<double>();
     int minibatch_count = config["minibatch_count"].as<int>();
-    if(cf.compare("log_likelihood"))
+    if(cf.compare("log_likelihood") == 0)
     {
         costfunction_type = LOG_LIKELIHOOD_CF;
-    }else if(cf.compare("quadratic"))
+    }else if(cf.compare("quadratic") == 0)
     {
         costfunction_type = QUADRATIC_CF;
-    }else if(cf.compare("cross_entropy"))
+    }else if(cf.compare("cross_entropy") == 0)
     {
         costfunction_type = CROSS_ENTROPY_CF;
     }

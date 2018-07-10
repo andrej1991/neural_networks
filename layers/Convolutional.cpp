@@ -61,8 +61,8 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, 
 inline void calculate_delta_helper(Matrice *padded_delta, Matrice *delta_helper, Matrice &kernel, Matrice &helper)
 {
     convolution(padded_delta[0],kernel, helper);
-    cout << "shit\n";
-    print_mtx(padded_delta[0]);
+    //cout << "shit\n";
+    //print_mtx(padded_delta[0]);
     delta_helper[0] += helper;
 }
 
@@ -106,8 +106,8 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
             {
                 this->get_2D_weights(j, i, kernel, next_layers_fmaps);
                 calculate_delta_helper(padded_delta[j], layers_delta_helper[i], kernel, helper);
-                cout << "fuck\n";
-                print_mtx(padded_delta[j][0]);
+                //cout << "fuck\n";
+                //print_mtx(padded_delta[j][0]);
             }
         }
         delete_padded_delta(padded_delta, next_layers_neuroncount);
