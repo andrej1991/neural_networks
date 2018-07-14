@@ -11,6 +11,8 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     this->output_error[0] = new Matrice(row, 1);
     this->output_error_helper = new Matrice*[1];
     this->output_error_helper[0] = new Matrice(row, 1);
+    this->layers_delta = new Matrice*[1];
+    this->layers_delta[0] = new Matrice(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
@@ -23,6 +25,14 @@ FullyConnected::~FullyConnected()
     delete[] this->output;
     delete this->fmap[0];
     delete[] this->fmap;
+    delete this->output_derivative[0];
+    delete[] this->output_derivative;
+    delete this->output_error[0];
+    delete[] this->output_error;
+    delete this->output_error_helper[0];
+    delete[] this->output_error_helper;
+    delete this->layers_delta[0];
+    delete[] this->layers_delta;
 }
 
 inline void FullyConnected::layers_output(Matrice **input)
@@ -134,12 +144,12 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
     this->derivate_layers_output(input);
     multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
     ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
-    delta[0][0] = hadamart_product(multiplied, this->output_derivative[0][0]);
-    nabla[0][0].biases[0][0] = delta[0][0];
-    nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
+    this->layers_delta[0][0] = hadamart_product(multiplied, this->output_derivative[0][0]);
+    nabla[0][0].biases[0][0] = this->layers_delta[0][0];
+    nabla[0][0].weights[0][0] = this->layers_delta[0][0] * input[0][0].transpose();
     //delete output_derivate[0];
     //delete[] output_derivate;
-    return delta;
+    return this->layers_delta;
 }
 
 inline Matrice** FullyConnected::get_output()

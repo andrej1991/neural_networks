@@ -163,32 +163,17 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     ///currently the final layer has to be a clasification layer
     this->feedforward(trainig_data->input);
     Matrice **delta = new Matrice* [1];
-    //delta[0] = new Matrice;
-    //delta[0][0] = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
     delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
                                                     trainig_data->required_output, this->costfunction_type);
     nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = delta[0][0];
     nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2]->get_output()[0]->transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
-        {
-            Feature_map **test = this->layers[i + 1]->get_feature_maps();
-            delta = this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
-                                           this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
-                                           nabla[i+1]->get_fmap_count());
-        }
-    //print_mtx(delta[3][0]);
-    /*if(this->layers[0]->get_mapcount() > 1)
-        {
-            for(int i = 0; i < this->layers[0]->get_mapcount(); i++)
-                delete delta[i];
-            delete[] delta;
-        }
-    else
-        {
-            delete delta[0];
-            delete[] delta;
-        }*/
+    {
+        delta = this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
+                                       this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
+                                       nabla[i+1]->get_fmap_count());
+    }
 }
 
 void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)

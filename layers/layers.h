@@ -90,7 +90,7 @@ class Layer{
 
 class FullyConnected : public Layer {
     friend class Softmax;
-    Matrice **output, **output_derivative, **output_error, **output_error_helper;
+    Matrice **output, **output_derivative, **output_error, **output_error_helper, **layers_delta;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;

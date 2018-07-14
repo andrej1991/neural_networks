@@ -37,9 +37,15 @@ Convolutional::~Convolutional()
     {
         delete fmap[i];
         delete outputs[i];
+        delete output_derivative[i];
+        delete layers_delta[i];
+        delete layers_delta_helper[i];
     }
     delete[] fmap;
     delete[] outputs;
+    delete[] output_derivative;
+    delete[] layers_delta;
+    delete[] layers_delta_helper;
 }
 
 void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap)
@@ -61,8 +67,6 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, 
 inline void calculate_delta_helper(Matrice *padded_delta, Matrice *delta_helper, Matrice &kernel, Matrice &helper)
 {
     convolution(padded_delta[0],kernel, helper);
-    //cout << "shit\n";
-    //print_mtx(padded_delta[0]);
     delta_helper[0] += helper;
 }
 
@@ -77,10 +81,7 @@ inline void delete_padded_delta(Matrice **padded_delta, int limit)
 
 inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **delta, int next_layers_fmapcount)
 {
-    //Matrice **layers_delta = new Matrice* [this->map_count];
-    //Matrice **output_derivate;
     this->derivate_layers_output(input);
-    //Matrice **delta_helper;
     Matrice **padded_delta;
     Matrice helper(this->output_row, this->output_col);
     if(this->next_layers_type != CONVOLUTIONAL)
@@ -96,18 +97,14 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                                                      (this->output_row-1)/2,
                                                      (this->output_col-1)/2);
         }
-        //delta_helper = new Matrice* [this->map_count];
         Matrice kernel(this->output_row, this->output_col);
         for(int i = 0; i < this->map_count; i++)
         {
-            //delta_helper[i] = new Matrice(this->output_row, this->output_col);
             this->layers_delta_helper[i][0].zero();
             for(int j = 0; j < next_layers_neuroncount; j++)
             {
                 this->get_2D_weights(j, i, kernel, next_layers_fmaps);
                 calculate_delta_helper(padded_delta[j], layers_delta_helper[i], kernel, helper);
-                //cout << "fuck\n";
-                //print_mtx(padded_delta[j][0]);
             }
         }
         delete_padded_delta(padded_delta, next_layers_neuroncount);
@@ -124,10 +121,8 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                                                      (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
         }
-        //delta_helper = new Matrice* [this->map_count];
         for(int i = 0; i < this->map_count; i++)
         {
-            //delta_helper[i] = new Matrice(this->output_row, this->output_col);
             this->layers_delta_helper[i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
@@ -138,23 +133,12 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
     }
     for(int i = 0; i < this->map_count; i++)
     {
-        //layers_delta[i] = new Matrice;
         this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
              convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
         }
-        //delete output_derivate[i];
-        //delete delta_helper[i];
     }
-    //delete[] output_derivate;
-    /*for(int i = 0; i < next_layers_fmapcount; i++)
-    {
-        //delete delta_helper[i];
-        //delete delta[i];
-    }*/
-    //delete[] delta_helper;
-    //delete[] delta;
     return this->layers_delta;
 }
 
@@ -207,11 +191,6 @@ inline Matrice** Convolutional::get_output_error(Matrice **input, Matrice &requi
 inline Matrice** Convolutional::derivate_layers_output(Matrice **input)
 {
     Matrice convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
-    /*Matrice **ret = new Matrice* [this->map_count];
-    for(int i = 0; i < this->map_count; i++)
-    {
-        ret[i] = new Matrice(this->output_row, this->output_col);
-    }*/
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
         this->fulldepth_conv(helper, convolved, input, map_index);
