@@ -5,6 +5,14 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
 {
     this->output = new Matrice*[1];
     this->output[0] = new Matrice(row, 1);
+    this->output_derivative = new Matrice*[1];
+    this->output_derivative[0] = new Matrice(row, 1);
+    this->output_error = new Matrice*[1];
+    this->output_error[0] = new Matrice(row, 1);
+    this->output_error_helper = new Matrice*[1];
+    this->output_error_helper[0] = new Matrice(row, 1);
+    this->layers_delta = new Matrice*[1];
+    this->layers_delta[0] = new Matrice(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
@@ -17,51 +25,59 @@ FullyConnected::~FullyConnected()
     delete[] this->output;
     delete this->fmap[0];
     delete[] this->fmap;
+    delete this->output_derivative[0];
+    delete[] this->output_derivative;
+    delete this->output_error[0];
+    delete[] this->output_error;
+    delete this->output_error_helper[0];
+    delete[] this->output_error_helper;
+    delete this->layers_delta[0];
+    delete[] this->layers_delta;
 }
 
 inline void FullyConnected::layers_output(Matrice **input)
 {
     Matrice inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    this->output[0][0] = this->neuron.neuron(inputparam);
+    this->neuron.neuron(inputparam, this->output[0][0]);
 }
 
-inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline Matrice** FullyConnected::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
-    Matrice mtx(this->outputlen, 1);
-    Matrice delta(this->outputlen, 1);
-    Matrice **output_derivate;
+    //Matrice mtx(this->outputlen, 1);
+    //Matrice delta(this->outputlen, 1);
+    //Matrice **output_derivate;
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
             for(int i = 0; i < this->outputlen; i++)
                 {
-                    mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                    this->output_error_helper[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
                 }
-            output_derivate = this->derivate_layers_output(input);
-            delta = hadamart_product(mtx, **output_derivate);
-            delete output_derivate[0];
-            delete[] output_derivate;
-            return delta;
+            this->derivate_layers_output(input);
+            this->output_error[0][0] = hadamart_product(this->output_error_helper[0][0], this->output_derivative[0][0]);
+            //delete output_derivate[0];
+            //delete[] output_derivate;
+            return this->output_error;
         case CROSS_ENTROPY_CF:
             switch(this->neuron_type)
                 {
                 case SIGMOID:
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            mtx.data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+                            this->output_error[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
                         }
-                    return mtx;
+                    return this->output_error;
                 default:
-                    output_derivate = this->derivate_layers_output(input);
+                    this->derivate_layers_output(input);
                     for(int i = 0; i < this->outputlen; i++)
                         {
-                            delta.data[i][0] = (output_derivate[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
+                            this->output_error[0][0].data[i][0] = (this->output_derivative[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
                                                     (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
                         }
-                    delete output_derivate[0];
-                    delete[] output_derivate;
-                    return delta;
+                    //delete output_derivate[0];
+                    //delete[] output_derivate;
+                    return this->output_error;
                 }
         default:
             cerr << "Unknown cost function\n";
@@ -71,13 +87,13 @@ inline Matrice FullyConnected::get_output_error(Matrice **input, Matrice &requir
 
 inline Matrice** FullyConnected::derivate_layers_output(Matrice **input)
 {
-    Matrice **mtx;
-    mtx = new Matrice* [1];
-    mtx[0] = new Matrice;
+    //Matrice **mtx;
+    //mtx = new Matrice* [1];
+    //mtx[0] = new Matrice(this->outputlen, 1);
     Matrice inputparam;
     inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    mtx[0][0] = this->neuron.neuron_derivate(inputparam);
-    return mtx;
+    this->neuron.neuron_derivative(inputparam, this->output_derivative[0][0]);
+    return this->output_derivative;
 }
 
 void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
@@ -124,16 +140,16 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
             cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
             throw exception();
         }
-    Matrice multiplied, **output_derivate;
-    output_derivate = this->derivate_layers_output(input);
+    Matrice multiplied;
+    this->derivate_layers_output(input);
     multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
     ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
-    delta[0][0] = hadamart_product(multiplied, **output_derivate);
-    nabla[0][0].biases[0][0] = delta[0][0];
-    nabla[0][0].weights[0][0] = delta[0][0] * input[0][0].transpose();
-    delete output_derivate[0];
-    delete[] output_derivate;
-    return delta;
+    this->layers_delta[0][0] = hadamart_product(multiplied, this->output_derivative[0][0]);
+    nabla[0][0].biases[0][0] = this->layers_delta[0][0];
+    nabla[0][0].weights[0][0] = this->layers_delta[0][0] * input[0][0].transpose();
+    //delete output_derivate[0];
+    //delete[] output_derivate;
+    return this->layers_delta;
 }
 
 inline Matrice** FullyConnected::get_output()

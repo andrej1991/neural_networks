@@ -27,7 +27,7 @@ inline void InputLayer::layers_output(Matrice **input)
     this->set_input(input);
 }
 
-inline Matrice InputLayer::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline Matrice** InputLayer::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
 {
     ;
 }

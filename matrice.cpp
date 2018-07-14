@@ -85,6 +85,7 @@ Matrice Matrice::operator= (const Matrice& mtx)
 
 Matrice Matrice::operator* (const Matrice& other)
 {
+    int debug1 = col;
     if(col != other.row)
         {
             std::cerr << "the condition of the if statement is fales in the operator Matrice::operator*\n";

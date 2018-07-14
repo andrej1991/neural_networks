@@ -2,134 +2,146 @@
 #include <math.h>
 #include <iostream>
 
+#define SIG(param)   (1 / (1 + exp(-1 * param)))
+
 Neuron::Neuron(int neuron_type) : neuron_type(neuron_type) {}
 
-inline Matrice Neuron::sigmoid(Matrice &inputs)
+inline void Neuron::sigmoid(Matrice &inputs, Matrice &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    Matrice ret(row, col);
+    //Matrice ret(row, col);
     for(int i = 0; i < row; i++)
+    {
+        for(int j = 0; j < col; j++)
         {
-            for(int j = 0; j < col; j++)
-                {
-                    ret.data[i][j] = 1 / (1 + exp(-1 * inputs.data[i][j]));
-                }
+            //outputs.data[i][j] = 1 / (1 + exp(-1 * inputs.data[i][j]));
+            outputs.data[i][j] = SIG(inputs.data[i][j]);
         }
-    return ret;
+    }
+    //return ret;
 }
 
-inline Matrice Neuron::sigmoid_derivate(Matrice &inputs)
+inline void Neuron::sigmoid_derivative(Matrice &inputs, Matrice &outputs)
 {
-    Matrice s = sigmoid(inputs);
+    //Matrice s = sigmoid(inputs);
     int row = inputs.get_row();
     int col = inputs.get_col();
-     for(int i = 0; i < row; i++)
+    double s;
+    for(int i = 0; i < row; i++)
+    {
+        for(int j = 0; j < col; j++)
         {
-            for(int j = 0; j < col; j++)
-                {
-                    s.data[i][j] = s.data[i][j] * (1 - s.data[i][j]);
-                }
+            s = SIG(inputs.data[i][j]);
+            //s.data[i][j] = s.data[i][j] * (1 - s.data[i][j]);
+            outputs.data[i][j] = s * (1 - s);
         }
-    return s;
+    }
+    //return s;
 }
 
-inline Matrice Neuron::relu(Matrice &inputs)
+inline void Neuron::relu(Matrice &inputs, Matrice &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    Matrice output(row, col);
+    //Matrice output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
                 {
                     if(inputs.data[i][j] > 0)
-                        output.data[i][j] = inputs.data[i][j];
+                        outputs.data[i][j] = inputs.data[i][j];
                     else
-                        output.data[i][j] = 0;
+                        outputs.data[i][j] = 0;
                 }
         }
-    return output;
+    //return output;
 }
-inline Matrice Neuron::relu_derivate(Matrice &inputs)
+inline void Neuron::relu_derivative(Matrice &inputs, Matrice &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    Matrice output(row, col);
+    //Matrice output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
                 {
                     if(inputs.data[i][j] > 0)
-                        output.data[i][j] = 1;
+                        outputs.data[i][j] = 1;
                     else
-                        output.data[i][j] = 0;
+                        outputs.data[i][j] = 0;
                 }
         }
-    return output;
+    //return output;
 }
 
-inline Matrice Neuron::leaky_relu(Matrice &inputs)
+inline void Neuron::leaky_relu(Matrice &inputs, Matrice &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    Matrice output(row, col);
+    //Matrice output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
                 {
                     if(inputs.data[i][j] > 0)
-                        output.data[i][j] = inputs.data[i][j];
+                        outputs.data[i][j] = inputs.data[i][j];
                     else
-                        output.data[i][j] = 0.001*inputs.data[i][j];
+                        outputs.data[i][j] = 0.001*inputs.data[i][j];
                 }
         }
-    return output;
+    //return output;
 }
-inline Matrice Neuron::leaky_relu_derivate(Matrice &inputs)
+inline void Neuron::leaky_relu_derivative(Matrice &inputs, Matrice &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    Matrice output(row, col);
+    //Matrice output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
                 {
                     if(inputs.data[i][j] > 0)
-                        output.data[i][j] = 1;
+                        outputs.data[i][j] = 1;
                     else
-                        output.data[i][j] = 0.001;
+                        outputs.data[i][j] = 0.001;
                 }
         }
-    return output;
+    //return output;
 }
 
-Matrice Neuron::neuron(Matrice &inputs)
+void Neuron::neuron(Matrice &inputs, Matrice &outputs)
 {
     switch(this->neuron_type)
     {
     case SIGMOID:
-        return this->sigmoid(inputs);
+        this->sigmoid(inputs, outputs);
+        return;
     case RELU:
-        return this->relu(inputs);
+        this->relu(inputs, outputs);
+        return;
     case LEAKY_RELU:
-        return this->leaky_relu(inputs);
+        this->leaky_relu(inputs, outputs);
+        return;
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();
     }
 }
 
-Matrice Neuron::neuron_derivate(Matrice &inputs)
+void Neuron::neuron_derivative(Matrice &inputs, Matrice &outputs)
 {
     switch(this->neuron_type)
     {
     case SIGMOID:
-        return this->sigmoid_derivate(inputs);
+        this->sigmoid_derivative(inputs, outputs);
+        return;
     case RELU:
-        return this->relu_derivate(inputs);
+        this->relu_derivative(inputs, outputs);
+        return;
     case LEAKY_RELU:
-        return this->leaky_relu_derivate(inputs);
+        this->leaky_relu_derivative(inputs, outputs);
+        return;
     default:
         std::cerr << "Unknown neuron type;";
         throw std::exception();
