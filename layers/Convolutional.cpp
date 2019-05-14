@@ -2,7 +2,7 @@
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride):
                     input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), stride(stride), next_layers_type(next_layers_type),
-                    pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
+                    pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type), tpool(map_count)
 {
     if(stride != 1)
         {
@@ -84,6 +84,9 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
     this->derivate_layers_output(input);
     Matrice **padded_delta;
     Matrice helper(this->output_row, this->output_col);
+    JobInterface **nabla_calculator_job, **delta_helper_conv_job;
+    nabla_calculator_job = new JobInterface*[this->map_count];
+    delta_helper_conv_job = new JobInterface*[this->map_count];
     if(this->next_layers_type != CONVOLUTIONAL)
     {
         int next_layers_neuroncount = delta[0]->get_row();
@@ -97,16 +100,19 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
                                                      (this->output_row-1)/2,
                                                      (this->output_col-1)/2);
         }
-        Matrice kernel(this->output_row, this->output_col);
+        //Matrice kernel(this->output_row, this->output_col);
         for(int i = 0; i < this->map_count; i++)
         {
-            this->layers_delta_helper[i][0].zero();
+            delta_helper_conv_job[i] = new CalculatingDeltaHelperNonConv(i, next_layers_neuroncount, this, next_layers_fmaps, padded_delta);
+            tpool.push(delta_helper_conv_job[i]);
+            /*this->layers_delta_helper[i][0].zero();
             for(int j = 0; j < next_layers_neuroncount; j++)
             {
                 this->get_2D_weights(j, i, kernel, next_layers_fmaps);
                 calculate_delta_helper(padded_delta[j], layers_delta_helper[i], kernel, helper);
-            }
+            }*/
         }
+        tpool.wait();
         delete_padded_delta(padded_delta, next_layers_neuroncount);
     }
     else
@@ -123,22 +129,39 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
         }
         for(int i = 0; i < this->map_count; i++)
         {
-            this->layers_delta_helper[i][0].zero();
+            /*this->layers_delta_helper[i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
                 calculate_delta_helper(padded_delta[j], this->layers_delta_helper[i], next_layers_fmaps[j]->weights[i][0], helper);
-            }
+            }*/
+            delta_helper_conv_job[i] = new CalculatingDeltaHelperConv(i, next_layers_fmapcount, this, next_layers_fmaps, padded_delta);
+            tpool.push(delta_helper_conv_job[i]);
         }
+        tpool.wait();
         delete_padded_delta(padded_delta, next_layers_fmapcount);
     }
     for(int i = 0; i < this->map_count; i++)
     {
-        this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
+        nabla_calculator_job[i] = new CalculatingNabla(i, this, input, nabla);
+        tpool.push(nabla_calculator_job[i]);
+        /*this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
              convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
-        }
+        }*/
+
     }
+    tpool.wait();
+    for(int i = 0; i < this->map_count; i++)
+    {
+        delete nabla_calculator_job[i];
+        delete delta_helper_conv_job[i];
+
+    }
+    delete[] nabla_calculator_job;
+    //cout << "suck it\n";
+    delete[] delta_helper_conv_job;
+    //cout << "fuck it\n";
     return this->layers_delta;
 }
 

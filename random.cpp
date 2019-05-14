@@ -23,9 +23,10 @@ int random(int start, int end, ifstream &rnd)
     return rand_num + start;
 }
 
-int shuffle(int *array, int len, std::ifstream &rnd)
+int shuffle(MNIST_data **array, int len, std::ifstream &rnd)
 {
-    int temp, index;
+    int index;
+    MNIST_data *temp;
     for(int i = 0; i < len; i++)
         {
             temp = array[i];

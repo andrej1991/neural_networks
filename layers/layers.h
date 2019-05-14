@@ -6,6 +6,7 @@
 #include "../neuron.h"
 #include "../MNIST_data.h"
 #include "../matrice.h"
+#include "../threadpool.h"
 
 #define QUADRATIC_CF 0
 #define CROSS_ENTROPY_CF 1
@@ -16,6 +17,7 @@
 #define CONVOLUTIONAL 1
 #define POOLING 2
 #define SOFTMAX 3
+
 
 class LayerDescriptor{
     public:
@@ -135,6 +137,7 @@ class Softmax : public FullyConnected {
 class Convolutional : public Layer {
     Matrice **outputs, **flattened_output, **layers_delta, **output_derivative, **layers_delta_helper;
     Feature_map **fmap;
+    ThreadPool tpool;
     Padding pad;
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
     short int layer_type;
@@ -167,6 +170,10 @@ class Convolutional : public Layer {
     void get_2D_weights(int neuron_id, int fmap_id, Matrice &kernel, Feature_map **next_layers_fmap);
     void store(std::ofstream &params);
     void load(std::ifstream &params);
+    friend class ThreadPool;
+    friend class CalculatingNabla;
+    friend class CalculatingDeltaHelperNonConv;
+    friend class CalculatingDeltaHelperConv;
 };
 
 

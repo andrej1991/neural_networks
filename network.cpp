@@ -307,13 +307,18 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             helper.data[i][0] == 0;
         }
     Matrice output;
+    int training_data_index;
     for(int i = 0; i < epochs; i++)
         {
+            training_data_index = 0;
+            shuffle(training_data, trainingdata_len, rand);
             for(int j = 0; j < minibatch_count; j++)
                 {
                     for(int k = 0; k < minibatch_len; k++)
                         {
-                            minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                            //minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                            minibatches[j][k] = training_data[training_data_index];
+                            training_data_index++;
                         }
                 }
 
