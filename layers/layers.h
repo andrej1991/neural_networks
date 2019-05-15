@@ -174,6 +174,10 @@ class Convolutional : public Layer {
     friend class CalculatingNabla;
     friend class CalculatingDeltaHelperNonConv;
     friend class CalculatingDeltaHelperConv;
+    /*friend class GetPaddedDeltaConv;
+    friend class GetPaddedDeltaNonConv;*/
+    friend class GetOutputJob;
+    friend class GetOutputDerivativeJob;
 };
 
 

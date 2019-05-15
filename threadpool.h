@@ -49,6 +49,46 @@ class CalculatingDeltaHelperNonConv: public JobInterface
     virtual void work();
 };
 
+/*class GetPaddedDeltaConv: public JobInterface
+{
+    int id, top, right, bottom, left;
+    class Convolutional *convlay;
+    Matrice **padded_delta, **delta;
+    public:
+    GetPaddedDeltaConv(int id, int top, int right, int bottom, int left, class Convolutional *convlay, Matrice **padded_delta, Matrice **delta);
+    virtual void work();
+};
+
+class GetPaddedDeltaNonConv: public JobInterface
+{
+    int id, top, right, bottom, left;
+    class Convolutional *convlay;
+    Matrice **padded_delta, **delta;
+    public:
+    GetPaddedDeltaNonConv(int id, int top, int right, int bottom, int left, class Convolutional *convlay, Matrice **padded_delta, Matrice **delta);
+    virtual void work();
+};*/
+
+class GetOutputJob: public JobInterface
+{
+    int id;
+    class Convolutional *convlay;
+    Matrice **input;
+    public:
+    GetOutputJob(int id, class Convolutional *convlay, Matrice **input);
+    virtual void work();
+};
+
+class GetOutputDerivativeJob: public JobInterface
+{
+    int id;
+    class Convolutional *convlay;
+    Matrice **input;
+    public:
+    GetOutputDerivativeJob(int id, class Convolutional *convlay, Matrice **input);
+    virtual void work();
+};
+
 
 class ThreadPool
 {

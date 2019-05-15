@@ -50,6 +50,57 @@ void CalculatingDeltaHelperConv::work()
     }
 }
 
+/*GetPaddedDeltaConv::GetPaddedDeltaConv(int id, int top, int right, int bottom, int left, Convolutional *convlay, Matrice **padded_delta, Matrice **delta):
+                           id(id), top(top), right(right), bottom(bottom), left(left), convlay(convlay), padded_delta(padded_delta), delta(delta){};
+
+
+void GetPaddedDeltaConv::work()
+{
+    padded_delta[id][0] = delta[0][0];
+    padded_delta[id][0] = padded_delta[id][0].zero_padd(top, right, bottom, left);
+}
+
+GetPaddedDeltaNonConv::GetPaddedDeltaNonConv(int id, int top, int right, int bottom, int left, Convolutional *convlay, Matrice **padded_delta, Matrice **delta):
+                           id(id), top(top), right(right), bottom(bottom), left(left), convlay(convlay), padded_delta(padded_delta), delta(delta){};
+
+
+void GetPaddedDeltaNonConv::work()
+{
+    padded_delta[id][0].data[0][0] = delta[0][0].data[id][0];
+    padded_delta[id][0] = padded_delta[id][0].zero_padd(top, right, bottom, left);
+}*/
+
+GetOutputJob::GetOutputJob(int id, Convolutional *convlay, Matrice **input):
+                           id(id), convlay(convlay), input(input){};
+
+
+void GetOutputJob::work()
+{
+    Matrice convolved(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col);
+    for(int channel_index = 0; channel_index < convlay->fmap[id]->get_mapdepth(); channel_index++)
+    {
+        convolution(input[channel_index][0], convlay->fmap[id]->weights[channel_index][0], convolved, convlay->stride);
+        helper += convolved;
+    }
+    helper+=convlay->fmap[id]->biases[0][0].data[0][0];
+    convlay->neuron.neuron(helper, convlay->outputs[id][0]);
+}
+
+GetOutputDerivativeJob::GetOutputDerivativeJob(int id, Convolutional *convlay, Matrice **input):
+                           id(id), convlay(convlay), input(input){};
+
+void GetOutputDerivativeJob::work()
+{
+    Matrice convolved(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col);
+    for(int channel_index = 0; channel_index < convlay->fmap[id]->get_mapdepth(); channel_index++)
+    {
+        convolution(input[channel_index][0], convlay->fmap[id]->weights[channel_index][0], convolved, convlay->stride);
+        helper += convolved;
+    }
+    helper+=convlay->fmap[id]->biases[0][0].data[0][0];
+    convlay->neuron.neuron_derivative(helper, convlay->outputs[id][0]);
+}
+
 
 ThreadPool::ThreadPool(int threadcount): thread_count(threadcount), queue_len(0), remaining_work(0)
 {
@@ -92,7 +143,7 @@ void ThreadPool::push(JobInterface* new_job)
     this->remaining_work++;
     pthread_mutex_unlock(&(this->jobqueue_lock));
     pthread_mutex_unlock(&(this->remaining_work_lock));
-    this->block_thread.notify_all();
+    this->block_thread.notify_one();
 }
 
 void ThreadPool::run(ThreadPool *obj)
@@ -101,7 +152,6 @@ void ThreadPool::run(ThreadPool *obj)
     std::unique_lock<std::mutex> execution_blocker(obj->block_thread_lock);
     while(obj)
     {
-        obj->block_thread.wait(execution_blocker);
         pthread_mutex_lock(&(obj->jobqueue_lock));
         if(obj->queue_len > 0)
         {
@@ -118,6 +168,7 @@ void ThreadPool::run(ThreadPool *obj)
         else if (obj->queue_len == 0)
         {
             pthread_mutex_unlock(&(obj->jobqueue_lock));
+            obj->block_thread.wait(execution_blocker);
         }
         else
         {
