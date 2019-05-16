@@ -4,7 +4,13 @@
 using namespace std;
 
 
-CalculatingNabla::CalculatingNabla(int id, class Convolutional *convlay, Matrice **input, class Feature_map** nabla):
+void JobInterface::set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta)
+{
+    cerr << "this function is not implemented\n";
+    throw exception();
+}
+
+CalculatingNabla::CalculatingNabla(int id, class Convolutional *convlay):
                            id(id), convlay(convlay), input(input), nabla(nabla){};
 
 
@@ -17,15 +23,15 @@ void CalculatingNabla::work()
     }
 }
 
-CalculatingDeltaHelperNonConv::CalculatingDeltaHelperNonConv(int id, int next_layers_neuroncount, Convolutional *convlay, Feature_map** next_layers_fmaps, Matrice **padded_delta):
-                           id(id), next_layers_neuroncount(next_layers_neuroncount), convlay(convlay), next_layers_fmaps(next_layers_fmaps), padded_delta(padded_delta){};
+CalculatingDeltaHelperNonConv::CalculatingDeltaHelperNonConv(int id, Convolutional *convlay):
+                           id(id), next_layers_neuroncount(0), convlay(convlay), next_layers_fmaps(NULL), padded_delta(NULL),
+                           kernel(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col){};
 
 
 void CalculatingDeltaHelperNonConv::work()
 {
-    Matrice kernel(convlay->output_row, convlay->output_col);
-    Matrice helper(convlay->output_row, convlay->output_col);
     convlay->layers_delta_helper[id][0].zero();
+    helper.zero();
     for(int j = 0; j < next_layers_neuroncount; j++)
     {
         convlay->get_2D_weights(j, id, kernel, next_layers_fmaps);
@@ -34,20 +40,32 @@ void CalculatingDeltaHelperNonConv::work()
     }
 }
 
-CalculatingDeltaHelperConv::CalculatingDeltaHelperConv(int id, int next_layers_fmapcount, Convolutional *convlay, Feature_map** next_layers_fmaps, Matrice **padded_delta):
-                           id(id), next_layers_fmapcount(next_layers_fmapcount), convlay(convlay), next_layers_fmaps(next_layers_fmaps), padded_delta(padded_delta){};
+void CalculatingDeltaHelperNonConv::set_params_for_deltahelper(int neuroncount, Feature_map **next_l_fmap, Matrice **pdelta)
+{
+    this->next_layers_neuroncount = neuroncount;
+    this->next_layers_fmaps = next_l_fmap;
+    this->padded_delta = pdelta;
+}
+
+CalculatingDeltaHelperConv::CalculatingDeltaHelperConv(int id, Convolutional *convlay):
+                           id(id), next_layers_fmapcount(0), convlay(convlay), next_layers_fmaps(NULL), padded_delta(NULL),
+                           kernel(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col){};
 
 
 void CalculatingDeltaHelperConv::work()
 {
-    Matrice kernel(convlay->output_row, convlay->output_col);
-    Matrice helper(convlay->output_row, convlay->output_col);
     convlay->layers_delta_helper[id][0].zero();
     for(int j = 0; j < next_layers_fmapcount; j++)
     {
         convolution(padded_delta[j][0], kernel, helper);
         convlay->layers_delta_helper[id][0] += helper;
     }
+}
+void CalculatingDeltaHelperConv::set_params_for_deltahelper(int neuroncount, Feature_map **next_l_fmap, Matrice **pdelta)
+{
+    this->next_layers_fmapcount = neuroncount;
+    this->next_layers_fmaps = next_l_fmap;
+    this->padded_delta = pdelta;
 }
 
 /*GetPaddedDeltaConv::GetPaddedDeltaConv(int id, int top, int right, int bottom, int left, Convolutional *convlay, Matrice **padded_delta, Matrice **delta):
@@ -70,13 +88,13 @@ void GetPaddedDeltaNonConv::work()
     padded_delta[id][0] = padded_delta[id][0].zero_padd(top, right, bottom, left);
 }*/
 
-GetOutputJob::GetOutputJob(int id, Convolutional *convlay, Matrice **input):
-                           id(id), convlay(convlay), input(input){};
+GetOutputJob::GetOutputJob(int id, Convolutional *convlay):
+                           id(id), convlay(convlay), input(NULL), convolved(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col){};
 
 
 void GetOutputJob::work()
 {
-    Matrice convolved(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col);
+    helper.zero();
     for(int channel_index = 0; channel_index < convlay->fmap[id]->get_mapdepth(); channel_index++)
     {
         convolution(input[channel_index][0], convlay->fmap[id]->weights[channel_index][0], convolved, convlay->stride);
@@ -86,12 +104,13 @@ void GetOutputJob::work()
     convlay->neuron.neuron(helper, convlay->outputs[id][0]);
 }
 
-GetOutputDerivativeJob::GetOutputDerivativeJob(int id, Convolutional *convlay, Matrice **input):
-                           id(id), convlay(convlay), input(input){};
+
+GetOutputDerivativeJob::GetOutputDerivativeJob(int id, Convolutional *convlay):
+                           id(id), convlay(convlay), input(NULL), convolved(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col){};
 
 void GetOutputDerivativeJob::work()
 {
-    Matrice convolved(convlay->output_row, convlay->output_col), helper(convlay->output_row, convlay->output_col);
+    helper.zero();
     for(int channel_index = 0; channel_index < convlay->fmap[id]->get_mapdepth(); channel_index++)
     {
         convolution(input[channel_index][0], convlay->fmap[id]->weights[channel_index][0], convolved, convlay->stride);
@@ -99,6 +118,11 @@ void GetOutputDerivativeJob::work()
     }
     helper+=convlay->fmap[id]->biases[0][0].data[0][0];
     convlay->neuron.neuron_derivative(helper, convlay->outputs[id][0]);
+}
+
+void GetOutputDerivativeJob::set_input(Matrice **input)
+{
+    this->input = input;
 }
 
 

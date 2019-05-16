@@ -143,6 +143,7 @@ class Convolutional : public Layer {
     short int layer_type;
     Neuron neuron;
     inline void fulldepth_conv(Matrice &helper, Matrice &convolved, Matrice **input, int map_index);
+    JobInterface **output_job, **output_derivative_job, **nabla_calculator_job, **delta_helper_conv_job, **delta_helper_nonconv_job;
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
     ~Convolutional();

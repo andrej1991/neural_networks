@@ -13,40 +13,51 @@
 class JobInterface
 {
     public:
-    virtual void work(){};
+    virtual void work() = 0;
+    virtual ~JobInterface(){};
+    virtual void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
 };
 
 class CalculatingNabla: public JobInterface
 {
     int id;
     class Convolutional *convlay;
+    public:
     Matrice **input;
     class Feature_map** nabla;
     public:
-    CalculatingNabla(int id, class Convolutional *convlay, Matrice **input, class Feature_map** nabla);
+    CalculatingNabla(int id, class Convolutional *convlay);
     virtual void work();
 };
 
 class CalculatingDeltaHelperConv: public JobInterface
 {
-    int id, next_layers_fmapcount;
+    int id;
     class Convolutional *convlay;
+    Matrice helper, kernel;
+    public:
+    int next_layers_fmapcount;
     class Feature_map** next_layers_fmaps;
     Matrice **padded_delta;
     public:
-    CalculatingDeltaHelperConv(int id, int next_layers_fmapcount, class Convolutional *convlay, class Feature_map** next_layers_fmaps, Matrice **padded_delta);
+    CalculatingDeltaHelperConv(int id, class Convolutional *convlay);
     virtual void work();
+    virtual void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
 };
 
 class CalculatingDeltaHelperNonConv: public JobInterface
 {
-    int id, next_layers_neuroncount;
+    int id;
     class Convolutional *convlay;
+    Matrice helper, kernel;
+    public:
+    int next_layers_neuroncount;
     class Feature_map** next_layers_fmaps;
     Matrice **padded_delta;
     public:
-    CalculatingDeltaHelperNonConv(int id, int next_layers_neuroncount, class Convolutional *convlay, class Feature_map** next_layers_fmaps, Matrice **padded_delta);
+    CalculatingDeltaHelperNonConv(int id, class Convolutional *convlay);
     virtual void work();
+    virtual void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
 };
 
 /*class GetPaddedDeltaConv: public JobInterface
@@ -73,9 +84,10 @@ class GetOutputJob: public JobInterface
 {
     int id;
     class Convolutional *convlay;
-    Matrice **input;
+    Matrice helper, convolved;
     public:
-    GetOutputJob(int id, class Convolutional *convlay, Matrice **input);
+    Matrice **input;
+    GetOutputJob(int id, class Convolutional *convlay);
     virtual void work();
 };
 
@@ -83,9 +95,11 @@ class GetOutputDerivativeJob: public JobInterface
 {
     int id;
     class Convolutional *convlay;
-    Matrice **input;
+    Matrice helper, convolved;
     public:
-    GetOutputDerivativeJob(int id, class Convolutional *convlay, Matrice **input);
+    Matrice **input;
+    GetOutputDerivativeJob(int id, class Convolutional *convlay);
+    virtual void set_input(Matrice **input);
     virtual void work();
 };
 
