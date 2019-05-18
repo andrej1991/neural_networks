@@ -119,11 +119,12 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
             tpool.push(padded_delta_job[i]);
         }
         tpool.wait();*/
-        for(int i = 0; i < this->map_count; i++)
+        /*for(int i = 0; i < this->map_count; i++)
         {
             delta_helper_nonconv_job[i]->set_params_for_deltahelper(next_layers_neuroncount, next_layers_fmaps, padded_delta);
-            tpool.push(delta_helper_nonconv_job[i]);
-        }
+            //tpool.push(delta_helper_nonconv_job[i]);
+        }*/
+        tpool.push_many<CalculatingDeltaHelperNonConv>(this->delta_helper_nonconv_job, this->map_count, next_layers_neuroncount, next_layers_fmaps, padded_delta);
         tpool.wait();
         delete_padded_delta(padded_delta, next_layers_neuroncount);
     }
@@ -148,21 +149,23 @@ inline Matrice** Convolutional::backpropagate(Matrice **input, Feature_map** nex
             tpool.push(padded_delta_job[i]);
         }
         tpool.wait();*/
-        for(int i = 0; i < this->map_count; i++)
+        /*for(int i = 0; i < this->map_count; i++)
         {
             delta_helper_conv_job[i]->set_params_for_deltahelper(next_layers_fmapcount, next_layers_fmaps, padded_delta);
-            tpool.push(delta_helper_conv_job[i]);
-        }
+            //tpool.push(delta_helper_conv_job[i]);
+        }*/
+        tpool.push_many<CalculatingDeltaHelperConv>(this->delta_helper_conv_job, this->map_count, next_layers_fmapcount, next_layers_fmaps, padded_delta);
         tpool.wait();
         delete_padded_delta(padded_delta, next_layers_fmapcount);
     }
-    for(int i = 0; i < this->map_count; i++)
+    /*for(int i = 0; i < this->map_count; i++)
     {
         //nabla_calculator_job[i] = new CalculatingNabla(i, this, input, nabla);
         dynamic_cast<CalculatingNabla*>(nabla_calculator_job[i])->input = input;
         dynamic_cast<CalculatingNabla*>(nabla_calculator_job[i])->nabla = nabla;
-        tpool.push(nabla_calculator_job[i]);
-    }
+        //tpool.push(nabla_calculator_job[i]);
+    }*/
+    tpool.push_many(this->nabla_calculator_job, this->map_count, input, nabla);
     tpool.wait();
     /*for(int i = 0; i < this->map_count; i++)
     {
@@ -208,12 +211,13 @@ inline void Convolutional::fulldepth_conv(Matrice &helper, Matrice &convolved, M
 
 inline void Convolutional::layers_output(Matrice **input)
 {
-    for(int map_index = 0; map_index < this->map_count; map_index++)
+    /*for(int map_index = 0; map_index < this->map_count; map_index++)
     {
         //output_job[map_index]->set_input(input);
         dynamic_cast<GetOutputJob*>(output_job[map_index])->input = input;
-        tpool.push(output_job[map_index]);
-    }
+        //tpool.push(output_job[map_index]);
+    }*/
+    tpool.push_many<GetOutputJob>(this->output_job, this->map_count, input);
     tpool.wait();
 }
 
@@ -225,12 +229,13 @@ inline Matrice** Convolutional::get_output_error(Matrice **input, Matrice &requi
 
 inline Matrice** Convolutional::derivate_layers_output(Matrice **input)
 {
-    for(int map_index = 0; map_index < this->map_count; map_index++)
+    /*for(int map_index = 0; map_index < this->map_count; map_index++)
     {
         //output_derivative_job[map_index]->set_input(input);
         dynamic_cast<GetOutputDerivativeJob*>(output_derivative_job[map_index])->input = input;
-        tpool.push(output_derivative_job[map_index]);
-    }
+        //tpool.push(output_derivative_job[map_index]);
+    }*/
+    tpool.push_many<GetOutputDerivativeJob>(this->output_derivative_job, this->map_count, input);
     tpool.wait();
     return output_derivative;
 }

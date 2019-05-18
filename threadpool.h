@@ -15,7 +15,7 @@ class JobInterface
     public:
     virtual void work() = 0;
     virtual ~JobInterface(){};
-    virtual void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
+    virtual inline void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
 };
 
 class CalculatingNabla: public JobInterface
@@ -42,7 +42,7 @@ class CalculatingDeltaHelperConv: public JobInterface
     public:
     CalculatingDeltaHelperConv(int id, class Convolutional *convlay);
     virtual void work();
-    virtual void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
+    virtual inline void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
 };
 
 class CalculatingDeltaHelperNonConv: public JobInterface
@@ -57,7 +57,7 @@ class CalculatingDeltaHelperNonConv: public JobInterface
     public:
     CalculatingDeltaHelperNonConv(int id, class Convolutional *convlay);
     virtual void work();
-    virtual void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
+    virtual inline void set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
 };
 
 /*class GetPaddedDeltaConv: public JobInterface
@@ -99,7 +99,6 @@ class GetOutputDerivativeJob: public JobInterface
     public:
     Matrice **input;
     GetOutputDerivativeJob(int id, class Convolutional *convlay);
-    virtual void set_input(Matrice **input);
     virtual void work();
 };
 
@@ -117,10 +116,69 @@ public:
     ThreadPool(int threadcount);
     ~ThreadPool();
     void push(JobInterface*);
+    template<typename T>
+    void push_many(JobInterface**, int, Matrice**);
+    void push_many(JobInterface**, int, Matrice**, Feature_map**);
+    template<typename T>
+    void push_many(JobInterface**, int,int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta);
     void wait();
     static void run(ThreadPool *obj);
 };
 
+void JobInterface::set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta)
+{
+    cerr << "this function is not implemented\n";
+    throw exception();
+}
+
+void CalculatingDeltaHelperNonConv::set_params_for_deltahelper(int neuroncount, Feature_map **next_l_fmap, Matrice **pdelta)
+{
+    this->next_layers_neuroncount = neuroncount;
+    this->next_layers_fmaps = next_l_fmap;
+    this->padded_delta = pdelta;
+}
+
+void CalculatingDeltaHelperConv::set_params_for_deltahelper(int neuroncount, Feature_map **next_l_fmap, Matrice **pdelta)
+{
+    this->next_layers_fmapcount = neuroncount;
+    this->next_layers_fmaps = next_l_fmap;
+    this->padded_delta = pdelta;
+}
+
+template<typename T>
+void ThreadPool::push_many(JobInterface** jobs, int num, Matrice **input)
+{
+    pthread_mutex_lock(&(this->jobqueue_lock));
+    pthread_mutex_lock(&(this->remaining_work_lock));
+    for(int i = 0; i < num; i++)
+    {
+        dynamic_cast<T*>(jobs[i])->input = input;
+        this->jobqueue.push(jobs[i]);
+    }
+    this->queue_len += num;
+    this->remaining_work += num;
+    pthread_mutex_unlock(&(this->jobqueue_lock));
+    pthread_mutex_unlock(&(this->remaining_work_lock));
+    this->block_thread.notify_all();
+}
+
+
+template<typename T>
+void ThreadPool::push_many(JobInterface** jobs, int num, int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta)
+{
+    pthread_mutex_lock(&(this->jobqueue_lock));
+    pthread_mutex_lock(&(this->remaining_work_lock));
+    for(int i = 0; i < num; i++)
+    {
+        dynamic_cast<T*>(jobs[i])->set_params_for_deltahelper(neuroncount, next_l_fmap, padded_delta);
+        this->jobqueue.push(jobs[i]);
+    }
+    this->queue_len += num;
+    this->remaining_work += num;
+    pthread_mutex_unlock(&(this->jobqueue_lock));
+    pthread_mutex_unlock(&(this->remaining_work_lock));
+    this->block_thread.notify_all();
+}
 
 
 #endif // THREADPOOL_H_INCLUDED

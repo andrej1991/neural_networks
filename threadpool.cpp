@@ -3,13 +3,6 @@
 
 using namespace std;
 
-
-void JobInterface::set_params_for_deltahelper(int neuroncount, class Feature_map **next_l_fmap, Matrice **padded_delta)
-{
-    cerr << "this function is not implemented\n";
-    throw exception();
-}
-
 CalculatingNabla::CalculatingNabla(int id, class Convolutional *convlay):
                            id(id), convlay(convlay), input(input), nabla(nabla){};
 
@@ -40,12 +33,6 @@ void CalculatingDeltaHelperNonConv::work()
     }
 }
 
-void CalculatingDeltaHelperNonConv::set_params_for_deltahelper(int neuroncount, Feature_map **next_l_fmap, Matrice **pdelta)
-{
-    this->next_layers_neuroncount = neuroncount;
-    this->next_layers_fmaps = next_l_fmap;
-    this->padded_delta = pdelta;
-}
 
 CalculatingDeltaHelperConv::CalculatingDeltaHelperConv(int id, Convolutional *convlay):
                            id(id), next_layers_fmapcount(0), convlay(convlay), next_layers_fmaps(NULL), padded_delta(NULL),
@@ -61,12 +48,7 @@ void CalculatingDeltaHelperConv::work()
         convlay->layers_delta_helper[id][0] += helper;
     }
 }
-void CalculatingDeltaHelperConv::set_params_for_deltahelper(int neuroncount, Feature_map **next_l_fmap, Matrice **pdelta)
-{
-    this->next_layers_fmapcount = neuroncount;
-    this->next_layers_fmaps = next_l_fmap;
-    this->padded_delta = pdelta;
-}
+
 
 /*GetPaddedDeltaConv::GetPaddedDeltaConv(int id, int top, int right, int bottom, int left, Convolutional *convlay, Matrice **padded_delta, Matrice **delta):
                            id(id), top(top), right(right), bottom(bottom), left(left), convlay(convlay), padded_delta(padded_delta), delta(delta){};
@@ -120,11 +102,6 @@ void GetOutputDerivativeJob::work()
     convlay->neuron.neuron_derivative(helper, convlay->outputs[id][0]);
 }
 
-void GetOutputDerivativeJob::set_input(Matrice **input)
-{
-    this->input = input;
-}
-
 
 ThreadPool::ThreadPool(int threadcount): thread_count(threadcount), queue_len(0), remaining_work(0)
 {
@@ -168,6 +145,23 @@ void ThreadPool::push(JobInterface* new_job)
     pthread_mutex_unlock(&(this->jobqueue_lock));
     pthread_mutex_unlock(&(this->remaining_work_lock));
     this->block_thread.notify_one();
+}
+
+void ThreadPool::push_many(JobInterface** jobs, int num, Matrice** input, Feature_map** nabla)
+{
+    pthread_mutex_lock(&(this->jobqueue_lock));
+    pthread_mutex_lock(&(this->remaining_work_lock));
+    for(int i = 0; i < num; i++)
+    {
+        dynamic_cast<CalculatingNabla*>(jobs[i])->input = input;
+        dynamic_cast<CalculatingNabla*>(jobs[i])->nabla = nabla;
+        this->jobqueue.push(jobs[i]);
+    }
+    this->queue_len += num;
+    this->remaining_work += num;
+    pthread_mutex_unlock(&(this->jobqueue_lock));
+    pthread_mutex_unlock(&(this->remaining_work_lock));
+    this->block_thread.notify_all();
 }
 
 void ThreadPool::run(ThreadPool *obj)
