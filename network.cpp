@@ -118,6 +118,41 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     }
 }
 
+void Network::store(char *filename)
+{
+    ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
+    ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
+    ofstream network_params (filename, ios::out | ios::binary);
+    if(network_params.is_open())
+        {
+            network_params.write(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
+            for(int i=0; i<this->layers_num; i++)
+                {
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_type)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->col)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->mapcount)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->stride)), sizeof(int));
+                }
+            for(int i = -1; i < this->layers_num; i++)
+                {
+                    this->layers[i]->store(network_params);
+                }
+            network_params.close();
+        }
+    else
+        {
+            cerr << "Unable to open the file:" << '"' << filename << '"' << endl;
+            throw exception();
+        }
+}
+
 inline void Network::feedforward(Matrice **input)
 {
     this->layers[-1]->set_input(input);
@@ -157,6 +192,13 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
         }
 }
 
+Matrice Network::get_output(Matrice **input)
+{
+    ///TODO modify this function to work with multiple input features...
+    this->feedforward(input);
+    Matrice ret = *(this->layers[this->layers_num - 1]->get_output()[0]);
+    return ret;
+}
 
 inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **nabla)
 {
@@ -176,71 +218,249 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     }
 }
 
-void Network::update_weights_and_biasses(MNIST_data **training_data, int training_data_len, int total_trainingdata_len, double learning_rate, double regularization_rate)
+void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
+                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    Layers_features **nabla, **deltanabla;
-    //Matrice **b_bck, **w_bck;
-    int *layer_bck, **ind;
-    //this->remove_some_neurons(&w_bck, &b_bck, &layer_bck, &ind);
-    try
+    if(minibatch_count < 0)
         {
-            nabla = new Layers_features* [this->layers_num];
-            deltanabla = new Layers_features* [this->layers_num];
-            for(int i = 0; i < this->layers_num; i++)
-                {
-                    ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
-                    int biascnt;
-                    if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
-                        biascnt = this->layers[i]->get_weights_row();
-                    else
-                        biascnt = 1;
-                    nabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
-                                                   this->layers[i]->get_weights_row(),
-                                                   this->layers[i]->get_weights_col(),
-                                                   this->layers[i]->get_mapdepth(),
-                                                   biascnt);
-                    deltanabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
-                                                        this->layers[i]->get_weights_row(),
-                                                        this->layers[i]->get_weights_col(),
-                                                        this->layers[i]->get_mapdepth(),
-                                                        biascnt);
-                }
+            minibatch_count = trainingdata_len / minibatch_len;
         }
+    Accuracy execution_accuracy;
+    MNIST_data *minibatches[minibatch_count][minibatch_len];
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
+    int learnig_cost_counter = 0;
+    double previoius_learning_cost = 0;
+    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Layers_features **nabla, **deltanabla;
+    try
+    {
+        nabla = new Layers_features* [this->layers_num];
+        deltanabla = new Layers_features* [this->layers_num];
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+            int biascnt;
+            if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
+                biascnt = this->layers[i]->get_weights_row();
+            else
+                biascnt = 1;
+            nabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                           this->layers[i]->get_weights_row(),
+                                           this->layers[i]->get_weights_col(),
+                                           this->layers[i]->get_mapdepth(),
+                                           biascnt);
+            deltanabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+        }
+    }
     catch(bad_alloc& ba)
         {
             cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
             return;
         }
-    for(int i = 0; i < training_data_len; i++)
+    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
         {
-            this->backpropagate(training_data[i], deltanabla);
-            for(int j = 0; j < this->layers_num; j++)
+            helper.data[i][0] = 0;
+        }
+    Matrice output;
+    for(int i = 0; i < epochs; i++)
+    {
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            for(int k = 0; k < minibatch_len; k++)
+            {
+                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+            }
+        }
+
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+            {
+                this->backpropagate(minibatches[j][training_data_index], deltanabla);
+                for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
                 {
-                    *nabla[j] += *deltanabla[j];
+                    *nabla[layer_index] += *deltanabla[layer_index];
                 }
+            }
+            double lr = learning_rate / minibatch_len;
+            double reg = (1 - learning_rate * (regularization_rate / trainingdata_len));
+            for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+            {
+                this->layers[layer_index]->update_weights_and_biasses(lr, reg, nabla[layer_index]);
+                nabla[layer_index]->zero();
+            }
         }
-    double lr = learning_rate / training_data_len;
-    double reg = (1 - learning_rate * (regularization_rate / total_trainingdata_len));
-    for(int i = 0; i < this->layers_num; i++)
+        if(test_data != NULL)
         {
-            this->layers[i]->update_weights_and_biasses(lr, reg, nabla[i]);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, monitor_learning_cost);
+            if(monitor_learning_cost)
+            {
+                cout << "total cost: " << execution_accuracy.total_cost << endl;
+                if(abs((long long int)execution_accuracy.total_cost) > abs((long long int)previoius_learning_cost))
+                    learnig_cost_counter++;
+                if(learnig_cost_counter == 10)
+                {
+                    learnig_cost_counter = 0;
+                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
+                    cout << "changing leatning rate to: " << learning_rate << endl;
+                }
+                previoius_learning_cost = execution_accuracy.total_cost;
+            }
         }
-    //this->add_back_removed_neurons(w_bck, b_bck, layer_bck, ind);
+    }
+    rand.close();
     for(int i = 0; i < this->layers_num; i++)
-        {
-            delete nabla[i];
-            delete deltanabla[i];
-        }
+    {
+        delete nabla[i];
+        delete deltanabla[i];
+    }
     delete[] nabla;
     delete[] deltanabla;
 }
 
-Matrice Network::get_output(Matrice **input)
+void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
+                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    ///TODO modify this function to work with multiple input features...
-    this->feedforward(input);
-    Matrice ret = *(this->layers[this->layers_num - 1]->get_output()[0]);
-    return ret;
+    if((momentum < 0) || (momentum > 1))
+    {
+        cerr << "momentum has to be between 0 and 1\n";
+        throw exception();
+    }
+    if(minibatch_count < 0)
+        {
+            minibatch_count = trainingdata_len / minibatch_len;
+        }
+    Accuracy execution_accuracy;
+    MNIST_data *minibatches[minibatch_count][minibatch_len];
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
+    int learnig_cost_counter = 0;
+    double previoius_learning_cost = 0;
+    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Layers_features **nabla, **deltanabla;
+    try
+    {
+        nabla = new Layers_features* [this->layers_num];
+        deltanabla = new Layers_features* [this->layers_num];
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+            int biascnt;
+            if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
+                biascnt = this->layers[i]->get_weights_row();
+            else
+                biascnt = 1;
+            nabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                           this->layers[i]->get_weights_row(),
+                                           this->layers[i]->get_weights_col(),
+                                           this->layers[i]->get_mapdepth(),
+                                           biascnt);
+            deltanabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+        }
+    }
+    catch(bad_alloc& ba)
+        {
+            cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
+            return;
+        }
+    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
+        {
+            helper.data[i][0] = 0;
+        }
+    Matrice output;
+    for(int i = 0; i < epochs; i++)
+    {
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            for(int k = 0; k < minibatch_len; k++)
+            {
+                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+            }
+        }
+
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+            {
+                this->backpropagate(minibatches[j][training_data_index], deltanabla);
+                for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+                {
+                    *nabla[layer_index] += *deltanabla[layer_index];
+                }
+            }
+            double lr = learning_rate / minibatch_len;
+            double reg = (1 - learning_rate * (regularization_rate / trainingdata_len));
+            for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+            {
+                this->layers[layer_index]->update_weights_and_biasses(lr, reg, nabla[layer_index]);
+                nabla[layer_index]->zero();
+            }
+        }
+        if(test_data != NULL)
+        {
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, monitor_learning_cost);
+            if(monitor_learning_cost)
+            {
+                cout << "total cost: " << execution_accuracy.total_cost << endl;
+                if(abs((long long int)execution_accuracy.total_cost) > abs((long long int)previoius_learning_cost))
+                    learnig_cost_counter++;
+                if(learnig_cost_counter == 10)
+                {
+                    learnig_cost_counter = 0;
+                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
+                    cout << "changing leatning rate to: " << learning_rate << endl;
+                }
+                previoius_learning_cost = execution_accuracy.total_cost;
+            }
+        }
+    }
+    rand.close();
+    for(int i = 0; i < this->layers_num; i++)
+    {
+        delete nabla[i];
+        delete deltanabla[i];
+    }
+    delete[] nabla;
+    delete[] deltanabla;
+}
+
+Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost)
+{
+    int learning_accuracy;
+    double learning_cost;
+    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Matrice output;
+    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
+    {
+        helper.data[i][0] = 0;
+    }
+    learning_accuracy = learning_cost = 0;
+    for(int j = 0; j < test_data_len; j++)
+    {
+        ///TODO this is an errorprone as well
+        output = this->get_output(test_data[j]->input);
+        if(getmax(output.data) == test_data[j]->required_output.data[0][0])
+            {
+                learning_accuracy++;
+            }
+        if(monitor_learning_cost)
+            {
+                helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
+                learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
+                helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
+            }
+    }
+    cout << "set " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << endl;
+    return Accuracy {learning_accuracy, learning_cost};
 }
 
 inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
@@ -251,159 +471,6 @@ inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup,
 inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
-}
-
-void Network::store(char *filename)
-{
-    ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
-    ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
-    ofstream network_params (filename, ios::out | ios::binary);
-    if(network_params.is_open())
-        {
-            network_params.write(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
-            for(int i=0; i<this->layers_num; i++)
-                {
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_type)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->col)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->mapcount)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->stride)), sizeof(int));
-                }
-            for(int i = -1; i < this->layers_num; i++)
-                {
-                    this->layers[i]->store(network_params);
-                }
-            network_params.close();
-        }
-    else
-        {
-            cerr << "Unable to open the file:" << '"' << filename << '"' << endl;
-            throw exception();
-        }
-}
-
-void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
-                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-{
-    if(minibatch_count < 0)
-        {
-            minibatch_count = trainingdata_len / minibatch_len;
-        }
-    MNIST_data *minibatches[minibatch_count][minibatch_len];
-    ifstream rand;
-    rand.open("/dev/urandom", ios::in);
-    int break_counter = 0;
-    int learning_accuracy, learnig_cost_counter = 0;
-    double learning_cost, previoius_learning_cost = 0;
-    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
-    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
-        {
-            helper.data[i][0] == 0;
-        }
-    Matrice output;
-    for(int i = 0; i < epochs; i++)
-        {
-            for(int j = 0; j < minibatch_count; j++)
-                {
-                    for(int k = 0; k < minibatch_len; k++)
-                        {
-                            minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
-                        }
-                }
-
-            for(int j = 0; j < minibatch_count; j++)
-                {
-                    this->update_weights_and_biasses(minibatches[j], minibatch_len, trainingdata_len, learning_rate, regularization_rate);
-                }
-            if(test_data != NULL)
-                {
-                    learning_accuracy = learning_cost = 0;
-                    for(int j = 0; j < test_data_len; j++)
-                        {
-                            ///TODO this is an errorprone as well
-                            output = this->get_output(test_data[j]->input);
-                            if(getmax(output.data) == test_data[j]->required_output.data[0][0])
-                                {
-                                    learning_accuracy++;
-                                }
-                            if(monitor_learning_cost)
-                                {
-                                    //if(j > 0)
-                                    //    helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
-                                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
-                                    learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
-                                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
-                                }
-                        }
-                    cout << "set " << i << ": " << learning_accuracy << " out of: " << test_data_len << endl;
-                    if(monitor_learning_cost)
-                        {
-                            cout << "total cost: " << learning_cost << endl;
-                            if(abs((long long int)learning_cost) > abs((long long int)previoius_learning_cost))
-                                learnig_cost_counter++;
-                            if(learnig_cost_counter == 10)
-                                {
-                                    learnig_cost_counter = 0;
-                                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
-                                    cout << "changing leatning rate to: " << learning_rate << endl;
-                                    if((break_counter++) == 50)
-                                        {
-                                            cout << "the learning rate is too small\n";
-                                            break;
-                                        }
-                                }
-                            previoius_learning_cost = learning_cost;
-                        }
-                }
-        }
-    rand.close();
-}
-
-void Network::check_accuracy(MNIST_data **test_data)
-{
-    int break_counter = 0;
-    int learning_accuracy, learnig_cost_counter = 0;
-    double learning_cost, previoius_learning_cost = 0;
-    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
-    Matrice output;
-    int test_data_len = 10000;
-    bool monitor_learning_cost = true;
-    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
-        {
-            helper.data[i][0] == 0;
-        }
-    learning_accuracy = learning_cost = 0;
-    for(int j = 0; j < test_data_len; j++)
-        {
-            ///TODO this is an errorprone as well
-            output = this->get_output(test_data[j]->input);
-            if(getmax(output.data) == test_data[j]->required_output.data[0][0])
-                {
-                    learning_accuracy++;
-                }
-            if(monitor_learning_cost)
-                {
-                    //if(j > 0)
-                    //    helper.data[(int)test_data[j - 1]->required_output.data[0][0]][0] = 0;
-                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
-                    learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
-                    helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
-                }
-        }
-    cout << learning_accuracy << " out of: " << test_data_len << endl;
-    if(monitor_learning_cost)
-        {
-            cout << "total cost: " << learning_cost << endl;
-            if(abs((long long int)learning_cost) > abs((long long int)previoius_learning_cost))
-                learnig_cost_counter++;
-            previoius_learning_cost = learning_cost;
-        }
 }
 
 void Network::test(MNIST_data **d, MNIST_data **v)

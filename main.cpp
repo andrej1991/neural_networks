@@ -34,8 +34,8 @@ inline int get_neuron_type(YAML::Node &config, int i, string &layerstr)
 
 int main()
 {
-    //YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
-    YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
+    YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
+    //YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
     string training_input = config["training_input"].as<string>();
     string required_training_output = config["required_training_output"].as<string>();
     string validation_input = config["validation_input"].as<string>();
@@ -121,7 +121,7 @@ int main()
     }
     Network n(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
-    n.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();

@@ -37,6 +37,19 @@ void Layers_features::operator+= (Layers_features &layer)
         }
 }
 
+void Layers_features::zero()
+{
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+        {
+            int mapdepth = this->fmap[map_index]->get_mapdepth();
+            for(int i = 0; i < mapdepth; i++)
+                {
+                    this->fmap[map_index]->weights[i][0].zero();
+                    this->fmap[map_index]->biases[i][0].zero();
+                }
+        }
+}
+
 int Layers_features::get_fmap_count()
 {
     return this->fmap_count;

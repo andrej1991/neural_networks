@@ -50,6 +50,7 @@ class Layers_features{
     Layers_features(int mapcount, int row, int col, int depth, int biascnt);
     ~Layers_features();
     void operator+=(Layers_features &layer);
+    void zero();
     int get_fmap_count();
 };
 
