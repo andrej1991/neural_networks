@@ -1,4 +1,4 @@
-#include "matrice.h"
+#include "matrix.h"
 Matrix::Matrix(int r,int c) : data(NULL)
 {
     if(r >= 0)
