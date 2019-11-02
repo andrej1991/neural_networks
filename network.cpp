@@ -153,7 +153,7 @@ void Network::store(char *filename)
         }
 }
 
-inline void Network::feedforward(Matrice **input)
+inline void Network::feedforward(Matrix **input)
 {
     this->layers[-1]->set_input(input);
     for(int i = 0; i < this->layers_num; i++)
@@ -162,7 +162,7 @@ inline void Network::feedforward(Matrice **input)
         }
 }
 
-double Network::cost(Matrice &required_output, int req_outp_indx)
+double Network::cost(Matrix &required_output, int req_outp_indx)
 {
     double helper = 0, result = 0;
     switch(this->costfunction_type)
@@ -192,11 +192,11 @@ double Network::cost(Matrice &required_output, int req_outp_indx)
         }
 }
 
-Matrice Network::get_output(Matrice **input)
+Matrix Network::get_output(Matrix **input)
 {
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input);
-    Matrice ret = *(this->layers[this->layers_num - 1]->get_output()[0]);
+    Matrix ret = *(this->layers[this->layers_num - 1]->get_output()[0]);
     return ret;
 }
 
@@ -204,7 +204,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
 {
     ///currently the final layer has to be a clasification layer
     this->feedforward(trainig_data->input);
-    Matrice **delta = new Matrice* [1];
+    Matrix **delta = new Matrix* [1];
     delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(),
                                                     trainig_data->required_output, this->costfunction_type);
     nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = delta[0][0];
@@ -231,7 +231,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
     double previoius_learning_cost = 0;
-    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla;
     try
     {
@@ -266,7 +266,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         {
             helper.data[i][0] = 0;
         }
-    Matrice output;
+    Matrix output;
     for(int i = 0; i < epochs; i++)
     {
         for(int j = 0; j < minibatch_count; j++)
@@ -297,7 +297,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         }
         if(test_data != NULL)
         {
-            execution_accuracy = this->check_accuracy(test_data, test_data_len, monitor_learning_cost);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
             if(monitor_learning_cost)
             {
                 cout << "total cost: " << execution_accuracy.total_cost << endl;
@@ -341,12 +341,13 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
     double previoius_learning_cost = 0;
-    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
-    Layers_features **nabla, **deltanabla;
+    Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Layers_features **nabla, **deltanabla, **nabla_momentum;
     try
     {
         nabla = new Layers_features* [this->layers_num];
         deltanabla = new Layers_features* [this->layers_num];
+        nabla_momentum = new Layers_features* [this->layers_num];
         for(int i = 0; i < this->layers_num; i++)
         {
             ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
@@ -365,18 +366,23 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
                                                 this->layers[i]->get_weights_col(),
                                                 this->layers[i]->get_mapdepth(),
                                                 biascnt);
+            nabla_momentum[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                           this->layers[i]->get_weights_row(),
+                                           this->layers[i]->get_weights_col(),
+                                           this->layers[i]->get_mapdepth(),
+                                           biascnt);
         }
     }
     catch(bad_alloc& ba)
-        {
-            cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
-            return;
-        }
+    {
+        cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
+        return;
+    }
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
-        {
-            helper.data[i][0] = 0;
-        }
-    Matrice output;
+    {
+        helper.data[i][0] = 0;
+    }
+    Matrix output;
     for(int i = 0; i < epochs; i++)
     {
         for(int j = 0; j < minibatch_count; j++)
@@ -401,13 +407,18 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
             double reg = (1 - learning_rate * (regularization_rate / trainingdata_len));
             for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
             {
-                this->layers[layer_index]->update_weights_and_biasses(lr, reg, nabla[layer_index]);
+                nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0]*(1 - momentum));
+                this->layers[layer_index]->update_weights_and_biasses(lr, reg, nabla_momentum[layer_index]);
                 nabla[layer_index]->zero();
             }
         }
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            nabla_momentum[layer_index]->zero();
+        }
         if(test_data != NULL)
         {
-            execution_accuracy = this->check_accuracy(test_data, test_data_len, monitor_learning_cost);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
             if(monitor_learning_cost)
             {
                 cout << "total cost: " << execution_accuracy.total_cost << endl;
@@ -437,8 +448,8 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
 {
     int learning_accuracy;
     double learning_cost;
-    Matrice helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
-    Matrice output;
+    Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Matrix output;
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
     {
         helper.data[i][0] = 0;
@@ -463,12 +474,12 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
     return Accuracy {learning_accuracy, learning_cost};
 }
 
-inline void Network::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+inline void Network::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
 {
     ;
 }
 
-inline void Network::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+inline void Network::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
 }

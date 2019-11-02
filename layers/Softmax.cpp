@@ -6,7 +6,7 @@ Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
 {
     this->layer_type = SOFTMAX;
     delete this->output_derivative[0];
-    this->output_derivative[0] = new Matrice(this->outputlen, this->outputlen);
+    this->output_derivative[0] = new Matrix(this->outputlen, this->outputlen);
 }
 
 Softmax::~Softmax()
@@ -14,16 +14,16 @@ Softmax::~Softmax()
     ;
 }
 
-inline Matrice** Softmax::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrice **next_layers_error, int next_layers_fmapcount)
+inline Matrix** Softmax::backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount)
 {
     cerr << "Softamx layer can only be an output layer!!!\n";
     throw exception();
 }
 
-inline void Softmax::layers_output(Matrice **input)
+inline void Softmax::layers_output(Matrix **input)
 {
-    Matrice weighted_input(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
-    Matrice output_helper(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
+    Matrix weighted_input(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
+    Matrix output_helper(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     double nominator = 0;
     double helper;
     weighted_input += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
@@ -38,7 +38,7 @@ inline void Softmax::layers_output(Matrice **input)
         }
 }
 
-inline Matrice** Softmax::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline Matrix** Softmax::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
 {
     switch(costfunction_type)
         {
@@ -62,7 +62,7 @@ inline Matrice** Softmax::get_output_error(Matrice **input, Matrice &required_ou
         };
 }
 
-inline Matrice** Softmax::derivate_layers_output(Matrice **input)
+inline Matrix** Softmax::derivate_layers_output(Matrix **input)
 {
     this->layers_output(input);
     for(int row = 0; row < this->outputlen; row ++)
@@ -89,22 +89,22 @@ inline Matrice** Softmax::derivate_layers_output(Matrice **input)
     ;
 }
 
-inline void Softmax::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+inline void Softmax::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
 {
     ;
 }
 
-inline void Softmax::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+inline void Softmax::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
 }
 
-void Softmax::set_input(Matrice **input)
+void Softmax::set_input(Matrix **input)
 {
     ;
 }
 
-inline Matrice** Softmax::get_output()
+inline Matrix** Softmax::get_output()
 {
     ;
 }
@@ -134,12 +134,12 @@ inline int Softmax::get_output_col()
     ;
 }
 
-void Softmax::set_weights(Matrice *w)
+void Softmax::set_weights(Matrix *w)
 {
     ;
 }
 
-void Softmax::set_biases(Matrice *b)
+void Softmax::set_biases(Matrix *b)
 {
     ;
 }

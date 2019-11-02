@@ -3,8 +3,8 @@
 Feature_map::Feature_map(int row, int col, int depth, int biascnt, bool initializtion_needed):
                 mapdepth(depth), row(row), col(col)
 {
-    this->weights = new Matrice* [depth];
-    this->biases = new Matrice* [depth];
+    this->weights = new Matrix* [depth];
+    this->biases = new Matrix* [depth];
     int biascount;
     if(biascnt > 1)
         biascount = biascnt;
@@ -12,8 +12,8 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, bool initiali
         biascount = 1;
     for(int i = 0; i < depth; i++)
         {
-            this->weights[i] = new Matrice(row, col);
-            this->biases[i] = new Matrice(biascount, 1);
+            this->weights[i] = new Matrix(row, col);
+            this->biases[i] = new Matrix(biascount, 1);
         }
     if(initializtion_needed)
     {

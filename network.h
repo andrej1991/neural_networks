@@ -2,7 +2,7 @@
 #define NETWORK_H_INCLUDED
 #include "neuron.h"
 #include "MNIST_data.h"
-#include "matrice.h"
+#include "matrix.h"
 #include "layers/layers.h"
 
 struct Accuracy{
@@ -17,10 +17,10 @@ class Network{
     bool dropout;
     void construct_layers(LayerDescriptor **desc);
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
-    inline void remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes);
-    inline void add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes);
-    inline void feedforward(Matrice **input);
-    double cost(Matrice &required_output, int req_outp_indx);
+    inline void remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes);
+    inline void add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes);
+    inline void feedforward(Matrix **input);
+    double cost(Matrix &required_output, int req_outp_indx);
     public:
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost = false,
@@ -32,7 +32,7 @@ class Network{
     Network(char *data);
     ~Network();
     void test(MNIST_data **d, MNIST_data **v);
-    Matrice get_output(Matrice **input);
+    Matrix get_output(Matrix **input);
     Accuracy check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost = false);
 };
 

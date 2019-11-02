@@ -4,7 +4,7 @@
 #include <string>
 #include "MNIST_data.h"
 #include "network.h"
-#include "matrice.h"
+#include "matrix.h"
 #include "random.h"
 #include <iosfwd>
 
@@ -120,8 +120,12 @@ int main()
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
     Network n(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
-    n.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    cout << "stohastic gradient descent\n";
+    n.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    cout << "momentum based gradient descent\n";
+    n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, 0.9, true, 0/*regularization_rate*/, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();

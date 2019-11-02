@@ -1,5 +1,5 @@
 #include "matrice.h"
-Matrice::Matrice(int r,int c) : data(NULL)
+Matrix::Matrix(int r,int c) : data(NULL)
 {
     if(r >= 0)
         this->row = r;
@@ -23,25 +23,25 @@ Matrice::Matrice(int r,int c) : data(NULL)
         }
     catch(bad_alloc& ba)
         {
-            cerr << "Matrice::constructor: bad_alloc caught: " << ba.what() << endl;
+            cerr << "Matrix::constructor: bad_alloc caught: " << ba.what() << endl;
             throw;
         }
 }
 
-inline void Matrice::destruct()
+inline void Matrix::destruct()
 {
     if(this->data != NULL)
+    {
+        for(int i = 0; i < this->row; i++)
         {
-            for(int i = 0; i < this->row; i++)
-                {
-                    delete this->data[i];
-                }
-            delete[] this->data;
-            this->data = NULL;
+            delete this->data[i];
         }
+        delete[] this->data;
+        this->data = NULL;
+    }
 }
 
-inline void Matrice::equality(const Matrice &mtx)
+inline void Matrix::equality(const Matrix &mtx)
 {
     row = mtx.row;
     col = mtx.col;
@@ -53,7 +53,7 @@ inline void Matrice::equality(const Matrice &mtx)
        }
     catch(bad_alloc& ba)
         {
-            cerr << "Matrice::copyconstructor: bad_alloc caught: " << ba.what() << endl;
+            cerr << "Matrix::copyconstructor: bad_alloc caught: " << ba.what() << endl;
             throw;
         }
     for(int i = 0; i < row; i++)
@@ -63,18 +63,18 @@ inline void Matrice::equality(const Matrice &mtx)
     }
 }
 
-Matrice::~Matrice()
+Matrix::~Matrix()
     {
         this->destruct();
     }
 
-Matrice::Matrice (const Matrice& mtx)
+Matrix::Matrix (const Matrix& mtx)
 {
     //this->destruct();
     this->equality(mtx);
 
 }
-Matrice Matrice::operator= (const Matrice& mtx)
+Matrix Matrix::operator= (const Matrix& mtx)
 {
     if(this==&mtx) return *this;
     this->destruct();
@@ -83,17 +83,17 @@ Matrice Matrice::operator= (const Matrice& mtx)
 
 }
 
-Matrice Matrice::operator* (const Matrice& other)
+Matrix Matrix::operator* (const Matrix& other)
 {
     int debug1 = col;
     if(col != other.row)
         {
-            std::cerr << "the condition of the if statement is fales in the operator Matrice::operator*\n";
+            std::cerr << "the condition of the if statement is fales in the operator Matrix::operator*\n";
             throw std::exception();
         }
     else
         {
-            Matrice mtx(row, other.col);
+            Matrix mtx(row, other.col);
             double c = 0;
             for(int k = 0; k < row; k++)
                 {
@@ -111,7 +111,20 @@ Matrice Matrice::operator* (const Matrice& other)
         }
 }
 
-void Matrice::operator+=(const Matrice& mtx)
+Matrix Matrix::operator*(double d)
+{
+    Matrix mtx(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            mtx.data[i][j] = this->data[i][j] * d;
+        }
+    }
+    return mtx;
+}
+
+void Matrix::operator+=(const Matrix& mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
         {
@@ -127,7 +140,7 @@ void Matrice::operator+=(const Matrice& mtx)
         }
 }
 
-void Matrice::operator+=(double d)
+void Matrix::operator+=(double d)
 {
     for(int i = 0; i < this->row; i++)
         {
@@ -138,14 +151,14 @@ void Matrice::operator+=(double d)
         }
 }
 
-Matrice Matrice::operator+(const Matrice &mtx)
+Matrix Matrix::operator+(const Matrix &mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
         {
             std::cerr << "the matrices cannot be added!\n";
             throw std::exception();
         }
-    Matrice sum(this->row, this->col);
+    Matrix sum(this->row, this->col);
     for(int i = 0; i < this->row; i++)
         {
             for(int j = 0; j < this->col; j++)
@@ -156,14 +169,14 @@ Matrice Matrice::operator+(const Matrice &mtx)
     return sum;
 }
 
-/*Matrice Matrice::operator-(const Matrice& mtx)
+/*Matrix Matrix::operator-(const Matrix& mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
         {
             std::cerr << "the matrices cannot be substracted!\n";
             throw std::exception();
         }
-    Matrice difference(this->row, this->col);
+    Matrix difference(this->row, this->col);
     for(int i = 0; i < this->row; i++)
         {
             for(int j = 0; j < this->col; j++)
@@ -174,9 +187,9 @@ Matrice Matrice::operator+(const Matrice &mtx)
     return dufference;
 }
 
-Matrice Matrice::operator-(double** mtx)
+Matrix Matrix::operator-(double** mtx)
 {
-    Matrice difference(this->row, this->col);
+    Matrix difference(this->row, this->col);
     for(int i = 0; i < this->row; i++)
         {
             for(int j = 0; j < this->col; j++)
@@ -186,21 +199,21 @@ Matrice Matrice::operator-(double** mtx)
         }
 }*/
 
-int Matrice::get_row()
+int Matrix::get_row()
 {
     return this->row;
 }
 
-int Matrice::get_col()
+int Matrix::get_col()
 {
     return this->col;
 }
 
-Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2)
+Matrix hadamart_product(Matrix &mtx1, Matrix &mtx2)
 {
     if((mtx1.row == mtx2.row) * (mtx1.col == mtx2.col))
         {
-            Matrice result(mtx1.row, mtx1.col);
+            Matrix result(mtx1.row, mtx1.col);
             for(int i = 0; i < mtx1.row; i++)
                 for(int j = 0; j < mtx1.col; j++)
                     result.data[i][j] = mtx1.data[i][j] * mtx2.data[i][j];
@@ -208,14 +221,14 @@ Matrice hadamart_product(Matrice &mtx1, Matrice &mtx2)
         }
     else
         {
-            std::cerr << "the condition of the if statement is fales in the function Matrice::hadamart_product\n";
+            std::cerr << "the condition of the if statement is fales in the function Matrix::hadamart_product\n";
             throw std::exception();
         }
 }
 
-Matrice Matrice::transpose()
+Matrix Matrix::transpose()
 {
-    Matrice tr_mtx(this->col,this->row);
+    Matrix tr_mtx(this->col,this->row);
     for(int i = 0; i < this->row; i++)
         {
             for(int  j= 0; j < this->col; j++)
@@ -226,9 +239,9 @@ Matrice Matrice::transpose()
     return tr_mtx;
 }
 
-Matrice Matrice::rot180()
+Matrix Matrix::rot180()
 {
-    Matrice ret(this->row, this->col);
+    Matrix ret(this->row, this->col);
     int i2 = 0;
     int j2 = 0;
     for(int i = this->row - 1; i >= 0; i--)
@@ -244,11 +257,11 @@ Matrice Matrice::rot180()
     return ret;
 }
 
-Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
+Matrix Matrix::zero_padd(int top, int right, int bottom, int left)
 {
     int padded_row = this->row + top + bottom;
     int padded_col = this->col + left + right;
-    Matrice ret(padded_row, padded_col);
+    Matrix ret(padded_row, padded_col);
     for(int i = 0; i < this->row; i++)
         {
             for(int j = 0; j < this->col; j++)
@@ -259,7 +272,7 @@ Matrice Matrice::zero_padd(int top, int right, int bottom, int left)
     return ret;
 }
 
-void cross_correlation(Matrice &input, Matrice &kernel, Matrice &output, int stride)
+void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int stride)
 {
     double helper;
     int r, c;
@@ -286,7 +299,7 @@ void cross_correlation(Matrice &input, Matrice &kernel, Matrice &output, int str
         }
 }
 
-void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
+void convolution(Matrix &input, Matrix &kernel, Matrix &output, int stride)
 {
     double helper;
     int r, c;
@@ -311,14 +324,14 @@ void convolution(Matrice &input, Matrice &kernel, Matrice &output, int stride)
         }
 }
 
-void Matrice::zero()
+void Matrix::zero()
 {
     for(int i = 0; i < this->row; i++)
         for(int j = 0; j < this->col; j++)
             this->data[i][j] = 0;
 }
 
-void print_mtx_list(Matrice **mtx, int list_len)
+void print_mtx_list(Matrix **mtx, int list_len)
 {
     for(int i = 0; i < list_len; i++)
     {
@@ -337,7 +350,7 @@ void print_mtx_list(Matrice **mtx, int list_len)
 
 }
 
-void print_mtx(Matrice &mtx)
+void print_mtx(Matrix &mtx)
 {
     cout << "[";
     for(int j = 0; j < mtx.row; j++)

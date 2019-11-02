@@ -6,35 +6,118 @@ LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_cou
 
 
 Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biascnt):
-            fmap_count(mapcount)
+            fmap_count(mapcount), biascnt(biascnt)
 {
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
+    {
+        this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+    }
+}
+
+Layers_features::Layers_features(const Layers_features &layer)
+{
+    int row, col, depth;
+    row = layer.fmap[0]->weights[0][0].get_row();
+    col = layer.fmap[0]->weights[0][0].get_col();
+    depth = layer.fmap[0]->get_mapdepth();
+    this->fmap = new Feature_map* [this->fmap_count];
+    for(int i = 0; i < this->fmap_count; i++)
+    {
+        this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+    }
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
         {
-            this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+            this->fmap[map_index]->weights[i][0] = layer.fmap[map_index]->weights[i][0];
+            this->fmap[map_index]->biases[i][0] = layer.fmap[map_index]->biases[i][0];
         }
+    }
 }
 
 Layers_features::~Layers_features()
 {
     for(int i = 0; i < this->fmap_count; i++)
-        {
-            delete this->fmap[i];
-        }
+    {
+        delete this->fmap[i];
+    }
     delete[] this->fmap;
 }
 
-void Layers_features::operator+= (Layers_features &layer)
+Layers_features Layers_features::operator= (const Layers_features &layer)
 {
-    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    for(int i = 0; i < this->fmap_count; i++)
+    {
+        delete this->fmap[i];
+    }
+    delete[] this->fmap;
+    int row, col, depth;
+    row = layer.fmap[0]->weights[0][0].get_row();
+    col = layer.fmap[0]->weights[0][0].get_col();
+    depth = layer.fmap[0]->get_mapdepth();
+    this->fmap = new Feature_map* [this->fmap_count];
+    for(int i = 0; i < this->fmap_count; i++)
+    {
+        this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+    }
+    //if (*this != &layer)
+    //{
+        for(int map_index = 0; map_index < this->fmap_count; map_index++)
         {
             int mapdepth = this->fmap[map_index]->get_mapdepth();
             for(int i = 0; i < mapdepth; i++)
-                {
-                    this->fmap[map_index]->weights[i][0] += layer.fmap[map_index]->weights[i][0];
-                    this->fmap[map_index]->biases[i][0] += layer.fmap[map_index]->biases[i][0];
-                }
+            {
+                this->fmap[map_index]->weights[i][0] = layer.fmap[map_index]->weights[i][0];
+                this->fmap[map_index]->biases[i][0] = layer.fmap[map_index]->biases[i][0];
+            }
         }
+    //}
+    return *this;
+}
+
+void Layers_features::operator+= (const Layers_features &layer)
+{
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            this->fmap[map_index]->weights[i][0] += layer.fmap[map_index]->weights[i][0];
+            this->fmap[map_index]->biases[i][0] += layer.fmap[map_index]->biases[i][0];
+        }
+    }
+}
+
+Layers_features Layers_features::operator+(const Layers_features &layer)
+{
+    Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] + layer.fmap[map_index]->weights[i][0];
+            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] + layer.fmap[map_index]->biases[i][0];
+        }
+    }
+    return new_layer;
+}
+
+Layers_features Layers_features::operator*(double d)
+{
+    Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] * d;
+            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] * d;
+        }
+    }
+    return new_layer;
 }
 
 void Layers_features::zero()

@@ -1,7 +1,7 @@
 #ifndef NEURON_H_INCLUDED
 #define NEURON_H_INCLUDED
 
-#include "matrice.h"
+#include "matrix.h"
 
 #define SIGMOID 0
 #define RELU 1
@@ -9,16 +9,16 @@
 
 class Neuron{
     int neuron_type;
-    inline void sigmoid(Matrice &input, Matrice &output);
-    inline void sigmoid_derivative(Matrice &input, Matrice &output);
-    inline void relu(Matrice &input, Matrice &output);
-    inline void leaky_relu(Matrice &input, Matrice &output);
-    inline void relu_derivative(Matrice &input, Matrice &output);
-    inline void leaky_relu_derivative(Matrice &input, Matrice &output);
+    inline void sigmoid(Matrix &input, Matrix &output);
+    inline void sigmoid_derivative(Matrix &input, Matrix &output);
+    inline void relu(Matrix &input, Matrix &output);
+    inline void leaky_relu(Matrix &input, Matrix &output);
+    inline void relu_derivative(Matrix &input, Matrix &output);
+    inline void leaky_relu_derivative(Matrix &input, Matrix &output);
     public:
     Neuron(int neuron_type = SIGMOID);
-    void neuron(Matrice &inputs, Matrice &outputs);
-    void neuron_derivative(Matrice &inputs, Matrice &outputs);
+    void neuron(Matrix &inputs, Matrix &outputs);
+    void neuron_derivative(Matrix &inputs, Matrix &outputs);
     void test();
 };
 

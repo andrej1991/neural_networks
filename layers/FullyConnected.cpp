@@ -3,16 +3,16 @@
 FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     neuron(neuron_type)
 {
-    this->output = new Matrice*[1];
-    this->output[0] = new Matrice(row, 1);
-    this->output_derivative = new Matrice*[1];
-    this->output_derivative[0] = new Matrice(row, 1);
-    this->output_error = new Matrice*[1];
-    this->output_error[0] = new Matrice(row, 1);
-    this->output_error_helper = new Matrice*[1];
-    this->output_error_helper[0] = new Matrice(row, 1);
-    this->layers_delta = new Matrice*[1];
-    this->layers_delta[0] = new Matrice(row, 1);
+    this->output = new Matrix*[1];
+    this->output[0] = new Matrix(row, 1);
+    this->output_derivative = new Matrix*[1];
+    this->output_derivative[0] = new Matrix(row, 1);
+    this->output_error = new Matrix*[1];
+    this->output_error[0] = new Matrix(row, 1);
+    this->output_error_helper = new Matrix*[1];
+    this->output_error_helper[0] = new Matrix(row, 1);
+    this->layers_delta = new Matrix*[1];
+    this->layers_delta[0] = new Matrix(row, 1);
     this->neuron_count = this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
@@ -35,18 +35,18 @@ FullyConnected::~FullyConnected()
     delete[] this->layers_delta;
 }
 
-inline void FullyConnected::layers_output(Matrice **input)
+inline void FullyConnected::layers_output(Matrix **input)
 {
-    Matrice inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
+    Matrix inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
     this->neuron.neuron(inputparam, this->output[0][0]);
 }
 
-inline Matrice** FullyConnected::get_output_error(Matrice **input, Matrice &required_output, int costfunction_type)
+inline Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
 {
-    //Matrice mtx(this->outputlen, 1);
-    //Matrice delta(this->outputlen, 1);
-    //Matrice **output_derivate;
+    //Matrix mtx(this->outputlen, 1);
+    //Matrix delta(this->outputlen, 1);
+    //Matrix **output_derivate;
     switch(costfunction_type)
         {
         case QUADRATIC_CF:
@@ -85,12 +85,12 @@ inline Matrice** FullyConnected::get_output_error(Matrice **input, Matrice &requ
         };
 }
 
-inline Matrice** FullyConnected::derivate_layers_output(Matrice **input)
+inline Matrix** FullyConnected::derivate_layers_output(Matrix **input)
 {
-    //Matrice **mtx;
-    //mtx = new Matrice* [1];
-    //mtx[0] = new Matrice(this->outputlen, 1);
-    Matrice inputparam;
+    //Matrix **mtx;
+    //mtx = new Matrix* [1];
+    //mtx[0] = new Matrix(this->outputlen, 1);
+    Matrix inputparam;
     inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
     this->neuron.neuron_derivative(inputparam, this->output_derivative[0][0]);
     return this->output_derivative;
@@ -114,25 +114,25 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
         }
 }
 
-inline void FullyConnected::remove_some_neurons(Matrice ***w_bckup, Matrice ***b_bckup, int **layers_bckup, int ***indexes)
+inline void FullyConnected::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
 {
     ;
 }
 
-inline void FullyConnected::add_back_removed_neurons(Matrice **w_bckup, Matrice **b_bckup, int *layers_bckup, int **indexes)
+inline void FullyConnected::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
 {
     ;
 }
 
-void FullyConnected::set_input(Matrice **input)
+void FullyConnected::set_input(Matrix **input)
 {
     cerr << "This function can be called only for the InputLayer!\n";
     throw exception();
 }
 
 
-inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
-                                          Matrice **delta, int next_layers_fmapcount)
+inline Matrix** FullyConnected::backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
+                                          Matrix **delta, int next_layers_fmapcount)
 {
     ///TODO think through this function from mathematical perspective!!!
     if(next_layers_fmapcount != 1)
@@ -140,7 +140,7 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
             cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
             throw exception();
         }
-    Matrice multiplied;
+    Matrix multiplied;
     this->derivate_layers_output(input);
     multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
     ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
@@ -152,7 +152,7 @@ inline Matrice** FullyConnected::backpropagate(Matrice **input, Feature_map** ne
     return this->layers_delta;
 }
 
-inline Matrice** FullyConnected::get_output()
+inline Matrix** FullyConnected::get_output()
 {
     return this->output;
 }
@@ -182,12 +182,12 @@ inline int FullyConnected::get_output_col()
     return 1;
 }
 
-void FullyConnected::set_weights(Matrice *w)
+void FullyConnected::set_weights(Matrix *w)
 {
     this->fmap[0]->weights[0][0] = *w;
 }
 
-void FullyConnected::set_biases(Matrice *b)
+void FullyConnected::set_biases(Matrix *b)
 {
     this->fmap[0]->biases[0][0] = *b;
 }

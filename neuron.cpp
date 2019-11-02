@@ -6,11 +6,11 @@
 
 Neuron::Neuron(int neuron_type) : neuron_type(neuron_type) {}
 
-inline void Neuron::sigmoid(Matrice &inputs, Matrice &outputs)
+inline void Neuron::sigmoid(Matrix &inputs, Matrix &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    //Matrice ret(row, col);
+    //Matrix ret(row, col);
     for(int i = 0; i < row; i++)
     {
         for(int j = 0; j < col; j++)
@@ -22,9 +22,9 @@ inline void Neuron::sigmoid(Matrice &inputs, Matrice &outputs)
     //return ret;
 }
 
-inline void Neuron::sigmoid_derivative(Matrice &inputs, Matrice &outputs)
+inline void Neuron::sigmoid_derivative(Matrix &inputs, Matrix &outputs)
 {
-    //Matrice s = sigmoid(inputs);
+    //Matrix s = sigmoid(inputs);
     int row = inputs.get_row();
     int col = inputs.get_col();
     double s;
@@ -40,11 +40,11 @@ inline void Neuron::sigmoid_derivative(Matrice &inputs, Matrice &outputs)
     //return s;
 }
 
-inline void Neuron::relu(Matrice &inputs, Matrice &outputs)
+inline void Neuron::relu(Matrix &inputs, Matrix &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    //Matrice output(row, col);
+    //Matrix output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
@@ -57,11 +57,11 @@ inline void Neuron::relu(Matrice &inputs, Matrice &outputs)
         }
     //return output;
 }
-inline void Neuron::relu_derivative(Matrice &inputs, Matrice &outputs)
+inline void Neuron::relu_derivative(Matrix &inputs, Matrix &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    //Matrice output(row, col);
+    //Matrix output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
@@ -75,11 +75,11 @@ inline void Neuron::relu_derivative(Matrice &inputs, Matrice &outputs)
     //return output;
 }
 
-inline void Neuron::leaky_relu(Matrice &inputs, Matrice &outputs)
+inline void Neuron::leaky_relu(Matrix &inputs, Matrix &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    //Matrice output(row, col);
+    //Matrix output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
@@ -92,11 +92,11 @@ inline void Neuron::leaky_relu(Matrice &inputs, Matrice &outputs)
         }
     //return output;
 }
-inline void Neuron::leaky_relu_derivative(Matrice &inputs, Matrice &outputs)
+inline void Neuron::leaky_relu_derivative(Matrix &inputs, Matrix &outputs)
 {
     int row = inputs.get_row();
     int col = inputs.get_col();
-    //Matrice output(row, col);
+    //Matrix output(row, col);
     for(int i = 0; i < row; i++)
         {
             for(int j = 0; j < col; j++)
@@ -110,7 +110,7 @@ inline void Neuron::leaky_relu_derivative(Matrice &inputs, Matrice &outputs)
     //return output;
 }
 
-void Neuron::neuron(Matrice &inputs, Matrice &outputs)
+void Neuron::neuron(Matrix &inputs, Matrix &outputs)
 {
     switch(this->neuron_type)
     {
@@ -129,7 +129,7 @@ void Neuron::neuron(Matrice &inputs, Matrice &outputs)
     }
 }
 
-void Neuron::neuron_derivative(Matrice &inputs, Matrice &outputs)
+void Neuron::neuron_derivative(Matrix &inputs, Matrix &outputs)
 {
     switch(this->neuron_type)
     {
