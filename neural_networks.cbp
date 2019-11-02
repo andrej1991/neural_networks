@@ -66,8 +66,8 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="main.cpp" />
-		<Unit filename="matrice.cpp" />
-		<Unit filename="matrice.h">
+		<Unit filename="matrix.cpp" />
+		<Unit filename="matrix.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="network.cpp">
