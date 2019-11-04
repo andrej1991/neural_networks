@@ -99,19 +99,19 @@ inline Matrix** FullyConnected::derivate_layers_output(Matrix **input)
 void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
 {
     if((layer->get_fmap_count() != 1) + (layer->fmap[0]->get_mapdepth() != 1))
-        {
-            cerr << "the fully connected layer must have only one set of weights!!!\n";
-            throw exception();
-        }
+    {
+        cerr << "the fully connected layer must have only one set of weights!!!\n";
+        throw exception();
+    }
     int prev_outputlen = this->fmap[0]->get_col();
     for(int j = 0; j < this->outputlen; j++)
+    {
+        this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
+        for(int k = 0; k < prev_outputlen; k++)
         {
-            this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
-            for(int k = 0; k < prev_outputlen; k++)
-                {
-                    this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
-                }
+            this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
         }
+    }
 }
 
 inline void FullyConnected::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)

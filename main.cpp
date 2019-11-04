@@ -119,16 +119,19 @@ int main()
         validation[i] = new MNIST_data(input_row, input_col, 1, 1);
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
-    Network n(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    /*Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);*/
+    Network n1("/home/andrej/myfiles/Asztal/x");
+    Network n2("/home/andrej/myfiles/Asztal/x");
+    Network n3("/home/andrej/myfiles/Asztal/x");
 
-    /*cout << "stohastic gradient descent\n";
-    n.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    cout << "stohastic gradient descent\n";
+    n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "momentum based gradient descent\n";
-    n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, 0.9, true, 0, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, 0.9, true, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();

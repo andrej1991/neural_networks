@@ -439,13 +439,15 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
     {
         delete nabla[i];
         delete deltanabla[i];
+        delete nabla_momentum[i];
     }
     delete[] nabla;
     delete[] deltanabla;
+    delete[] nabla_momentum;
 }
 
 void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
-                                            MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     if((momentum < 0) || (momentum > 1))
     {
@@ -461,7 +463,7 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
-    double previoius_learning_cost = 0;
+    double lr, reg, previoius_learning_cost = 0;
     Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla, **nabla_momentum, **layer_helper;
     try
@@ -495,11 +497,6 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
                                            this->layers[i]->get_mapdepth(),
                                            biascnt);
             nabla_momentum[i]->zero();
-            layer_helper[i] = new Layers_features(this->layers[i]->get_mapcount(),
-                                           this->layers[i]->get_weights_row(),
-                                           this->layers[i]->get_weights_col(),
-                                           this->layers[i]->get_mapdepth(),
-                                           biascnt);
         }
     }
     catch(bad_alloc& ba)
@@ -521,14 +518,13 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
                 minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
             }
         }
-
         for(int j = 0; j < minibatch_count; j++)
         {
-            double lr = learning_rate / minibatch_len;
+            lr = learning_rate / minibatch_len;
+            reg = (1 - learning_rate * (regularization_rate / trainingdata_len));
             for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
             {
-                layer_helper[layer_index][0] = nabla_momentum[layer_index][0] * momentum;
-                this->layers[layer_index]->update_weights_and_biasses(momentum, 0, layer_helper[layer_index]);
+                this->layers[layer_index]->update_weights_and_biasses(momentum, reg, nabla_momentum[layer_index]);
             }
             for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
             {
@@ -540,9 +536,9 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
             }
             for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
             {
-                this->layers[layer_index]->update_weights_and_biasses(-1*momentum, 0, layer_helper[layer_index]);
-                nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0] * learning_rate);
-                this->layers[layer_index]->update_weights_and_biasses(1, 0, nabla_momentum[layer_index]);
+                this->layers[layer_index]->update_weights_and_biasses(-1*momentum, reg, nabla_momentum[layer_index]);
+                nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0] * lr);
+                this->layers[layer_index]->update_weights_and_biasses(1, reg, nabla_momentum[layer_index]);
                 nabla[layer_index]->zero();
             }
         }
@@ -573,9 +569,11 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     {
         delete nabla[i];
         delete deltanabla[i];
+        delete nabla_momentum[i];
     }
     delete[] nabla;
     delete[] deltanabla;
+    delete[] nabla_momentum;
 }
 
 Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost)
