@@ -105,6 +105,21 @@ Layers_features Layers_features::operator+(const Layers_features &layer)
     return new_layer;
 }
 
+Layers_features Layers_features::operator/(const Layers_features &layer)
+{
+    Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] / layer.fmap[map_index]->weights[i][0];
+            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] / layer.fmap[map_index]->biases[i][0];
+        }
+    }
+    return new_layer;
+}
+
 Layers_features Layers_features::operator*(double d)
 {
     Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
@@ -115,6 +130,51 @@ Layers_features Layers_features::operator*(double d)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] * d;
             new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] * d;
+        }
+    }
+    return new_layer;
+}
+
+Layers_features Layers_features::operator+(double d)
+{
+    Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] + d;
+            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] + d;
+        }
+    }
+    return new_layer;
+}
+
+Layers_features Layers_features::sqroot()
+{
+    Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0].sqroot();
+            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0].sqroot();
+        }
+    }
+    return new_layer;
+}
+
+Layers_features Layers_features::square_element_by()
+{
+    Layers_features new_layer(this->fmap_count, this->fmap[0]->get_row(), this->fmap[0]->get_col(), this->fmap[0]->get_mapdepth(), this->biascnt);
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
+        {
+            new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0].square_element_by();
+            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0].square_element_by();
         }
     }
     return new_layer;

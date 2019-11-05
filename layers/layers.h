@@ -52,8 +52,13 @@ class Layers_features{
     ~Layers_features();
     void operator+=(const Layers_features &layer);
     Layers_features operator+(const Layers_features &layer);
+    Layers_features operator/(const Layers_features &layer);
+    //Layers_features operator*(const Layers_features &layer);
     Layers_features operator=(const Layers_features &layer);
     Layers_features operator*(double d);
+    Layers_features operator+(double d);
+    Layers_features sqroot();
+    Layers_features square_element_by();
     void zero();
     int get_fmap_count();
 };

@@ -1,4 +1,6 @@
+#include <math.h>
 #include "matrix.h"
+
 Matrix::Matrix(int r,int c) : data(NULL)
 {
     if(r >= 0)
@@ -111,6 +113,25 @@ Matrix Matrix::operator* (const Matrix& other)
         }
 }
 
+Matrix Matrix::operator/(const Matrix &mtx)
+{
+    if((this->col != mtx.col) && (this->row != mtx.row))
+    {
+        cerr << "The row or the colum is not equal of the matrixes in the division operator\n";
+        throw exception();
+    }
+    Matrix ret(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            ret.data[i][j] = this->data[i][j] / mtx.data[i][j];
+        }
+    }
+
+    return ret;
+}
+
 Matrix Matrix::operator*(double d)
 {
     Matrix mtx(this->row, this->col);
@@ -149,6 +170,19 @@ void Matrix::operator+=(double d)
                     this->data[i][j] += d;
                 }
         }
+}
+
+Matrix Matrix::operator+(double d)
+{
+    Matrix sum(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            sum.data[i][j] = this->data[i][j] + d;
+        }
+    }
+    return sum;
 }
 
 Matrix Matrix::operator+(const Matrix &mtx)
@@ -254,6 +288,32 @@ Matrix Matrix::rot180()
             i2++;
             j2 = 0;
         }
+    return ret;
+}
+
+Matrix Matrix::sqroot()
+{
+    Matrix ret(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            ret.data[i][j] = sqrt(this->data[i][j]);
+        }
+    }
+    return ret;
+}
+
+Matrix Matrix::square_element_by()
+{
+    Matrix ret(this->row, this->col);
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            ret.data[i][j] = this->data[i][j] * this->data[i][j];
+        }
+    }
     return ret;
 }
 

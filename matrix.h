@@ -21,14 +21,18 @@ class Matrix
     ~Matrix();
     Matrix(const Matrix& mtx);
     Matrix operator* (const Matrix& mtx);
+    Matrix operator/ (const Matrix& mtx);
     Matrix operator* (double d);
     Matrix operator= (const Matrix& mtx);
     void operator+= (const Matrix& mtx);
     void operator+= (double d);
+    Matrix operator+ (double d);
     Matrix operator+ (const Matrix &mtx);
     friend Matrix hadamart_product(Matrix &mtx1, Matrix &mtx2);
     Matrix transpose();
     Matrix rot180();
+    Matrix sqroot();
+    Matrix square_element_by();
     Matrix zero_padd(int top, int right, int bottom, int left);
     friend void convolution(Matrix &input, Matrix &kernel, Matrix &output, int stride = 1);
     friend void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int stride = 1);

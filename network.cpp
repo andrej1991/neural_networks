@@ -222,9 +222,9 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                                             double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     if(minibatch_count < 0)
-        {
-            minibatch_count = trainingdata_len / minibatch_len;
-        }
+    {
+        minibatch_count = trainingdata_len / minibatch_len;
+    }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     ifstream rand;
@@ -258,14 +258,11 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         }
     }
     catch(bad_alloc& ba)
-        {
-            cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
-            return;
-        }
-    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
-        {
-            helper.data[i][0] = 0;
-        }
+    {
+        cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
+        return;
+    }
+    helper.zero();
     Matrix output;
     for(int i = 0; i < epochs; i++)
     {
@@ -332,16 +329,16 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
         throw exception();
     }
     if(minibatch_count < 0)
-        {
-            minibatch_count = trainingdata_len / minibatch_len;
-        }
+    {
+        minibatch_count = trainingdata_len / minibatch_len;
+    }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
     double previoius_learning_cost = 0;
-    Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla, **nabla_momentum;
     try
     {
@@ -377,10 +374,6 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
     {
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
-    }
-    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
-    {
-        helper.data[i][0] = 0;
     }
     Matrix output;
     for(int i = 0; i < epochs; i++)
@@ -419,19 +412,7 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
         if(test_data != NULL)
         {
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
-            if(monitor_learning_cost)
-            {
-                cout << "total cost: " << execution_accuracy.total_cost << endl;
-                if(abs((long long int)execution_accuracy.total_cost) > abs((long long int)previoius_learning_cost))
-                    learnig_cost_counter++;
-                if(learnig_cost_counter == 10)
-                {
-                    learnig_cost_counter = 0;
-                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
-                    cout << "changing leatning rate to: " << learning_rate << endl;
-                }
-                previoius_learning_cost = execution_accuracy.total_cost;
-            }
+            cout << "total cost: " << execution_accuracy.total_cost << endl;
         }
     }
     rand.close();
@@ -455,16 +436,16 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
         throw exception();
     }
     if(minibatch_count < 0)
-        {
-            minibatch_count = trainingdata_len / minibatch_len;
-        }
+    {
+        minibatch_count = trainingdata_len / minibatch_len;
+    }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
     double lr, reg, previoius_learning_cost = 0;
-    Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla, **nabla_momentum, **layer_helper;
     try
     {
@@ -503,10 +484,6 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     {
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
-    }
-    for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
-    {
-        helper.data[i][0] = 0;
     }
     Matrix output;
     for(int i = 0; i < epochs; i++)
@@ -549,19 +526,7 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
         if(test_data != NULL)
         {
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
-            if(monitor_learning_cost)
-            {
-                cout << "total cost: " << execution_accuracy.total_cost << endl;
-                if(abs((long long int)execution_accuracy.total_cost) > abs((long long int)previoius_learning_cost))
-                    learnig_cost_counter++;
-                if(learnig_cost_counter == 10)
-                {
-                    learnig_cost_counter = 0;
-                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
-                    cout << "changing leatning rate to: " << learning_rate << endl;
-                }
-                previoius_learning_cost = execution_accuracy.total_cost;
-            }
+            cout << "total cost: " << execution_accuracy.total_cost << endl;
         }
     }
     rand.close();
@@ -574,6 +539,121 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     delete[] nabla;
     delete[] deltanabla;
     delete[] nabla_momentum;
+}
+
+void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
+                                            double regularization_rate, double denominator, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+{
+    if((momentum < 0) || (momentum > 1))
+    {
+        cerr << "momentum has to be between 0 and 1\n";
+        throw exception();
+    }
+    if(minibatch_count < 0)
+    {
+        minibatch_count = trainingdata_len / minibatch_len;
+    }
+    Accuracy execution_accuracy;
+    MNIST_data *minibatches[minibatch_count][minibatch_len];
+    ifstream rand;
+    rand.open("/dev/urandom", ios::in);
+    int learnig_cost_counter = 0;
+    double lr, reg, previoius_learning_cost = 0;
+    //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Layers_features **nabla, **deltanabla, **squared_grad_moving_avarange, **layer_helper;
+    try
+    {
+        nabla = new Layers_features* [this->layers_num];
+        deltanabla = new Layers_features* [this->layers_num];
+        squared_grad_moving_avarange = new Layers_features* [this->layers_num];
+        layer_helper = new Layers_features* [this->layers_num];
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+            int biascnt;
+            if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
+                biascnt = this->layers[i]->get_weights_row();
+            else
+                biascnt = 1;
+            nabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                           this->layers[i]->get_weights_row(),
+                                           this->layers[i]->get_weights_col(),
+                                           this->layers[i]->get_mapdepth(),
+                                           biascnt);
+            nabla[i]->zero();
+            deltanabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+            squared_grad_moving_avarange[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                           this->layers[i]->get_weights_row(),
+                                           this->layers[i]->get_weights_col(),
+                                           this->layers[i]->get_mapdepth(),
+                                           biascnt);
+            squared_grad_moving_avarange[i]->zero();
+            layer_helper[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+        }
+    }
+    catch(bad_alloc& ba)
+    {
+        cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
+        return;
+    }
+    Matrix output;
+    for(int i = 0; i < epochs; i++)
+    {
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            for(int k = 0; k < minibatch_len; k++)
+            {
+                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+            }
+        }
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            lr = learning_rate / minibatch_len;
+            reg = (1 - learning_rate * (regularization_rate / trainingdata_len));
+            for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+            {
+                this->backpropagate(minibatches[j][training_data_index], deltanabla);
+                for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+                {
+                    *nabla[layer_index] += *deltanabla[layer_index];
+                }
+            }
+            for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+            {
+                squared_grad_moving_avarange[layer_index][0] = (squared_grad_moving_avarange[layer_index][0] * momentum) + (nabla[layer_index][0].square_element_by() * (1 - momentum));
+                layer_helper[layer_index][0] = nabla[layer_index][0] / (squared_grad_moving_avarange[layer_index][0].sqroot() + denominator);
+                this->layers[layer_index]->update_weights_and_biasses(lr, reg, layer_helper[layer_index]);
+                nabla[layer_index]->zero();
+            }
+        }
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            squared_grad_moving_avarange[layer_index]->zero();
+        }
+        if(test_data != NULL)
+        {
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
+            cout << "total cost: " << execution_accuracy.total_cost << endl;
+        }
+    }
+    rand.close();
+    for(int i = 0; i < this->layers_num; i++)
+    {
+        delete nabla[i];
+        delete deltanabla[i];
+        delete squared_grad_moving_avarange[i];
+    }
+    delete[] nabla;
+    delete[] deltanabla;
+    delete[] squared_grad_moving_avarange;
 }
 
 Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost)
