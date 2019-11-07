@@ -7,7 +7,7 @@
 
 struct Accuracy{
     int correct_answers;
-    double total_cost;
+    double total_cost, execution_time;
 };
 
 class Network{
@@ -22,6 +22,7 @@ class Network{
     inline void feedforward(Matrix **input);
     double cost(Matrix &required_output, int req_outp_indx);
     public:
+    bool monitor_training_duration;
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);

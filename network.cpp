@@ -6,11 +6,12 @@
 #include "additional.h"
 #include <math.h>
 #include "layers/layers.h"
+#include <chrono>
 
 using namespace std;
 ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false
 Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout):
-                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num)
+                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num), monitor_training_duration(true)
 {
     try
     {
@@ -24,7 +25,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int
         }
 }
 
-Network::Network(char *data)
+Network::Network(char *data): monitor_training_duration(false)
 {
     ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
     ///int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1
@@ -232,6 +233,8 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     int learnig_cost_counter = 0;
     double previoius_learning_cost = 0;
     Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    chrono::time_point<chrono::system_clock> start, end_training;
+    chrono::duration<double> epoch_duration, overall_duration;
     Layers_features **nabla, **deltanabla;
     try
     {
@@ -273,7 +276,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                 minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
             }
         }
-
+        start = chrono::system_clock::now();
         for(int j = 0; j < minibatch_count; j++)
         {
             for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
@@ -292,6 +295,8 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                 nabla[layer_index]->zero();
             }
         }
+        end_training = chrono::system_clock::now();
+        epoch_duration = end_training - start;
         if(test_data != NULL)
         {
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
@@ -307,6 +312,17 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                     cout << "changing leatning rate to: " << learning_rate << endl;
                 }
                 previoius_learning_cost = execution_accuracy.total_cost;
+            }
+        }
+        if(this->monitor_training_duration)
+        {
+            cout << "    training over an epoch took: " << epoch_duration.count() << "seconds" << endl;
+            if(test_data != NULL)
+            {
+                end_training = chrono::system_clock::now();
+                overall_duration = end_training - start;
+                cout << "    the testing took: " << execution_accuracy.execution_time << "seconds" << endl;
+                cout << "    the whole epoch took: " << overall_duration.count() << "seconds" << endl;
             }
         }
     }
@@ -338,7 +354,8 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
     double previoius_learning_cost = 0;
-    //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    chrono::time_point<chrono::system_clock> start, end_training;
+    chrono::duration<double> epoch_duration, overall_duration;
     Layers_features **nabla, **deltanabla, **nabla_momentum;
     try
     {
@@ -375,7 +392,6 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
     }
-    Matrix output;
     for(int i = 0; i < epochs; i++)
     {
         for(int j = 0; j < minibatch_count; j++)
@@ -385,7 +401,7 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
                 minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
             }
         }
-
+        start = chrono::system_clock::now();
         for(int j = 0; j < minibatch_count; j++)
         {
             for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
@@ -409,10 +425,23 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
         {
             nabla_momentum[layer_index]->zero();
         }
+        end_training = chrono::system_clock::now();
+        epoch_duration = end_training - start;
         if(test_data != NULL)
         {
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
             cout << "total cost: " << execution_accuracy.total_cost << endl;
+        }
+        if(this->monitor_training_duration)
+        {
+            cout << "    training over an epoch took: " << epoch_duration.count() << "seconds" << endl;
+            if(test_data != NULL)
+            {
+                end_training = chrono::system_clock::now();
+                overall_duration = end_training - start;
+                cout << "    the testing took: " << execution_accuracy.execution_time << "seconds" << endl;
+                cout << "    the whole epoch took: " << overall_duration.count() << "seconds" << endl;
+            }
         }
     }
     rand.close();
@@ -443,8 +472,10 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
-    int learnig_cost_counter = 0;
+    //int learnig_cost_counter = 0;
     double lr, reg, previoius_learning_cost = 0;
+    chrono::time_point<chrono::system_clock> start, end_training;
+    chrono::duration<double> epoch_duration, overall_duration;
     //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla, **nabla_momentum, **layer_helper;
     try
@@ -485,7 +516,6 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
     }
-    Matrix output;
     for(int i = 0; i < epochs; i++)
     {
         for(int j = 0; j < minibatch_count; j++)
@@ -495,6 +525,7 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
                 minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
             }
         }
+        start = chrono::system_clock::now();
         for(int j = 0; j < minibatch_count; j++)
         {
             lr = learning_rate / minibatch_len;
@@ -523,10 +554,23 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
         {
             nabla_momentum[layer_index]->zero();
         }
+        end_training = chrono::system_clock::now();
+        epoch_duration = end_training - start;
         if(test_data != NULL)
         {
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
             cout << "total cost: " << execution_accuracy.total_cost << endl;
+        }
+        if(this->monitor_training_duration)
+        {
+            cout << "    training over an epoch took: " << epoch_duration.count() << "seconds" << endl;
+            if(test_data != NULL)
+            {
+                end_training = chrono::system_clock::now();
+                overall_duration = end_training - start;
+                cout << "    the testing took: " << execution_accuracy.execution_time << "seconds" << endl;
+                cout << "    the whole epoch took: " << overall_duration.count() << "seconds" << endl;
+            }
         }
     }
     rand.close();
@@ -557,7 +601,9 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     ifstream rand;
     rand.open("/dev/urandom", ios::in);
-    int learnig_cost_counter = 0;
+    //int learnig_cost_counter = 0;
+    chrono::time_point<chrono::system_clock> start, end_training;
+    chrono::duration<double> epoch_duration, overall_duration;
     double lr, reg, previoius_learning_cost = 0;
     Layers_features **nabla, **deltanabla, **squared_grad_moving_avarange, **layer_helper;
     try
@@ -604,7 +650,6 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
     }
-    Matrix output;
     for(int i = 0; i < epochs; i++)
     {
         for(int j = 0; j < minibatch_count; j++)
@@ -614,6 +659,7 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
                 minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
             }
         }
+        start = chrono::system_clock::now();
         for(int j = 0; j < minibatch_count; j++)
         {
             lr = learning_rate / minibatch_len;
@@ -638,10 +684,23 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
         {
             squared_grad_moving_avarange[layer_index]->zero();
         }
+        end_training = chrono::system_clock::now();
+        epoch_duration = end_training - start;
         if(test_data != NULL)
         {
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
             cout << "total cost: " << execution_accuracy.total_cost << endl;
+        }
+        if(this->monitor_training_duration)
+        {
+            cout << "    training over an epoch took: " << epoch_duration.count() << "seconds" << endl;
+            if(test_data != NULL)
+            {
+                end_training = chrono::system_clock::now();
+                overall_duration = end_training - start;
+                cout << "    the testing took: " << execution_accuracy.execution_time << "seconds" << endl;
+                cout << "    the whole epoch took: " << overall_duration.count() << "seconds" << endl;
+            }
         }
     }
     rand.close();
@@ -662,11 +721,14 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
     double learning_cost;
     Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Matrix output;
+    chrono::time_point<chrono::system_clock> start, end_testing;
+    chrono::duration<double> test_duration;
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
     {
         helper.data[i][0] = 0;
     }
     learning_accuracy = learning_cost = 0;
+    start = chrono::system_clock::now();
     for(int j = 0; j < test_data_len; j++)
     {
         ///TODO this is an errorprone as well
@@ -682,8 +744,16 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
                 helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
             }
     }
+    end_testing = chrono::system_clock::now();
+    test_duration = end_testing - start;
     cout << "set " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << endl;
-    return Accuracy {learning_accuracy, learning_cost};
+    //cout << "the testing took: " << test_duration.count() << "seconds" << endl;
+    double execution_time = 0;
+    if(this->monitor_training_duration)
+    {
+        execution_time = test_duration.count();
+    }
+    return Accuracy {learning_accuracy, learning_cost, execution_time};
 }
 
 inline void Network::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
