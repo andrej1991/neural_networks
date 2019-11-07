@@ -11,9 +11,9 @@
 using namespace std;
 
 
-inline int get_neuron_type(YAML::Node &config, int i, string &layerstr)
+inline int get_neuron_type(YAML::const_iterator &it, int i)
 {
-    string nt = config["layers"][i][layerstr]["neuron_type"].as<string>();
+    string nt = it->second["neuron_type"].as<string>();
     if(nt.compare("sigmoid") == 0)
     {
         return SIGMOID;
@@ -46,7 +46,7 @@ int main()
     int output_size = config["output_size"].as<int>();
     int traninig_data_len = config["traninig_data_len"].as<int>();
     int validation_data_len = config["validation_data_len"].as<int>();
-    int layer_count = config["layer_count"].as<int>();
+    int layer_count = config["layers"].size();
     string cf = config["cost_function_type"].as<string>();
     int costfunction_type = -1;
     int epochs = config["epochs"].as<int>();
@@ -54,6 +54,8 @@ int main()
     double learning_rate = config["learning_rate"].as<double>();
     double regularization_rate = config["regularization_rate"].as<double>();
     int minibatch_count = config["minibatch_count"].as<int>();
+    double momentum = config["momentum"].as<double>();
+    double denominator = config["denominator"].as<double>();
     if(cf.compare("log_likelihood") == 0)
     {
         costfunction_type = LOG_LIKELIHOOD_CF;
@@ -74,26 +76,28 @@ int main()
     LayerDescriptor *layers[layer_count];
     for(int i=0; i<layer_count; i++)
     {
-        string layerstr = string("layer-") + to_string(i);
-        lt = config["layers"][i][layerstr]["layer_type"].as<string>();
-        if(lt.compare("convolutional") == 0)
+        for(YAML::const_iterator it=config["layers"][i].begin();it!=config["layers"][i].end();++it)
         {
-            neuron_type = get_neuron_type(config, i, layerstr);
-            layers[i] = new LayerDescriptor(CONVOLUTIONAL, neuron_type, config["layers"][i][layerstr]["weights_row"].as<int>(),
-                                            config["layers"][i][layerstr]["weights_col"].as<int>(),
-                                            config["layers"][i][layerstr]["feature_map_count"].as<int>());
-        }else if(lt.compare("fully_connected") == 0)
-        {
-            neuron_type = get_neuron_type(config, i, layerstr);
-            layers[i] = new LayerDescriptor(FULLY_CONNECTED, neuron_type, config["layers"][i][layerstr]["weights_row"].as<int>());
-        }else if(lt.compare("softmax") == 0)
-        {
-            layers[i] = new LayerDescriptor(SOFTMAX, SIGMOID, config["layers"][i][layerstr]["weights_row"].as<int>());
-        }
-        else
-        {
-            cerr << "Unknown layer type found in your configfile!\n";
-            throw exception();
+            lt = it->second["layer_type"].as<string>();
+            if(lt.compare("convolutional") == 0)
+            {
+                neuron_type = get_neuron_type(it, i);
+                layers[i] = new LayerDescriptor(CONVOLUTIONAL, neuron_type, it->second["weights_row"].as<int>(),
+                                                it->second["weights_col"].as<int>(),
+                                                it->second["feature_map_count"].as<int>());
+            }else if(lt.compare("fully_connected") == 0)
+            {
+                neuron_type = get_neuron_type(it, i);
+                layers[i] = new LayerDescriptor(FULLY_CONNECTED, neuron_type, it->second["weights_row"].as<int>());
+            }else if(lt.compare("softmax") == 0)
+            {
+                layers[i] = new LayerDescriptor(SOFTMAX, SIGMOID, it->second["weights_row"].as<int>());
+            }
+            else
+            {
+                cerr << "Unknown layer type found in your configfile!\n";
+                throw exception();
+            }
         }
 
     }
@@ -120,8 +124,8 @@ int main()
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
     /*Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);*/
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);*/
     Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     //Network n1("../data/fully_conn.bin");
     //Network n2("../data/fully_conn.bin");
@@ -136,11 +140,11 @@ int main()
     /*cout << "stohastic gradient descent\n";
     n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "momentum based gradient descent\n";
-    n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
     cout << "RMSprop\n";
-    n4.rmsprop(m, epochs, minibatch_len, learning_rate, 0.9, true, regularization_rate, 0.0001, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();
