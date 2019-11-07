@@ -22,10 +22,10 @@ class LayerDescriptor{
     int layer_type;
     int neuron_count, row, col;
     int mapcount;
-    int stride;
+    int horizontal_stride, vertical_stride;
     int neuron_type;
     public:
-    LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1);
+    LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
 };
 
 class Feature_map{
@@ -146,12 +146,12 @@ class Convolutional : public Layer {
     Matrix **outputs, **flattened_output, **layers_delta, **output_derivative, **layers_delta_helper;
     Feature_map **fmap;
     Padding pad;
-    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, stride, next_layers_type, output_row, output_col;
+    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
     inline void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
     public:
-    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride = 1);
+    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
     inline Matrix** backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount);
     inline void layers_output(Matrix **input);

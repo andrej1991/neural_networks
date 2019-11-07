@@ -1,7 +1,7 @@
 #include "layers.h"
 
-LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col, int mapcount, int stride):
-            layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), stride(stride),
+LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col, int mapcount, int vertical_stride, int horizontal_stride):
+            layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
             row(neuron_count), col(col), mapcount(mapcount) {}
 
 

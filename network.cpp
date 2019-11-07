@@ -32,7 +32,7 @@ Network::Network(char *data): monitor_training_duration(false)
     ifstream file (data, ios::in|ios::binary);
     if(file.is_open())
         {
-            int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_stride;
+            int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride;
             //LayerDescriptor **dsc = new LayerDescriptor* [this->layers_num];
             LayerDescriptor *dsc[this->layers_num];
             file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
@@ -49,8 +49,9 @@ Network::Network(char *data): monitor_training_duration(false)
                     file.read(reinterpret_cast<char *>(&f_neuron_count), sizeof(int));
                     file.read(reinterpret_cast<char *>(&f_col), sizeof(int));
                     file.read(reinterpret_cast<char *>(&f_mapcount), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_stride), sizeof(int));
-                    dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_stride);
+                    file.read(reinterpret_cast<char *>(&f_vertical_stride), sizeof(int));
+                    file.read(reinterpret_cast<char *>(&f_horizontal_stride), sizeof(int));
+                    dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride);
                 }
             this->construct_layers(dsc);
             for(int i = 0; i < this->layers_num; i++)
@@ -96,7 +97,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     for(int i = 0; i < layers_num; i++)
     {
         this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count,
-                                                layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->stride);
+                                                layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
@@ -110,7 +111,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
                                                     this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
-                                                    layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, 1);
+                                                    layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
                 break;
             default:
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
@@ -139,7 +140,8 @@ void Network::store(char *filename)
                     network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
                     network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->col)), sizeof(int));
                     network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->mapcount)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->stride)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->vertical_stride)), sizeof(int));
+                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->horizontal_stride)), sizeof(int));
                 }
             for(int i = -1; i < this->layers_num; i++)
                 {
@@ -217,6 +219,7 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
                                        this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
                                        nabla[i+1]->get_fmap_count());
     }
+    throw exception();
 }
 
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,

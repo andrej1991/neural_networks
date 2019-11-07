@@ -1,16 +1,26 @@
 #include "layers.h"
 
-Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride):
-                    input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), stride(stride), next_layers_type(next_layers_type),
-                    pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
+Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
+                    input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
+                    next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
 {
-    if(stride != 1)
+    /*if(stride != 1)
         {
             std::cerr << "counting with stride different than 1 is not implemented yet!";
             throw exception();
-        }
-    this->output_row = input_row - kern_row + 1;
-    this->output_col = input_col - kern_col + 1;
+        }*/
+    this->output_row = (input_row - kern_row + vertical_stride) / vertical_stride;
+    this->output_col = (input_col - kern_col + horizontal_stride) / horizontal_stride;
+    if((this->output_row <= 0) || (this->output_col <= 0))
+    {
+        cerr << "You are using too big kernel or strides!" << endl;
+        throw exception();
+    }
+    if(((input_row - kern_row + vertical_stride) % vertical_stride != 0) || ((input_col - kern_col + horizontal_stride) % horizontal_stride != 0))
+    {
+        cerr << "The stride or the size of the kernel is too big!" << endl;
+        throw exception();
+    }
     this->layer_type = CONVOLUTIONAL;
     this->fmap = new Feature_map* [map_count];
     this->outputs = new Matrix* [map_count];
@@ -112,11 +122,13 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Feature_map** next_
     else
     {
         padded_delta = new Matrix* [next_layers_fmapcount];
+        Matrix dilated;
         for(int i = 0; i < next_layers_fmapcount; i++)
         {
             padded_delta[i] = new Matrix;
             padded_delta[i][0] = delta[i][0];
-            padded_delta[i][0] = delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+            //dilated = delta[i][0].dilate(1, 1);
+            padded_delta[i][0] = padded_delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
@@ -139,6 +151,10 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Feature_map** next_
              convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
         }
     }
+    cout << this->horizontal_stride;
+    cout << this->output_row << endl;
+    cout << this->output_col << endl;
+    cout << this->layers_delta[0][0].get_row() << endl;
     return this->layers_delta;
 }
 
@@ -165,7 +181,7 @@ inline void Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, Mat
 {
     for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
     {
-        convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->stride);
+        convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->vertical_stride, this->horizontal_stride);
         helper += convolved;
     }
     helper+=this->fmap[map_index]->biases[0][0].data[0][0];

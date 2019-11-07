@@ -331,16 +331,16 @@ Matrix Matrix::zero_padd(int top, int right, int bottom, int left)
     return ret;
 }
 
-void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int stride)
+void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output,  int vertical_stride, int horizontal_stride)
 {
     double helper;
     int r, c;
     r = c = 0;
-    int vertical_step = (input.row - kernel.row) / stride + 1;
-    int horizontal_step = (input.col - kernel.col) / stride + 1;
-    for(int i = 0; i < vertical_step; i += stride)
+    int vertical_step = (input.row - kernel.row) / vertical_stride + 1;
+    int horizontal_step = (input.col - kernel.col) / horizontal_stride + 1;
+    for(int i = 0; i < vertical_step; i += vertical_stride)
         {
-            for(int j = 0; j < horizontal_step; j += stride)
+            for(int j = 0; j < horizontal_step; j += horizontal_stride)
                 {
                     helper = 0;
                     for(int k = 0; k < kernel.row; k++)
@@ -358,14 +358,14 @@ void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int stride
         }
 }
 
-void convolution(Matrix &input, Matrix &kernel, Matrix &output, int stride)
+void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride)
 {
     double helper;
     int r, c;
     r = c = 0;
-    for(int i = kernel.row-1; i < input.row; i += stride)
+    for(int i = kernel.row-1; i < input.row; i += vertical_stride)
         {
-            for(int j = kernel.col-1; j < input.col; j += stride)
+            for(int j = kernel.col-1; j < input.col; j += horizontal_stride)
                 {
                     helper = 0;
                     for(int k = kernel.row-1; k >= 0; k--)
@@ -381,6 +381,30 @@ void convolution(Matrix &input, Matrix &kernel, Matrix &output, int stride)
             r++;
             c = 0;
         }
+}
+
+Matrix Matrix::dilate(int vertical_stride, int horizontal_stride)
+{
+    int new_row, new_col;
+    new_row = this->row + ((this->row - 1) * (vertical_stride - 1));
+    new_col = this->col + ((this->col - 1) * (horizontal_stride - 1));
+    horizontal_stride;
+    vertical_stride;
+    Matrix ret(new_row, new_col);
+    ret.zero();
+    int r, c;
+    r = 0;
+    for(int i = 0; i < this->row; i++)
+    {
+        c = 0;
+        for(int j = 0; j < this->col; j++)
+        {
+            ret.data[r][c] = this->data[i][j];
+            c += horizontal_stride;
+        }
+        r += vertical_stride;
+    }
+    return ret;
 }
 
 void Matrix::zero()

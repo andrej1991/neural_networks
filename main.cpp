@@ -83,8 +83,8 @@ int main()
             {
                 neuron_type = get_neuron_type(it, i);
                 layers[i] = new LayerDescriptor(CONVOLUTIONAL, neuron_type, it->second["weights_row"].as<int>(),
-                                                it->second["weights_col"].as<int>(),
-                                                it->second["feature_map_count"].as<int>());
+                                                it->second["weights_col"].as<int>(), it->second["feature_map_count"].as<int>(),
+                                                it->second["vertical_stride"].as<int>(), it->second["horizontal_stride"].as<int>());
             }else if(lt.compare("fully_connected") == 0)
             {
                 neuron_type = get_neuron_type(it, i);
@@ -137,14 +137,22 @@ int main()
     Network n4("../data/conv.bin");*/
 
 
+    Matrix A(3,3), B;
+    for(int i = 0; i < 3; i++)
+        for(int j = 0; j < 3; j++)
+            A.data[i][j] = i+j;
+    B = A.dilate(1, 2);
+    print_mtx(A);
+    print_mtx(B);
     cout << "stohastic gradient descent\n";
+    n1.check_accuracy(validation, 10, 0, true);
     n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    cout << "momentum based gradient descent\n";
+    /*cout << "momentum based gradient descent\n";
     n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
     n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "RMSprop\n";
-    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);*/
 
 
     input.close();
