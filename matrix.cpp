@@ -76,9 +76,8 @@ Matrix::Matrix (const Matrix& mtx)
     this->equality(mtx);
 
 }
-Matrix Matrix::operator= (const Matrix& mtx)
+Matrix & Matrix::operator= (const Matrix& mtx)
 {
-    if(this==&mtx) return *this;
     this->destruct();
     this->equality(mtx);
     return *this;

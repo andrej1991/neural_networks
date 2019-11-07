@@ -120,13 +120,17 @@ int main()
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
     /*Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);*/
     Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);*/
-    Network n1("/home/andrej/myfiles/Asztal/x");
-    Network n2("/home/andrej/myfiles/Asztal/x");
-    Network n3("/home/andrej/myfiles/Asztal/x");
-    Network n4("/home/andrej/myfiles/Asztal/x");
+    Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    //Network n1("../data/fully_conn.bin");
+    //Network n2("../data/fully_conn.bin");
+    //Network n3("../data/fully_conn.bin");
+    //Network n4("../data/fully_conn.bin");
+    /*Network n1("../data/conv.bin");
+    Network n2("../data/conv.bin");
+    Network n3("../data/conv.bin");
+    Network n4("../data/conv.bin");*/
 
 
     /*cout << "stohastic gradient descent\n";

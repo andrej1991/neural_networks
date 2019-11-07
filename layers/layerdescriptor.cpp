@@ -46,7 +46,7 @@ Layers_features::~Layers_features()
     delete[] this->fmap;
 }
 
-Layers_features Layers_features::operator= (const Layers_features &layer)
+Layers_features & Layers_features::operator= (const Layers_features &layer)
 {
     for(int i = 0; i < this->fmap_count; i++)
     {
@@ -62,18 +62,16 @@ Layers_features Layers_features::operator= (const Layers_features &layer)
     {
         this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
     }
-    //if (*this != &layer)
-    //{
-        for(int map_index = 0; map_index < this->fmap_count; map_index++)
+
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        int mapdepth = this->fmap[map_index]->get_mapdepth();
+        for(int i = 0; i < mapdepth; i++)
         {
-            int mapdepth = this->fmap[map_index]->get_mapdepth();
-            for(int i = 0; i < mapdepth; i++)
-            {
-                this->fmap[map_index]->weights[i][0] = layer.fmap[map_index]->weights[i][0];
-                this->fmap[map_index]->biases[i][0] = layer.fmap[map_index]->biases[i][0];
-            }
+            this->fmap[map_index]->weights[i][0] = layer.fmap[map_index]->weights[i][0];
+            this->fmap[map_index]->biases[i][0] = layer.fmap[map_index]->biases[i][0];
         }
-    //}
+    }
     return *this;
 }
 

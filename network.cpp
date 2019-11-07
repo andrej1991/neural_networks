@@ -559,7 +559,6 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
     rand.open("/dev/urandom", ios::in);
     int learnig_cost_counter = 0;
     double lr, reg, previoius_learning_cost = 0;
-    //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla, **squared_grad_moving_avarange, **layer_helper;
     try
     {
@@ -587,16 +586,17 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
                                                 this->layers[i]->get_mapdepth(),
                                                 biascnt);
             squared_grad_moving_avarange[i] = new Layers_features(this->layers[i]->get_mapcount(),
-                                           this->layers[i]->get_weights_row(),
-                                           this->layers[i]->get_weights_col(),
-                                           this->layers[i]->get_mapdepth(),
-                                           biascnt);
+                                                                  this->layers[i]->get_weights_row(),
+                                                                  this->layers[i]->get_weights_col(),
+                                                                  this->layers[i]->get_mapdepth(),
+                                                                  biascnt);
             squared_grad_moving_avarange[i]->zero();
             layer_helper[i] = new Layers_features(this->layers[i]->get_mapcount(),
-                                                this->layers[i]->get_weights_row(),
-                                                this->layers[i]->get_weights_col(),
-                                                this->layers[i]->get_mapdepth(),
-                                                biascnt);
+                                                  this->layers[i]->get_weights_row(),
+                                                  this->layers[i]->get_weights_col(),
+                                                  this->layers[i]->get_mapdepth(),
+                                                  biascnt);
+
         }
     }
     catch(bad_alloc& ba)

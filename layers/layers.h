@@ -54,7 +54,7 @@ class Layers_features{
     Layers_features operator+(const Layers_features &layer);
     Layers_features operator/(const Layers_features &layer);
     //Layers_features operator*(const Layers_features &layer);
-    Layers_features operator=(const Layers_features &layer);
+    Layers_features & operator=(const Layers_features &layer);
     Layers_features operator*(double d);
     Layers_features operator+(double d);
     Layers_features sqroot();

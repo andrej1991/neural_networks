@@ -23,7 +23,7 @@ class Matrix
     Matrix operator* (const Matrix& mtx);
     Matrix operator/ (const Matrix& mtx);
     Matrix operator* (double d);
-    Matrix operator= (const Matrix& mtx);
+    Matrix & operator= (const Matrix& mtx);
     void operator+= (const Matrix& mtx);
     void operator+= (double d);
     Matrix operator+ (double d);
