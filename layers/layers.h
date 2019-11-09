@@ -87,8 +87,6 @@ class Layer{
     virtual inline int get_output_len() = 0;
     virtual inline int get_output_row() = 0;
     virtual inline int get_output_col() = 0;
-    virtual void set_weights(Matrix *w) = 0;
-    virtual void set_biases(Matrix *b) = 0;
     virtual int get_mapcount() = 0;
     virtual int get_mapdepth() = 0;
     virtual int get_weights_row() = 0;
@@ -122,8 +120,6 @@ class FullyConnected : public Layer {
     virtual inline int get_output_len();
     virtual inline int get_output_row();
     virtual inline int get_output_col();
-    virtual void set_weights(Matrix *w);
-    virtual void set_biases(Matrix *b);
     virtual int get_mapcount();
     virtual int get_mapdepth();
     virtual int get_weights_row();
@@ -167,8 +163,6 @@ class Convolutional : public Layer {
     inline int get_output_len();
     inline int get_output_row();
     inline int get_output_col();
-    void set_weights(Matrix *w);
-    void set_biases(Matrix *b);
     void flatten();
     int get_mapcount();
     int get_mapdepth();
@@ -204,8 +198,6 @@ class InputLayer : public Layer {
     inline int get_output_len();
     inline int get_output_row();
     inline int get_output_col();
-    void set_weights(Matrix *w);
-    void set_biases(Matrix *b);
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();
@@ -216,20 +208,28 @@ class InputLayer : public Layer {
 
 /*class Pooling : public Layer {
     public:
-    //Neuron neuron;
-    Pooling(int row, int col, int neuron_type);
+    Pooling(int row, int col, int pooling_type);
     ~Pooling();
-    inline void layers_output(double **input, int layer);
-    inline Matrix get_output_error(double **input, double **required_output, int inputlen, int costfunction_type);
-    inline Matrix derivate_layers_output(double **input, int inputlen);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Matrix *weights, Matrix *biases);
+    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error);
+    inline void layers_output(Matrix **input);
+    inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
+    inline Matrix** derivate_layers_output(Matrix **input);
+    void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(double **input);
-    inline Matrix& get_output();
-    inline Matrix& get_weights();
+    void set_input(Matrix **input);
+    inline Matrix** get_output();
+    inline Feature_map** get_feature_maps();
     inline short get_layer_type();
-    inline int get_outputlen();
+    inline int get_output_len();
+    inline int get_output_row();
+    inline int get_output_col();
+    int get_mapcount();
+    int get_mapdepth();
+    int get_weights_row();
+    int get_weights_col();
+    void store(std::ofstream &params);
+    void load(std::ifstream &params);
 };*/
 
 #endif // LAYERS_H_INCLUDED

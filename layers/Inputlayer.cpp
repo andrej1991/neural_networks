@@ -114,16 +114,6 @@ inline int InputLayer::get_output_col()
     return this->col;
 }
 
-void InputLayer::set_weights(Matrix *w)
-{
-    ;
-}
-
-void InputLayer::set_biases(Matrix *b)
-{
-    ;
-}
-
 int InputLayer::get_weights_row()
 {
     return this->row;

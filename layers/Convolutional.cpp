@@ -129,10 +129,8 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, 
         for(int i = 0; i < next_layers_fmapcount; i++)
         {
             padded_delta[i] = new Matrix;
-            //padded_delta[i][0] = delta[i][0];
             dilated = delta[i][0].dilate(static_cast<Convolutional*>(next_layer)->get_vertical_stride(), static_cast<Convolutional*>(next_layer)->get_horizontal_stride());
             padded_delta[i][0] = dilated.zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-            //padded_delta[i][0] = padded_delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
@@ -147,17 +145,23 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, 
         }
         delete_padded_delta(padded_delta, next_layers_fmapcount);
     }
+    Matrix rotated_input;
     for(int i = 0; i < this->map_count; i++)
     {
         this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
             dilated = this->layers_delta[i][0].dilate(this->vertical_stride, this->horizontal_stride);
-            //convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
             convolution(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
-             ///cross_correlation(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
+            //rotated_input = input[j][0].rot180();
+            //cross_correlation(rotated_input, dilated, nabla[i]->weights[j][0]);
         }
     }
+    /*cout << input[0][0].get_row() << endl;
+    cout << input[0][0].get_col() << endl;
+    cout << dilated.get_row() << endl;
+    cout << dilated.get_col() << endl;
+    throw exception();*/
     return this->layers_delta;
 }
 
@@ -289,16 +293,6 @@ inline int Convolutional::get_output_len()
 inline int Convolutional::get_output_col()
 {
     return this->output_col;
-}
-
-void Convolutional::set_weights(Matrix *w)
-{
-    ;
-}
-
-void Convolutional::set_biases(Matrix *b)
-{
-    ;
 }
 
 int Convolutional::get_mapcount()

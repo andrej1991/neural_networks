@@ -183,16 +183,6 @@ inline int FullyConnected::get_output_col()
     return 1;
 }
 
-void FullyConnected::set_weights(Matrix *w)
-{
-    this->fmap[0]->weights[0][0] = *w;
-}
-
-void FullyConnected::set_biases(Matrix *b)
-{
-    this->fmap[0]->biases[0][0] = *b;
-}
-
 int FullyConnected::get_mapcount()
 {
     return 1;
