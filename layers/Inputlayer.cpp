@@ -79,7 +79,7 @@ void InputLayer::set_input(Matrix **input)
         }
 }
 
-inline Matrix** InputLayer::backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount)
+inline Matrix** InputLayer::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error)
 {
     ;
 }

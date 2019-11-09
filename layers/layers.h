@@ -73,7 +73,7 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual inline Matrix** backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount) = 0;
+    virtual inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error) = 0;
     virtual inline void layers_output(Matrix **input) = 0;
     virtual inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type) = 0;
     virtual inline Matrix** derivate_layers_output(Matrix **input) = 0;
@@ -108,7 +108,7 @@ class FullyConnected : public Layer {
     public:
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
-    virtual inline Matrix** backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount);
+    virtual inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
     virtual inline void layers_output(Matrix **input);
     virtual inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
     virtual inline Matrix** derivate_layers_output(Matrix **input);
@@ -136,7 +136,7 @@ class Softmax : public FullyConnected {
     public:
     Softmax(int row, int col);
     ~Softmax();
-    inline Matrix** backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount);
+    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
     inline void layers_output(Matrix **input);
     inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
     inline Matrix** derivate_layers_output(Matrix **input);
@@ -153,7 +153,7 @@ class Convolutional : public Layer {
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
-    inline Matrix** backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount);
+    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
     inline void layers_output(Matrix **input);
     inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
     inline Matrix** derivate_layers_output(Matrix **input);
@@ -174,6 +174,8 @@ class Convolutional : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
+    int get_vertical_stride();
+    int get_horizontal_stride();
     void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
     void store(std::ofstream &params);
     void load(std::ifstream &params);
@@ -188,7 +190,7 @@ class InputLayer : public Layer {
     Padding padd;
     InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    inline Matrix** backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **next_layers_error, int next_layers_fmapcount);
+    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
     inline void layers_output(Matrix **input);
     inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
     inline Matrix** derivate_layers_output(Matrix **input);

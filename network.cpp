@@ -215,11 +215,8 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
     {
-        delta = this->layers[i]->backpropagate(this->layers[i - 1]->get_output(),
-                                       this->layers[i + 1]->get_feature_maps(), nabla[i][0].fmap, delta,
-                                       nabla[i+1]->get_fmap_count());
+        delta = this->layers[i]->backpropagate(this->layers[i - 1]->get_output(), this->layers[i + 1], nabla[i][0].fmap, delta);
     }
-    throw exception();
 }
 
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,

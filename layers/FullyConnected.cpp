@@ -131,10 +131,11 @@ void FullyConnected::set_input(Matrix **input)
 }
 
 
-inline Matrix** FullyConnected::backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla,
-                                          Matrix **delta, int next_layers_fmapcount)
+inline Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta)
 {
     ///TODO think through this function from mathematical perspective!!!
+    Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
+    int next_layers_fmapcount = next_layer->get_mapcount();
     if(next_layers_fmapcount != 1)
         {
             cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";

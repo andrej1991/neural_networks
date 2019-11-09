@@ -77,6 +77,7 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 inline void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
 {
     convolution(padded_delta[0],kernel, helper);
+    //cross_correlation(padded_delta[0],kernel, helper);
     delta_helper[0] += helper;
 }
 
@@ -89,11 +90,14 @@ inline void delete_padded_delta(Matrix **padded_delta, int limit)
     delete[] padded_delta;
 }
 
-inline Matrix** Convolutional::backpropagate(Matrix **input, Feature_map** next_layers_fmaps, Feature_map** nabla, Matrix **delta, int next_layers_fmapcount)
+inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta)
 {
+    Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
+    int next_layers_fmapcount = next_layer->get_mapcount();
     this->derivate_layers_output(input);
     Matrix **padded_delta;
     Matrix helper(this->output_row, this->output_col);
+    Matrix dilated;
     if(this->next_layers_type != CONVOLUTIONAL)
     {
         int next_layers_neuroncount = delta[0]->get_row();
@@ -122,13 +126,13 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Feature_map** next_
     else
     {
         padded_delta = new Matrix* [next_layers_fmapcount];
-        Matrix dilated;
         for(int i = 0; i < next_layers_fmapcount; i++)
         {
             padded_delta[i] = new Matrix;
-            padded_delta[i][0] = delta[i][0];
-            //dilated = delta[i][0].dilate(1, 1);
-            padded_delta[i][0] = padded_delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+            //padded_delta[i][0] = delta[i][0];
+            dilated = delta[i][0].dilate(static_cast<Convolutional*>(next_layer)->get_vertical_stride(), static_cast<Convolutional*>(next_layer)->get_horizontal_stride());
+            padded_delta[i][0] = dilated.zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+            //padded_delta[i][0] = padded_delta[i][0].zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
                                                      (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
@@ -148,13 +152,12 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Feature_map** next_
         this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
-             convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
+            dilated = this->layers_delta[i][0].dilate(this->vertical_stride, this->horizontal_stride);
+            //convolution(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
+            convolution(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
+             ///cross_correlation(input[j][0], this->layers_delta[i][0], nabla[i]->weights[j][0]);
         }
     }
-    cout << this->horizontal_stride;
-    cout << this->output_row << endl;
-    cout << this->output_col << endl;
-    cout << this->layers_delta[0][0].get_row() << endl;
     return this->layers_delta;
 }
 
@@ -316,6 +319,16 @@ int Convolutional::get_weights_row()
 int Convolutional::get_weights_col()
 {
     return this->kernel_col;
+}
+
+int Convolutional::get_vertical_stride()
+{
+    return this->vertical_stride;
+}
+
+int Convolutional::get_horizontal_stride()
+{
+    return this->horizontal_stride;
 }
 
 void Convolutional::store(std::ofstream &params)
