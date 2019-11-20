@@ -299,7 +299,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         epoch_duration = end_training - start;
         if(test_data != NULL)
         {
-            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost, regularization_rate);
             if(monitor_learning_cost)
             {
                 cout << "total cost: " << execution_accuracy.total_cost << endl;
@@ -429,7 +429,7 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
         epoch_duration = end_training - start;
         if(test_data != NULL)
         {
-            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost, regularization_rate);
             cout << "total cost: " << execution_accuracy.total_cost << endl;
         }
         if(this->monitor_training_duration)
@@ -558,7 +558,7 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
         epoch_duration = end_training - start;
         if(test_data != NULL)
         {
-            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost, regularization_rate);
             cout << "total cost: " << execution_accuracy.total_cost << endl;
         }
         if(this->monitor_training_duration)
@@ -688,7 +688,7 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
         epoch_duration = end_training - start;
         if(test_data != NULL)
         {
-            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost);
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost, regularization_rate);
             cout << "total cost: " << execution_accuracy.total_cost << endl;
         }
         if(this->monitor_training_duration)
@@ -715,12 +715,14 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
     delete[] squared_grad_moving_avarange;
 }
 
-Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost)
+Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost, double regularization_rate)
 {
     int learning_accuracy;
-    double learning_cost;
+    double learning_cost, squared_sum = 0;
     Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Matrix output;
+    int mapcount, mapdepth;
+    Feature_map **fmaps;
     chrono::time_point<chrono::system_clock> start, end_testing;
     chrono::duration<double> test_duration;
     for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_row(); i++)
@@ -741,6 +743,23 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
             {
                 helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
                 learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
+                if(regularization_rate != 0)
+                {
+                    for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
+                    {
+                        fmaps = this->layers[layerindex]->get_feature_maps();
+                        mapcount = this->layers[layerindex]->get_mapcount();
+                        for(int mapindex = 0; mapindex < mapcount; mapindex++)
+                        {
+                            mapdepth = fmaps[mapindex]->get_mapdepth();
+                            for(int i = 0; i < mapdepth; i++)
+                            {
+                                squared_sum += fmaps[mapindex]->weights[i]->squared_sum_over_elements();
+                            }
+                        }
+                    }
+                    learning_cost += ((learning_cost/(2*test_data_len))*squared_sum);
+                }
                 helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
             }
     }

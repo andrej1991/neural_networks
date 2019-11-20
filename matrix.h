@@ -42,6 +42,7 @@ class Matrix
     int get_row();
     int get_col();
     void zero();
+    double squared_sum_over_elements();
 };
 
 

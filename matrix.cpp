@@ -414,6 +414,19 @@ void Matrix::zero()
             this->data[i][j] = 0;
 }
 
+double Matrix::squared_sum_over_elements()
+{
+    double squared_sum = 0;
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            squared_sum += this->data[i][j]*this->data[i][j];
+        }
+    }
+    return squared_sum;
+}
+
 void print_mtx_list(Matrix **mtx, int list_len)
 {
     for(int i = 0; i < list_len; i++)
