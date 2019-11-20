@@ -55,6 +55,7 @@
 		<Unit filename="layers/Feature_map.cpp" />
 		<Unit filename="layers/FullyConnected.cpp" />
 		<Unit filename="layers/Inputlayer.cpp" />
+		<Unit filename="layers/Pooling.cpp" />
 		<Unit filename="layers/Softmax.cpp" />
 		<Unit filename="layers/layerdescriptor.cpp">
 			<Option weight="40" />

@@ -17,6 +17,8 @@
 #define POOLING 2
 #define SOFTMAX 3
 
+#define MAX_POOLING 1
+
 class LayerDescriptor{
     public:
     int layer_type;
@@ -206,9 +208,12 @@ class InputLayer : public Layer {
     void load(std::ifstream &params);
 };
 
-/*class Pooling : public Layer {
+class Pooling : public Layer {
+    Matrix **output, **pooling_memory, **layers_delta;
+    int fmap_count, output_row, output_col, map_row, map_col, pooling_type;
+    inline void max_pooling(Matrix **input);
     public:
-    Pooling(int row, int col, int pooling_type);
+    Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col);
     ~Pooling();
     inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error);
     inline void layers_output(Matrix **input);
@@ -230,6 +235,6 @@ class InputLayer : public Layer {
     int get_weights_col();
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-};*/
+};
 
 #endif // LAYERS_H_INCLUDED

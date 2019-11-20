@@ -747,7 +747,6 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
     end_testing = chrono::system_clock::now();
     test_duration = end_testing - start;
     cout << "set " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << endl;
-    //cout << "the testing took: " << test_duration.count() << "seconds" << endl;
     double execution_time = 0;
     if(this->monitor_training_duration)
     {
@@ -766,10 +765,3 @@ inline void Network::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup
     ;
 }
 
-void Network::test(MNIST_data **d, MNIST_data **v)
-{
-    ///(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
-    this->stochastic_gradient_descent(d, 3, 10, 0.3, true, 10, v, 50);
-    //this->store("/home/andrej/myfiles/Asztal/net.bin");
-    //this->get_output(v[0]->input);
-}

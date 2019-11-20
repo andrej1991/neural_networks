@@ -4,11 +4,6 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
                     input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
                     next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
 {
-    /*if(stride != 1)
-        {
-            std::cerr << "counting with stride different than 1 is not implemented yet!";
-            throw exception();
-        }*/
     this->output_row = (input_row - kern_row + vertical_stride) / vertical_stride;
     this->output_col = (input_col - kern_col + horizontal_stride) / horizontal_stride;
     if((this->output_row <= 0) || (this->output_col <= 0))
@@ -225,7 +220,6 @@ inline Matrix** Convolutional::derivate_layers_output(Matrix **input)
 
 void Convolutional::flatten()
 {
-    ///TODO rewrite this if the feature maps can have different kernel size;
     int i = 0;
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
@@ -259,8 +253,6 @@ void Convolutional::set_input(Matrix **input)
 
 inline Matrix** Convolutional::get_output()
 {
-    //print_mtx_list(outputs, this->map_count);
-    //cout << "---------------------------" << endl;
     if(next_layers_type == FULLY_CONNECTED)
     {
         this->flatten();

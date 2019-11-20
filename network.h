@@ -36,7 +36,6 @@ class Network{
             int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false);
     Network(char *data);
     ~Network();
-    void test(MNIST_data **d, MNIST_data **v);
     Matrix get_output(Matrix **input);
     Accuracy check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost = false);
 };

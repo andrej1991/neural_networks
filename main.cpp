@@ -144,6 +144,21 @@ int main()
     Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+
+
+    Pooling p(2, 2, MAX_POOLING, 1, 11, 11);
+    Matrix *inp = new Matrix(11, 11);
+
+    for(int i = 0; i<11;i++)
+        for(int j=0;j<11;j++)
+        {
+            inp->data[i][j] = i+j;
+        }
+    p.layers_output(&inp);
+    print_mtx(*inp);
+    print_mtx((p.get_output())[0][0]);
+
+
     //Network n1("../data/fully_conn.bin");
     //Network n2("../data/fully_conn.bin");
     //Network n3("../data/fully_conn.bin");
@@ -159,9 +174,9 @@ int main()
     cout << "momentum based gradient descent\n";
     n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "RMSprop\n";
-    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);*/
 
 
     input.close();
