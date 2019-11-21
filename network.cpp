@@ -10,8 +10,8 @@
 
 using namespace std;
 ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false
-Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout):
-                dropout(dropout), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num), monitor_training_duration(true)
+Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  double dropout_probability):
+                dropout_probability(dropout_probability), input_row(input_row), input_col(input_col), input_channel_count(input_channel_count), layers_num(layers_num), monitor_training_duration(true)
 {
     try
     {
@@ -40,7 +40,7 @@ Network::Network(char *data): monitor_training_duration(false)
             file.read(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
+            file.read(reinterpret_cast<char *>(&(this->dropout_probability)), sizeof(double));
             this->total_layers_num = this->layers_num + 1;
             for(int i = 0; i < this->layers_num; i++)
                 {
@@ -132,7 +132,7 @@ void Network::store(char *filename)
             network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
             network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
             network_params.write(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->dropout)), sizeof(bool));
+            network_params.write(reinterpret_cast<char *>(&(this->dropout_probability)), sizeof(double));
             for(int i=0; i<this->layers_num; i++)
                 {
                     network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
@@ -773,16 +773,6 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
         execution_time = test_duration.count();
     }
     return Accuracy {learning_accuracy, learning_cost, execution_time};
-}
-
-inline void Network::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
-{
-    ;
-}
-
-inline void Network::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
-{
-    ;
 }
 
 void Network::test(MNIST_data **d, MNIST_data **v)

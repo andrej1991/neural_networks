@@ -91,6 +91,8 @@ class Layer{
     virtual int get_mapdepth() = 0;
     virtual int get_weights_row() = 0;
     virtual int get_weights_col() = 0;
+    virtual void drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL) = 0;
+    virtual void restore_neurons(Matrix *removed_colums = NULL) = 0;
     virtual void store(std::ofstream &params) = 0;
     virtual void load(std::ifstream &params) = 0;
 
@@ -99,6 +101,7 @@ class Layer{
 class FullyConnected : public Layer {
     friend class Softmax;
     Matrix **output, **output_derivative, **output_error, **output_error_helper, **layers_delta;
+    Matrix *removed_rows, *backup_weights, *backup_biases;
     int neuron_type, neuron_count, outputlen;
     short int layer_type;
     Neuron neuron;
@@ -124,6 +127,8 @@ class FullyConnected : public Layer {
     virtual int get_mapdepth();
     virtual int get_weights_row();
     virtual int get_weights_col();
+    virtual void drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL);
+    virtual void restore_neurons(Matrix *removed_colums = NULL);
     virtual void store(std::ofstream &params);
     virtual void load(std::ifstream &params);
 };
@@ -171,6 +176,8 @@ class Convolutional : public Layer {
     int get_vertical_stride();
     int get_horizontal_stride();
     void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
+    void drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL){};
+    void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
 };
@@ -202,6 +209,8 @@ class InputLayer : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
+    void drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL){};
+    void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
 };

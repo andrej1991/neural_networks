@@ -427,6 +427,62 @@ double Matrix::squared_sum_over_elements()
     return squared_sum;
 }
 
+Matrix* Matrix::remove_rows(Matrix &rows_to_remove)
+{
+    if(rows_to_remove.col != this->row)
+    {
+        throw exception();
+    }
+    int count_of_remaining = 0;
+    for(int i = 0; i < rows_to_remove.col; i++)
+    {
+        if(rows_to_remove.data[0][i] != 1)
+            count_of_remaining++;
+    }
+    Matrix *ret = new Matrix(count_of_remaining, this->col);
+    int k = 0;
+    for(int i = 0; i < this->row; i++)
+    {
+        if(rows_to_remove.data[0][i] != 1)
+        {
+            for(int j = 0; j < this->col; j++)
+            {
+                ret->data[k][j] = this->data[i][j];
+            }
+            k++;
+        }
+    }
+    return ret;
+}
+
+Matrix* Matrix::remove_colums(Matrix &colums_to_remove)
+{
+    if(colums_to_remove.col != this->col)
+    {
+        throw exception();
+    }
+    int count_of_remaining = 0;
+    for(int i = 0; i < colums_to_remove.col; i++)
+    {
+        if(colums_to_remove.data[0][i] != 1)
+            count_of_remaining++;
+    }
+    Matrix *ret = new Matrix(count_of_remaining, this->col);
+    int k = 0;
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            if(colums_to_remove.data[0][j] != 1)
+            {
+                ret->data[i][k] = this->data[i][j];
+                k++;
+            }
+        }
+    }
+    return ret;
+}
+
 void print_mtx_list(Matrix **mtx, int list_len)
 {
     for(int i = 0; i < list_len; i++)

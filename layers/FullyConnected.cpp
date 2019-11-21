@@ -207,6 +207,15 @@ int FullyConnected::get_weights_col()
     return this->fmap[0]->get_col();
 }
 
+void FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_to_remove)
+{
+    ;
+}
+void FullyConnected::restore_neurons(Matrix *removed_colums)
+{
+    ;
+}
+
 void FullyConnected::store(std::ofstream &params)
 {
     this->fmap[0]->store(params);
