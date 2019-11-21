@@ -29,15 +29,15 @@ class LayerDescriptor{
 };
 
 class Feature_map{
-    void initialize_biases();
-    void initialize_weights();
     int row, col, mapdepth;
     public:
     Matrix **weights, **biases;
-    Feature_map(int row, int col, int mapdepth, int biascnt = -1, bool initialization_needed = true);
+    Feature_map(int row, int col, int mapdepth, int biascnt = -1);
     int get_col();
     int get_row();
     int get_mapdepth();
+    void initialize_biases(double standard_deviation = 1, double mean = 0);
+    void initialize_weights(double standard_deviation = 1, double mean = 0);
     void store(std::ofstream &params);
     void load(std::ifstream &params);
     ~Feature_map();

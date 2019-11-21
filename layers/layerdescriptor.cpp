@@ -11,7 +11,7 @@ Layers_features::Layers_features(int mapcount, int row, int col, int depth, int 
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < mapcount; i++)
     {
-        this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+        this->fmap[i] = new Feature_map(row, col, depth, biascnt);
     }
 }
 
@@ -24,7 +24,7 @@ Layers_features::Layers_features(const Layers_features &layer)
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < this->fmap_count; i++)
     {
-        this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+        this->fmap[i] = new Feature_map(row, col, depth, biascnt);
     }
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
     {
@@ -60,7 +60,7 @@ Layers_features & Layers_features::operator= (const Layers_features &layer)
     this->fmap = new Feature_map* [this->fmap_count];
     for(int i = 0; i < this->fmap_count; i++)
     {
-        this->fmap[i] = new Feature_map(row, col, depth, biascnt, false);
+        this->fmap[i] = new Feature_map(row, col, depth, biascnt);
     }
 
     for(int map_index = 0; map_index < this->fmap_count; map_index++)

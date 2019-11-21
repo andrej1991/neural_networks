@@ -1,14 +1,10 @@
+#include <math.h>
 #include "layers.h"
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
                     input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
                     next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
 {
-    /*if(stride != 1)
-        {
-            std::cerr << "counting with stride different than 1 is not implemented yet!";
-            throw exception();
-        }*/
     this->output_row = (input_row - kern_row + vertical_stride) / vertical_stride;
     this->output_col = (input_col - kern_col + horizontal_stride) / horizontal_stride;
     if((this->output_row <= 0) || (this->output_col <= 0))
@@ -29,9 +25,12 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->layers_delta_helper = new Matrix* [map_count];
     this->flattened_output = new Matrix* [1];
     this->flattened_output[0] = new Matrix(this->map_count * this->output_row * this->output_col, 1);
+    double deviation = sqrt(2/(kern_row * kern_col));
     for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);
+        fmap[i]->initialize_weights(deviation);
+        fmap[i]->initialize_biases();
         this->outputs[i] = new Matrix(this->output_row, this->output_col);
         this->output_derivative[i] = new Matrix(this->output_row, this->output_col);
         this->layers_delta[i] = new Matrix(this->output_row, this->output_col);
