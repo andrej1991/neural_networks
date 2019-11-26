@@ -283,8 +283,14 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         {
             if(this->dropout_probability != 0)
             {
-                dropout_neurons[0] = this->layers[0]->drop_out_some_neurons(dropout_probability, NULL);
-                for(int dropout_index = 1; dropout_index < this->layers_num - 1; dropout_index++)
+                int dropout_index = 0;
+                while(this->layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->layers[dropout_index]->get_layer_type() != SOFTMAX)
+                {
+                    dropout_index++;
+                }
+                dropout_neurons[dropout_index] = this->layers[dropout_index]->drop_out_some_neurons(dropout_probability, NULL);
+                dropout_index++;
+                for(dropout_index; dropout_index < this->layers_num - 1; dropout_index++)
                 {
                     dropout_neurons[dropout_index] = this->layers[dropout_index]->drop_out_some_neurons(dropout_probability, &dropout_neurons[dropout_index-1]);
                 }
@@ -326,8 +332,14 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             }
             if(this->dropout_probability != 0)
             {
-                this->layers[0]->restore_neurons(NULL);
-                for(int dropout_index = 1; dropout_index < this->layers_num - 1; dropout_index++)
+                int dropout_index = 0;
+                while(this->layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->layers[dropout_index]->get_layer_type() != SOFTMAX)
+                {
+                    dropout_index++;
+                }
+                this->layers[dropout_index]->restore_neurons(NULL);
+                dropout_index++;
+                for(dropout_index; dropout_index < this->layers_num - 1; dropout_index++)
                 {
                     this->layers[dropout_index]->restore_neurons(&dropout_neurons[dropout_index-1]);
                 }

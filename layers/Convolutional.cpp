@@ -25,7 +25,7 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->layers_delta_helper = new Matrix* [map_count];
     this->flattened_output = new Matrix* [1];
     this->flattened_output[0] = new Matrix(this->map_count * this->output_row * this->output_col, 1);
-    double deviation = sqrt(2/(kern_row * kern_col));
+    double deviation = sqrt(2.0/(kern_row * kern_col));
     for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);

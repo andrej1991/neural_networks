@@ -19,7 +19,7 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
     this->fmap[0] = new Feature_map(row, prev_row, 1, row);
-    double deviation = sqrt(1/prev_row);
+    double deviation = sqrt(1.0/prev_row);
     this->fmap[0]->initialize_weights(deviation);
     this->fmap[0]->initialize_biases();
     this->dropout_happened = false;

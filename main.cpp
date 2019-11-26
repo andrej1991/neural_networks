@@ -51,8 +51,8 @@ int main()
     x = A.remove_rows(B);
     print_mtx(x[0].remove_colums(B)[0]);
     throw exception();*/
-    YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
-    //YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
+    //YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
+    YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
     string training_input = config["training_input"].as<string>();
     string required_training_output = config["required_training_output"].as<string>();
     string validation_input = config["validation_input"].as<string>();
