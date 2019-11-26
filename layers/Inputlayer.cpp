@@ -42,20 +42,10 @@ void InputLayer::update_weights_and_biasses(double learning_rate, double regular
     ;
 }
 
-inline void InputLayer::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
-{
-    ;
-}
-
-inline void InputLayer::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
-{
-    ;
-}
-
 void InputLayer::set_input(Matrix **input)
 {
     ///TODO modify this function to work with FC layer and convolutional layer
-    if(this->next_layers_type == SIGMOID)
+    if(this->next_layers_type == FULLY_CONNECTED)
         {
             for (int i = 0; i < this->input_channel_count; i++)
                 {

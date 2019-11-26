@@ -5,7 +5,7 @@
 #include "MNIST_data.h"
 #include "network.h"
 #include "matrix.h"
-#include "random.h"
+#include <random>
 #include <iosfwd>
 
 using namespace std;
@@ -24,6 +24,10 @@ inline int get_neuron_type(YAML::const_iterator &it, int i)
     {
         return LEAKY_RELU;
     }
+    else if(nt.compare("tanh") == 0)
+    {
+        return TANH;
+    }
     else
     {
         cerr << "Unknown neuron type found in your config file\n";
@@ -34,6 +38,19 @@ inline int get_neuron_type(YAML::const_iterator &it, int i)
 
 int main()
 {
+    /*Matrix A(10,10), B(10,1), *x;
+    for(int i = 0; i < 10; i++)
+    {
+        for(int j = 0; j < 10; j++)
+        {
+            A.data[i][j] = i+j;
+        }
+    }
+    print_mtx(A);
+    B.data[2][0] = 1; B.data[7][0] = 1;
+    x = A.remove_rows(B);
+    print_mtx(x[0].remove_colums(B)[0]);
+    throw exception();*/
     YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
     //YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
     string training_input = config["training_input"].as<string>();
@@ -53,6 +70,12 @@ int main()
     int minibatch_len = config["minibatch_len"].as<int>();
     double learning_rate = config["learning_rate"].as<double>();
     double regularization_rate = config["regularization_rate"].as<double>();
+    double dropout_probability = config["dropout_probability"].as<double>();
+    if(dropout_probability < 0 or dropout_probability > 1)
+    {
+        cerr << "the probability of dropout must be between 0 - 1!" << endl;
+        throw exception();
+    }
     int minibatch_count = config["minibatch_count"].as<int>();
     double momentum = config["momentum"].as<double>();
     double denominator = config["denominator"].as<double>();
@@ -141,9 +164,9 @@ int main()
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
     Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    //Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    //Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    //Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     //Network n1("../data/fully_conn.bin");
     //Network n2("../data/fully_conn.bin");
     //Network n3("../data/fully_conn.bin");
@@ -153,15 +176,16 @@ int main()
     Network n3("../data/conv.bin");
     Network n4("../data/conv.bin");*/
 
-    /*cout << "stohastic gradient descent\n";
+    cout << "stohastic gradient descent\n";
     //n1.check_accuracy(validation, 10, 0, true);
+    n1.dropout_probability = dropout_probability;
     n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    cout << "momentum based gradient descent\n";
+    /*cout << "momentum based gradient descent\n";
     n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "RMSprop\n";
-    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);*/
 
 
     input.close();

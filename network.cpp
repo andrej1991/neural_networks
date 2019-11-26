@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdlib.h>
-#include "random.h"
+#include <random>
 #include "additional.h"
 #include <math.h>
 #include "layers/layers.h"
@@ -228,11 +228,14 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
     }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
-    ifstream rand;
-    rand.open("/dev/urandom", ios::in);
+    std::random_device rand;
+    std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     int learnig_cost_counter = 0;
+    int randomnum;
+    int biascnt;
     double previoius_learning_cost = 0;
     Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Matrix dropout_neurons[this->layers_num - 1];
     chrono::time_point<chrono::system_clock> start, end_training;
     chrono::duration<double> epoch_duration, overall_duration;
     Layers_features **nabla, **deltanabla;
@@ -243,7 +246,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         for(int i = 0; i < this->layers_num; i++)
         {
             ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
-            int biascnt;
             if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
                 biascnt = this->layers[i]->get_weights_row();
             else
@@ -273,12 +275,40 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
         {
             for(int k = 0; k < minibatch_len; k++)
             {
-                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                minibatches[j][k] = training_data[distribution(rand)];
             }
         }
         start = chrono::system_clock::now();
         for(int j = 0; j < minibatch_count; j++)
         {
+            if(this->dropout_probability != 0)
+            {
+                dropout_neurons[0] = this->layers[0]->drop_out_some_neurons(dropout_probability, NULL);
+                for(int dropout_index = 1; dropout_index < this->layers_num - 1; dropout_index++)
+                {
+                    dropout_neurons[dropout_index] = this->layers[dropout_index]->drop_out_some_neurons(dropout_probability, &dropout_neurons[dropout_index-1]);
+                }
+                this->layers[layers_num - 1]->drop_out_some_neurons(0.0, &dropout_neurons[layers_num - 2]);
+                for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
+                {
+                    if(this->layers[layerindex]->get_layer_type() == FULLY_CONNECTED or this->layers[layerindex]->get_layer_type() == SOFTMAX)
+                    {
+                        delete nabla[layerindex];
+                        delete deltanabla[layerindex];
+                        biascnt = this->layers[layerindex]->get_weights_row();
+                        nabla[layerindex] = new Layers_features(this->layers[layerindex]->get_mapcount(),
+                                                       this->layers[layerindex]->get_weights_row(),
+                                                       this->layers[layerindex]->get_weights_col(),
+                                                       this->layers[layerindex]->get_mapdepth(),
+                                                       biascnt);
+                        deltanabla[layerindex] = new Layers_features(this->layers[layerindex]->get_mapcount(),
+                                                            this->layers[layerindex]->get_weights_row(),
+                                                            this->layers[layerindex]->get_weights_col(),
+                                                            this->layers[layerindex]->get_mapdepth(),
+                                                            biascnt);
+                    }
+                }
+            }
             for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
             {
                 this->backpropagate(minibatches[j][training_data_index], deltanabla);
@@ -293,6 +323,15 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             {
                 this->layers[layer_index]->update_weights_and_biasses(lr, reg, nabla[layer_index]);
                 nabla[layer_index]->zero();
+            }
+            if(this->dropout_probability != 0)
+            {
+                this->layers[0]->restore_neurons(NULL);
+                for(int dropout_index = 1; dropout_index < this->layers_num - 1; dropout_index++)
+                {
+                    this->layers[dropout_index]->restore_neurons(&dropout_neurons[dropout_index-1]);
+                }
+                this->layers[layers_num - 1]->restore_neurons(&dropout_neurons[layers_num - 2]);
             }
         }
         end_training = chrono::system_clock::now();
@@ -326,7 +365,6 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
             }
         }
     }
-    rand.close();
     for(int i = 0; i < this->layers_num; i++)
     {
         delete nabla[i];
@@ -350,8 +388,8 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
     }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
-    ifstream rand;
-    rand.open("/dev/urandom", ios::in);
+    std::random_device rand;
+    std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     int learnig_cost_counter = 0;
     double previoius_learning_cost = 0;
     chrono::time_point<chrono::system_clock> start, end_training;
@@ -398,7 +436,7 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
         {
             for(int k = 0; k < minibatch_len; k++)
             {
-                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                minibatches[j][k] = training_data[distribution(rand)];
             }
         }
         start = chrono::system_clock::now();
@@ -444,7 +482,6 @@ void Network::momentum_gradient_descent(MNIST_data **training_data, int epochs, 
             }
         }
     }
-    rand.close();
     for(int i = 0; i < this->layers_num; i++)
     {
         delete nabla[i];
@@ -470,8 +507,8 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
-    ifstream rand;
-    rand.open("/dev/urandom", ios::in);
+    std::random_device rand;
+    std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     //int learnig_cost_counter = 0;
     double lr, reg, previoius_learning_cost = 0;
     chrono::time_point<chrono::system_clock> start, end_training;
@@ -522,7 +559,7 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
         {
             for(int k = 0; k < minibatch_len; k++)
             {
-                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                minibatches[j][k] = training_data[distribution(rand)];
             }
         }
         start = chrono::system_clock::now();
@@ -573,7 +610,6 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
             }
         }
     }
-    rand.close();
     for(int i = 0; i < this->layers_num; i++)
     {
         delete nabla[i];
@@ -599,9 +635,8 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
     }
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
-    ifstream rand;
-    rand.open("/dev/urandom", ios::in);
-    //int learnig_cost_counter = 0;
+    std::random_device rand;
+    std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     chrono::time_point<chrono::system_clock> start, end_training;
     chrono::duration<double> epoch_duration, overall_duration;
     double lr, reg, previoius_learning_cost = 0;
@@ -656,7 +691,7 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
         {
             for(int k = 0; k < minibatch_len; k++)
             {
-                minibatches[j][k] = training_data[random(0, trainingdata_len, rand)];
+                minibatches[j][k] = training_data[distribution(rand)];
             }
         }
         start = chrono::system_clock::now();
@@ -703,7 +738,6 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
             }
         }
     }
-    rand.close();
     for(int i = 0; i < this->layers_num; i++)
     {
         delete nabla[i];

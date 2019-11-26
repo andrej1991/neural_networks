@@ -3,7 +3,7 @@
 #include "../matrix.h"
 
 Feature_map::Feature_map(int row, int col, int depth ,int biascnt):
-                mapdepth(depth), row(row), col(col)
+                mapdepth(depth)/*, row(row), col(col)*/
 {
     this->weights = new Matrix* [depth];
     this->biases = new Matrix* [depth];
@@ -61,12 +61,12 @@ void Feature_map::initialize_weights(double standard_deviation, double mean)
 
 int Feature_map::get_col()
 {
-    return this->col;
+    return this->weights[0]->get_col();
 }
 
 int Feature_map::get_row()
 {
-    return this->row;
+    return this->weights[0]->get_row();
 }
 
 int Feature_map::get_mapdepth()

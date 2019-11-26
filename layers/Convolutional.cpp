@@ -239,17 +239,6 @@ void Convolutional::flatten()
     }
 }
 
-
-inline void Convolutional::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
-{
-    ;///this function doesn't have meaning in convolutional layer; it's only here for interface compatibility
-}
-
-inline void Convolutional::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
-{
-    ;///this function doesn't have meaning in convolutional layer; it's only here for interface compatibility
-}
-
 void Convolutional::set_input(Matrix **input)
 {
     cerr << "This function can be called only for the InputLayer!\n";

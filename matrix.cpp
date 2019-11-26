@@ -3,14 +3,20 @@
 
 Matrix::Matrix(int r,int c) : data(NULL)
 {
-    if(r >= 0)
+    if(r > 0)
         this->row = r;
     else
-        this->row = 1;
+        {
+            cerr << "The matrix must contain more than 0 rows!\n";
+            throw exception();
+        }
     if(c >= 0)
         this->col = c;
     else
-        this->col = 1;
+        {
+            cerr << "The matrix must contain more than 0 colums!\n";
+            throw exception();
+        }
     try
         {
             this->data = new double* [r];
@@ -201,36 +207,6 @@ Matrix Matrix::operator+(const Matrix &mtx)
         }
     return sum;
 }
-
-/*Matrix Matrix::operator-(const Matrix& mtx)
-{
-    if((this->col != mtx.col) + (this->row != mtx.row))
-        {
-            std::cerr << "the matrices cannot be substracted!\n";
-            throw std::exception();
-        }
-    Matrix difference(this->row, this->col);
-    for(int i = 0; i < this->row; i++)
-        {
-            for(int j = 0; j < this->col; j++)
-                {
-                    difference.data[i][j] = this->data[i][j] - mtx.data[i][j];
-                }
-        }
-    return dufference;
-}
-
-Matrix Matrix::operator-(double** mtx)
-{
-    Matrix difference(this->row, this->col);
-    for(int i = 0; i < this->row; i++)
-        {
-            for(int j = 0; j < this->col; j++)
-                {
-                    difference.data[i][j] = this->data[i][j] - mtx[i][j];
-                }
-        }
-}*/
 
 int Matrix::get_row()
 {
@@ -429,21 +405,22 @@ double Matrix::squared_sum_over_elements()
 
 Matrix* Matrix::remove_rows(Matrix &rows_to_remove)
 {
-    if(rows_to_remove.col != this->row)
+    if(rows_to_remove.row != this->row)
     {
+        cerr << "Not decided about each row if it needs to be deleted or not\n";
         throw exception();
     }
     int count_of_remaining = 0;
-    for(int i = 0; i < rows_to_remove.col; i++)
+    for(int i = 0; i < rows_to_remove.row; i++)
     {
-        if(rows_to_remove.data[0][i] != 1)
+        if(rows_to_remove.data[i][0] != 1)
             count_of_remaining++;
     }
     Matrix *ret = new Matrix(count_of_remaining, this->col);
     int k = 0;
     for(int i = 0; i < this->row; i++)
     {
-        if(rows_to_remove.data[0][i] != 1)
+        if(rows_to_remove.data[i][0] != 1)
         {
             for(int j = 0; j < this->col; j++)
             {
@@ -457,28 +434,30 @@ Matrix* Matrix::remove_rows(Matrix &rows_to_remove)
 
 Matrix* Matrix::remove_colums(Matrix &colums_to_remove)
 {
-    if(colums_to_remove.col != this->col)
+    if(colums_to_remove.row != this->col)
     {
+        cerr << "Not decided about each colum if it needs to be deleted or not\n";
         throw exception();
     }
     int count_of_remaining = 0;
-    for(int i = 0; i < colums_to_remove.col; i++)
+    for(int i = 0; i < colums_to_remove.row; i++)
     {
-        if(colums_to_remove.data[0][i] != 1)
+        if(colums_to_remove.data[i][0] != 1)
             count_of_remaining++;
     }
-    Matrix *ret = new Matrix(count_of_remaining, this->col);
+    Matrix *ret = new Matrix(this->row, count_of_remaining);
     int k = 0;
     for(int i = 0; i < this->row; i++)
     {
         for(int j = 0; j < this->col; j++)
         {
-            if(colums_to_remove.data[0][j] != 1)
+            if(colums_to_remove.data[j][0] != 1)
             {
                 ret->data[i][k] = this->data[i][j];
                 k++;
             }
         }
+        k = 0;
     }
     return ret;
 }

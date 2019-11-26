@@ -14,12 +14,12 @@ class Network{
     int total_layers_num, layers_num, costfunction_type, input_row, input_col, input_channel_count;
     Layer **layers;
     LayerDescriptor **layerdsc;
-    double dropout_probability;
     void construct_layers(LayerDescriptor **desc);
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
     inline void feedforward(Matrix **input);
     double cost(Matrix &required_output, int req_outp_indx);
     public:
+    double dropout_probability;
     bool monitor_training_duration;
     void store(char *filename);
     void stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost = false,
