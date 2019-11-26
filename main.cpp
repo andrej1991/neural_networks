@@ -38,19 +38,6 @@ inline int get_neuron_type(YAML::const_iterator &it, int i)
 
 int main()
 {
-    /*Matrix A(10,10), B(10,1), *x;
-    for(int i = 0; i < 10; i++)
-    {
-        for(int j = 0; j < 10; j++)
-        {
-            A.data[i][j] = i+j;
-        }
-    }
-    print_mtx(A);
-    B.data[2][0] = 1; B.data[7][0] = 1;
-    x = A.remove_rows(B);
-    print_mtx(x[0].remove_colums(B)[0]);
-    throw exception();*/
     //YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
     YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
     string training_input = config["training_input"].as<string>();
