@@ -359,7 +359,7 @@ void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs
                 if(learnig_cost_counter == 10)
                 {
                     learnig_cost_counter = 0;
-                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2;
+                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2.0;
                     cout << "changing leatning rate to: " << learning_rate << endl;
                 }
                 previoius_learning_cost = execution_accuracy.total_cost;
@@ -804,7 +804,8 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
                             }
                         }
                     }
-                    learning_cost += ((learning_cost/(2*test_data_len))*squared_sum);
+                    learning_cost += ((regularization_rate/(2.0*test_data_len))*squared_sum);
+                    squared_sum = 0;
                 }
                 helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
             }

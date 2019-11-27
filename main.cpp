@@ -38,8 +38,8 @@ inline int get_neuron_type(YAML::const_iterator &it, int i)
 
 int main()
 {
-    //YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
-    YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
+    YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
+    //YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
     string training_input = config["training_input"].as<string>();
     string required_training_output = config["required_training_output"].as<string>();
     string validation_input = config["validation_input"].as<string>();
