@@ -3,7 +3,7 @@
 
 using namespace std;
 
-int random(int start, int end, ifstream &rnd)
+/*int random(int start, int end, ifstream &rnd)
 {
     int range = end - start;
     int rand_num;
@@ -21,9 +21,9 @@ int random(int start, int end, ifstream &rnd)
             rnd.read((char*)(&rand_num), bytes_to_read);
         }while(rand_num >= range);
     return rand_num + start;
-}
+}*/
 
-int shuffle(int *array, int len, std::ifstream &rnd)
+/*int shuffle(int *array, int len, std::ifstream &rnd)
 {
     int temp, index;
     for(int i = 0; i < len; i++)
@@ -33,4 +33,4 @@ int shuffle(int *array, int len, std::ifstream &rnd)
             array[i] = array[index];
             array[index] = temp;
         }
-}
+}*/

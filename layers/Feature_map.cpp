@@ -1,7 +1,9 @@
+#include <random>
 #include "layers.h"
+#include "../matrix.h"
 
-Feature_map::Feature_map(int row, int col, int depth, int biascnt, bool initializtion_needed):
-                mapdepth(depth), row(row), col(col)
+Feature_map::Feature_map(int row, int col, int depth ,int biascnt):
+                mapdepth(depth)/*, row(row), col(col)*/
 {
     this->weights = new Matrix* [depth];
     this->biases = new Matrix* [depth];
@@ -15,11 +17,6 @@ Feature_map::Feature_map(int row, int col, int depth, int biascnt, bool initiali
             this->weights[i] = new Matrix(row, col);
             this->biases[i] = new Matrix(biascount, 1);
         }
-    if(initializtion_needed)
-    {
-        this->initialize_weights();
-        this->initialize_biases();
-    }
 }
 
 Feature_map::~Feature_map()
@@ -33,47 +30,43 @@ Feature_map::~Feature_map()
     delete[] this->biases;
 }
 
-void Feature_map::initialize_biases()
+void Feature_map::initialize_biases(double standard_deviation, double mean)
 {
-    ifstream random;
-    random.open("/dev/urandom", ios::in);
-    short int val;
+    std::random_device rand;
+    std::normal_distribution<double> distribution (mean, standard_deviation);
     for(int i = 0; i < this->mapdepth; i++)
+    {
         for(int j = 0; j < this->biases[i][0].get_row(); j++)
-            {
-                random.read((char*)(&val), 2);
-                this->biases[i][0].data[j][0] = val;
-                this->biases[i][0].data[j][0] /= 63000;
-            }
-    random.close();
+        {
+            this->biases[i][0].data[j][0] = distribution(rand);
+        }
+    }
 }
 
-void Feature_map::initialize_weights()
+void Feature_map::initialize_weights(double standard_deviation, double mean)
 {
-    ifstream random;
-    random.open("/dev/urandom", ios::in);
-    short int val;
+    std::random_device rand;
+    std::normal_distribution<double> distribution (mean, standard_deviation);
     for(int i = 0; i < this->mapdepth; i++)
-    for(int j = 0; j < this->weights[i][0].get_row(); j++)
+    {
+        for(int j = 0; j < this->weights[i][0].get_row(); j++)
         {
             for(int k = 0; k < this->weights[i][0].get_col(); k++)
-                {
-                    random.read((char*)(&val), 2);
-                    this->weights[i][0].data[j][k] = val;
-                    this->weights[i][0].data[j][k] /= 63000;
-                }
+            {
+                this->weights[i][0].data[j][k] = distribution(rand);
+            }
         }
-    random.close();
+    }
 }
 
 int Feature_map::get_col()
 {
-    return this->col;
+    return this->weights[0]->get_col();
 }
 
 int Feature_map::get_row()
 {
-    return this->row;
+    return this->weights[0]->get_row();
 }
 
 int Feature_map::get_mapdepth()

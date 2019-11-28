@@ -32,7 +32,7 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-march=corei7-avx" />
+			<Add option="-march=corei7" />
 			<Add option="-Wall" />
 			<Add option="-std=c++11" />
 			<Add option="-m64" />

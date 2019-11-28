@@ -1,3 +1,4 @@
+#include <math.h>
 #include "layers.h"
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
@@ -24,9 +25,12 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->layers_delta_helper = new Matrix* [map_count];
     this->flattened_output = new Matrix* [1];
     this->flattened_output[0] = new Matrix(this->map_count * this->output_row * this->output_col, 1);
+    double deviation = sqrt(2.0/(kern_row * kern_col));
     for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);
+        fmap[i]->initialize_weights(deviation);
+        fmap[i]->initialize_biases();
         this->outputs[i] = new Matrix(this->output_row, this->output_col);
         this->output_derivative[i] = new Matrix(this->output_row, this->output_col);
         this->layers_delta[i] = new Matrix(this->output_row, this->output_col);
@@ -71,8 +75,8 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 
 inline void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
 {
-    convolution(padded_delta[0],kernel, helper);
-    //cross_correlation(padded_delta[0],kernel, helper);
+    //convolution(padded_delta[0],kernel, helper);
+    cross_correlation(padded_delta[0],kernel, helper);
     delta_helper[0] += helper;
 }
 
@@ -140,23 +144,16 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, 
         }
         delete_padded_delta(padded_delta, next_layers_fmapcount);
     }
-    Matrix rotated_input;
     for(int i = 0; i < this->map_count; i++)
     {
         this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
             dilated = this->layers_delta[i][0].dilate(this->vertical_stride, this->horizontal_stride);
-            convolution(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
-            //rotated_input = input[j][0].rot180();
-            //cross_correlation(rotated_input, dilated, nabla[i]->weights[j][0]);
+            //convolution(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
+            cross_correlation(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
         }
     }
-    /*cout << input[0][0].get_row() << endl;
-    cout << input[0][0].get_col() << endl;
-    cout << dilated.get_row() << endl;
-    cout << dilated.get_col() << endl;
-    throw exception();*/
     return this->layers_delta;
 }
 
@@ -232,17 +229,6 @@ void Convolutional::flatten()
             }
         }
     }
-}
-
-
-inline void Convolutional::remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes)
-{
-    ;///this function doesn't have meaning in convolutional layer; it's only here for interface compatibility
-}
-
-inline void Convolutional::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes)
-{
-    ;///this function doesn't have meaning in convolutional layer; it's only here for interface compatibility
 }
 
 void Convolutional::set_input(Matrix **input)

@@ -42,6 +42,9 @@ class Matrix
     int get_row();
     int get_col();
     void zero();
+    double squared_sum_over_elements();
+    Matrix* remove_rows(Matrix &rows_to_remove);
+    Matrix* remove_colums(Matrix &colums_to_remove);
 };
 
 

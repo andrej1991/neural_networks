@@ -5,7 +5,7 @@
 #include "MNIST_data.h"
 #include "network.h"
 #include "matrix.h"
-#include "random.h"
+#include <random>
 #include <iosfwd>
 
 using namespace std;
@@ -23,6 +23,10 @@ inline int get_neuron_type(YAML::const_iterator &it, int i)
     }else if(nt.compare("leaky_relu") == 0)
     {
         return LEAKY_RELU;
+    }
+    else if(nt.compare("tanh") == 0)
+    {
+        return TANH;
     }
     else
     {
@@ -53,6 +57,12 @@ int main()
     int minibatch_len = config["minibatch_len"].as<int>();
     double learning_rate = config["learning_rate"].as<double>();
     double regularization_rate = config["regularization_rate"].as<double>();
+    double dropout_probability = config["dropout_probability"].as<double>();
+    if(dropout_probability < 0 or dropout_probability > 1)
+    {
+        cerr << "the probability of dropout must be between 0 - 1!" << endl;
+        throw exception();
+    }
     int minibatch_count = config["minibatch_count"].as<int>();
     double momentum = config["momentum"].as<double>();
     double denominator = config["denominator"].as<double>();
@@ -141,12 +151,12 @@ int main()
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
     Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    //Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    //Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
 
-    Pooling p(2, 2, MAX_POOLING, 1, 11, 11);
+    /*Pooling p(2, 2, MAX_POOLING, 1, 11, 11);
     Matrix *inp = new Matrix(11, 11);
 
     for(int i = 0; i<11;i++)
@@ -156,7 +166,7 @@ int main()
         }
     p.layers_output(&inp);
     print_mtx(*inp);
-    print_mtx((p.get_output())[0][0]);
+    print_mtx((p.get_output())[0][0]);*/
 
 
     //Network n1("../data/fully_conn.bin");
@@ -168,10 +178,11 @@ int main()
     Network n3("../data/conv.bin");
     Network n4("../data/conv.bin");*/
 
-    /*cout << "stohastic gradient descent\n";
+    cout << "stohastic gradient descent\n";
     //n1.check_accuracy(validation, 10, 0, true);
-    n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    cout << "momentum based gradient descent\n";
+    n1.dropout_probability = dropout_probability;
+    /*n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    /*cout << "momentum based gradient descent\n";
     n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
     n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
