@@ -91,13 +91,17 @@ inline void delete_padded_delta(Matrix **padded_delta, int limit)
 
 inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta)
 {
-    Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
+    Feature_map** next_layers_fmaps;
+    if(this->next_layers_type != POOLING)
+    {
+        next_layers_fmaps = next_layer->get_feature_maps();
+    }
     int next_layers_fmapcount = next_layer->get_mapcount();
     this->derivate_layers_output(input);
     Matrix **padded_delta;
     Matrix helper(this->output_row, this->output_col);
     Matrix dilated;
-    if(this->next_layers_type != CONVOLUTIONAL)
+    if(this->next_layers_type == FULLY_CONNECTED or this->next_layers_type == SOFTMAX)
     {
         int next_layers_neuroncount = delta[0]->get_row();
         padded_delta = new Matrix* [next_layers_neuroncount];
@@ -122,7 +126,7 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, 
         }
         delete_padded_delta(padded_delta, next_layers_neuroncount);
     }
-    else
+    else if (this->next_layers_type == CONVOLUTIONAL)
     {
         padded_delta = new Matrix* [next_layers_fmapcount];
         for(int i = 0; i < next_layers_fmapcount; i++)
@@ -146,7 +150,14 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, 
     }
     for(int i = 0; i < this->map_count; i++)
     {
-        this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
+        if(this->next_layers_type != POOLING)
+        {
+            this->layers_delta[i][0] = hadamart_product(this->layers_delta_helper[i][0], this->output_derivative[i][0]);
+        }
+        else
+        {
+            this->layers_delta[i][0] = hadamart_product(delta[i][0], this->output_derivative[i][0]);
+        }
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
             dilated = this->layers_delta[i][0].dilate(this->vertical_stride, this->horizontal_stride);
@@ -239,7 +250,7 @@ void Convolutional::set_input(Matrix **input)
 
 inline Matrix** Convolutional::get_output()
 {
-    if(next_layers_type == FULLY_CONNECTED)
+    if(this->next_layers_type == FULLY_CONNECTED)
     {
         this->flatten();
         return this->flattened_output;

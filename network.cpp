@@ -113,6 +113,10 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                                                     this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
                                                     layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
                 break;
+            case MAX_POOLING:
+                this->layers[i] = new Pooling(layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, this->layers[i - 1]->get_mapcount(), this->layers[i - 1]->get_output_row(),
+                                              this->layers[i - 1]->get_output_col(), layerdesc[i + 1]->layer_type);
+                break;
             default:
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
@@ -764,7 +768,7 @@ void Network::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len,
 Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost, double regularization_rate)
 {
     int learning_accuracy;
-    double learning_cost, squared_sum = 0;
+    double learning_cost, squared_sum = 0, avarange_confidence = 0;
     Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Matrix output;
     int mapcount, mapdepth;
@@ -782,16 +786,19 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
         ///TODO this is an errorprone as well
         output = this->get_output(test_data[j]->input);
         if(getmax(output.data) == test_data[j]->required_output.data[0][0])
-            {
-                learning_accuracy++;
-            }
+        {
+            learning_accuracy++;
+            avarange_confidence += output.data[int(test_data[j]->required_output.data[0][0])][0] * 100.0;
+        }
         if(monitor_learning_cost)
+        {
+            helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
+            learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
+            if(regularization_rate != 0)
             {
-                helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
-                learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
-                if(regularization_rate != 0)
+                for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
                 {
-                    for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
+                    if(this->layers[layerindex]->get_layer_type() != POOLING)
                     {
                         fmaps = this->layers[layerindex]->get_feature_maps();
                         mapcount = this->layers[layerindex]->get_mapcount();
@@ -804,15 +811,17 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
                             }
                         }
                     }
-                    learning_cost += ((regularization_rate/(2.0*test_data_len))*squared_sum);
-                    squared_sum = 0;
                 }
-                helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
+                learning_cost += ((regularization_rate/(2.0*test_data_len))*squared_sum);
+                squared_sum = 0;
             }
+            helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
+        }
     }
     end_testing = chrono::system_clock::now();
     test_duration = end_testing - start;
     cout << "set " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << endl;
+    cout << "  The avarange confidence is: " << avarange_confidence/learning_accuracy << "%" << endl;
     double execution_time = 0;
     if(this->monitor_training_duration)
     {

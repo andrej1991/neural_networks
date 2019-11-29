@@ -1,6 +1,7 @@
 #include "layers.h"
 
-Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row, int input_col): fmap_count(prev_layers_fmapcount), map_row(row), map_col(col), pooling_type(pooling_type)
+Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row, int input_col, int next_layers_type):
+                fmap_count(prev_layers_fmapcount), map_row(row), map_col(col), pooling_type(pooling_type), next_layers_type(next_layers_type)
 {
     this->output_row = input_row / row;
     if(input_row % row)
@@ -10,12 +11,16 @@ Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, 
         output_col++;
     this->pooling_memory = new Matrix* [prev_layers_fmapcount];
     this->layers_delta = new Matrix* [prev_layers_fmapcount];
-    this->output = new Matrix* [prev_layers_fmapcount];
+    this->layers_delta_helper = new Matrix* [prev_layers_fmapcount];
+    this->outputs = new Matrix* [prev_layers_fmapcount];
+    this->flattened_output = new Matrix* [1];
+    this->flattened_output[0] = new Matrix(this->fmap_count * this->output_row * this->output_col, 1);
     for(int i = 0; i < prev_layers_fmapcount; i++)
     {
         this->pooling_memory[i] = new Matrix(input_row, input_col);
         this->layers_delta[i] = new Matrix(input_row, input_col);
-        this->output[i] = new Matrix(this->output_row, this->output_col);
+        this->layers_delta_helper[i] = new Matrix(this->output_row, this->output_col);
+        this->outputs[i] = new Matrix(this->output_row, this->output_col);
     }
 }
 
@@ -25,11 +30,11 @@ Pooling::~Pooling()
     {
         delete this->pooling_memory[i];
         delete this->layers_delta[i];
-        delete this->output[i];
+        delete this->outputs[i];
     }
     delete[] this->pooling_memory;
     delete[] this->layers_delta;
-    delete[] this->output;
+    delete[] this->outputs;
 }
 
 inline void Pooling::max_pooling(Matrix **input)
@@ -61,23 +66,109 @@ inline void Pooling::max_pooling(Matrix **input)
                         }
                     }
                 }
-                this->output[mapindex]->data[output_r][output_c] = max;
+                this->outputs[mapindex]->data[output_r][output_c] = max;
                 this->pooling_memory[mapindex]->data[max_r_index][max_c_index] = 1;
                 input_c_index += this->map_col;
             }
             input_c_index = 0;
             input_r_index += this->map_row;
         }
+        input_r_index = 0;
     }
 }
 
-inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error)
+inline void delete_padded_delta(Matrix **padded_delta, int limit)
+{
+    for(int i = 0; i < limit; i++)
+    {
+        delete padded_delta[i];
+    }
+    delete[] padded_delta;
+}
+
+void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap)
+{
+    int kernelsize = kernel.get_row() * kernel.get_col();
+    int starting_pos = kernelsize * fmap_id;
+    int endpos = starting_pos + kernelsize;
+    int index = starting_pos;
+    for(int col = 0; col < kernel.get_col(); col++)
+    {
+        for(int row = 0; row < kernel.get_row(); row++)
+        {
+            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
+            index++;
+        }
+    }
+}
+
+inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **delta)
 {
     int in_row = input[0][0].get_row();
     int in_col = input[0][0].get_col();
     int delta_r_index, delta_c_index;
     double max;
     delta_c_index = delta_r_index = 0;
+    Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
+    int next_layers_fmapcount = next_layer->get_mapcount();
+    Matrix **padded_delta;
+    Matrix helper(this->output_row, this->output_col);
+    Matrix dilated;
+    if(next_layers_type == FULLY_CONNECTED or next_layers_type == SOFTMAX)
+    {
+        int next_layers_neuroncount = delta[0]->get_row();
+        padded_delta = new Matrix* [next_layers_neuroncount];
+        for(int i = 0; i < next_layers_neuroncount; i++)
+        {
+            padded_delta[i] = new Matrix;
+            padded_delta[i][0].data[0][0] = delta[0][0].data[i][0];
+            padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
+                                                     (this->output_col-1)/2,
+                                                     (this->output_row-1)/2,
+                                                     (this->output_col-1)/2);
+        }
+        Matrix kernel(this->output_row, this->output_col);
+        for(int i = 0; i < this->fmap_count; i++)
+        {
+            this->layers_delta_helper[i][0].zero();
+            for(int j = 0; j < next_layers_neuroncount; j++)
+            {
+                this->get_2D_weights(j, i, kernel, next_layers_fmaps);
+                //convolution(padded_delta[0],kernel, helper);
+                cross_correlation(padded_delta[j][0],kernel, helper);
+                this->layers_delta_helper[i][0] += helper;
+            }
+        }
+        delete_padded_delta(padded_delta, next_layers_neuroncount);
+    }
+    else if(next_layers_type == CONVOLUTIONAL)
+    {
+        padded_delta = new Matrix* [next_layers_fmapcount];
+        for(int i = 0; i < next_layers_fmapcount; i++)
+        {
+            padded_delta[i] = new Matrix;
+            dilated = delta[i][0].dilate(static_cast<Convolutional*>(next_layer)->get_vertical_stride(), static_cast<Convolutional*>(next_layer)->get_horizontal_stride());
+            padded_delta[i][0] = dilated.zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+                                                     (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
+                                                     (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
+                                                     (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
+        }
+        for(int i = 0; i < this->fmap_count; i++)
+        {
+            this->layers_delta_helper[i][0].zero();
+            for(int j = 0; j < next_layers_fmapcount; j++)
+            {
+                cross_correlation(padded_delta[j][0], next_layers_fmaps[j]->weights[i][0], helper);
+                this->layers_delta_helper[i][0] += helper;
+            }
+        }
+        delete_padded_delta(padded_delta, next_layers_fmapcount);
+    }
+    else if(next_layers_type == POOLING)
+    {
+        cerr << "Two poolin layer cannot follow each other!\n";
+        throw exception();
+    }
     for(int mapindex = 0; mapindex < this->fmap_count; mapindex++)
     {
         this->layers_delta[mapindex][0].zero();
@@ -91,7 +182,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
                     {
                         if(pooling_memory[mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] == 1)
                         {
-                            layers_delta[mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] = next_layers_error[mapindex]->data[output_r][output_c];
+                            layers_delta[mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] = this->layers_delta_helper[mapindex]->data[output_r][output_c];
                         }
                         else
                         {
@@ -154,9 +245,31 @@ void Pooling::set_input(Matrix **input)
     throw exception();
 }
 
+void Pooling::flatten()
+{
+    int i = 0;
+    for(int map_index = 0; map_index < this->fmap_count; map_index++)
+    {
+        for(int col = 0; col < this->output_col; col++)
+        {
+            for(int row = 0; row < this->output_row; row++)
+            {
+                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
+                i++;
+            }
+        }
+    }
+}
+
 inline Matrix** Pooling::get_output()
 {
-    return this->output;
+    if(this->next_layers_type == FULLY_CONNECTED)
+    {
+        this->flatten();
+        return this->flattened_output;
+    }
+    else
+        return this->outputs;
 }
 
 inline Feature_map** Pooling::get_feature_maps()

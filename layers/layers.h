@@ -14,10 +14,9 @@
 #define INPUTLAYER -1
 #define FULLY_CONNECTED 0
 #define CONVOLUTIONAL 1
-#define POOLING 2
-#define SOFTMAX 3
-
-#define MAX_POOLING 1
+#define SOFTMAX 2
+#define POOLING 3
+#define MAX_POOLING 3
 
 class LayerDescriptor{
     public:
@@ -211,11 +210,13 @@ class InputLayer : public Layer {
 };
 
 class Pooling : public Layer {
-    Matrix **output, **pooling_memory, **layers_delta;
-    int fmap_count, output_row, output_col, map_row, map_col, pooling_type;
+    Matrix **outputs, **pooling_memory, **layers_delta, **layers_delta_helper, **flattened_output;
+    int fmap_count, output_row, output_col, map_row, map_col, pooling_type, next_layers_type;
     inline void max_pooling(Matrix **input);
+    void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
+    void flatten();
     public:
-    Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col);
+    Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col, int next_layers_type);
     ~Pooling();
     inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error);
     inline void layers_output(Matrix **input);
@@ -235,6 +236,8 @@ class Pooling : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
+    Matrix drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL){};
+    void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
 };

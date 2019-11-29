@@ -112,13 +112,19 @@ int main()
                 layers[i] = new LayerDescriptor(CONVOLUTIONAL, neuron_type, it->second["weights_row"].as<int>(),
                                                 it->second["weights_col"].as<int>(), it->second["feature_map_count"].as<int>(),
                                                 vertical_stride, horizontal_stride);
-            }else if(lt.compare("fully_connected") == 0)
+            }
+            else if(lt.compare("fully_connected") == 0)
             {
                 neuron_type = get_neuron_type(it, i);
                 layers[i] = new LayerDescriptor(FULLY_CONNECTED, neuron_type, it->second["weights_row"].as<int>());
-            }else if(lt.compare("softmax") == 0)
+            }
+            else if(lt.compare("softmax") == 0)
             {
                 layers[i] = new LayerDescriptor(SOFTMAX, SIGMOID, it->second["weights_row"].as<int>());
+            }
+            else if(lt.compare("maxpooling") == 0)
+            {
+                layers[i] = new LayerDescriptor(MAX_POOLING, -1, it->second["filter_row"].as<int>(), it->second["filter_col"].as<int>());
             }
             else
             {
@@ -178,16 +184,16 @@ int main()
     Network n3("../data/conv.bin");
     Network n4("../data/conv.bin");*/
 
-    cout << "stohastic gradient descent\n";
+    /*cout << "stohastic gradient descent\n";
     //n1.check_accuracy(validation, 10, 0, true);
     n1.dropout_probability = dropout_probability;
-    /*n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     /*cout << "momentum based gradient descent\n";
     n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
     cout << "RMSprop\n";
-    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();
