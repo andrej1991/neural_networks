@@ -53,37 +53,37 @@ inline void FullyConnected::layers_output(Matrix **input)
 inline Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
 {
     switch(costfunction_type)
+    {
+    case QUADRATIC_CF:
+        for(int i = 0; i < this->outputlen; i++)
         {
-        case QUADRATIC_CF:
+            this->output_error_helper[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+        }
+        this->derivate_layers_output(input);
+        this->output_error[0][0] = hadamart_product(this->output_error_helper[0][0], this->output_derivative[0][0]);
+        return this->output_error;
+    case CROSS_ENTROPY_CF:
+        switch(this->neuron_type)
+        {
+        case SIGMOID:
             for(int i = 0; i < this->outputlen; i++)
-                {
-                    this->output_error_helper[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
-                }
-            this->derivate_layers_output(input);
-            this->output_error[0][0] = hadamart_product(this->output_error_helper[0][0], this->output_derivative[0][0]);
+            {
+                this->output_error[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+            }
             return this->output_error;
-        case CROSS_ENTROPY_CF:
-            switch(this->neuron_type)
-                {
-                case SIGMOID:
-                    for(int i = 0; i < this->outputlen; i++)
-                        {
-                            this->output_error[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
-                        }
-                    return this->output_error;
-                default:
-                    this->derivate_layers_output(input);
-                    for(int i = 0; i < this->outputlen; i++)
-                        {
-                            this->output_error[0][0].data[i][0] = (this->output_derivative[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
-                                                    (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
-                        }
-                    return this->output_error;
-                }
         default:
-            cerr << "Unknown cost function\n";
-            throw exception();
-        };
+            this->derivate_layers_output(input);
+            for(int i = 0; i < this->outputlen; i++)
+            {
+                this->output_error[0][0].data[i][0] = (this->output_derivative[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
+                                                       (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
+            }
+            return this->output_error;
+        }
+    default:
+        cerr << "Unknown cost function\n";
+        throw exception();
+    };
 }
 
 inline Matrix** FullyConnected::derivate_layers_output(Matrix **input)
