@@ -22,6 +22,7 @@
 				<Option object_output="../obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="../data/convolutional.yaml" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-std=c++11" />

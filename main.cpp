@@ -36,10 +36,15 @@ inline int get_neuron_type(YAML::const_iterator &it, int i)
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
-    //YAML::Node config = YAML::LoadFile("../data/fully_connected.yaml");
-    YAML::Node config = YAML::LoadFile("../data/convolutional.yaml");
+    if(argc < 2)
+    {
+        cerr << "You must provide the yaml config of the neural network!\n" << endl;
+        throw exception();
+    }
+    cout << "Loading the " << argv[1] << " file.\n";
+    YAML::Node config = YAML::LoadFile(argv[1]);
     string training_input = config["training_input"].as<string>();
     string required_training_output = config["required_training_output"].as<string>();
     string validation_input = config["validation_input"].as<string>();
