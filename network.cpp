@@ -525,11 +525,9 @@ void Network::nesterov_accelerated_gradient(MNIST_data **training_data, int epoc
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     std::random_device rand;
     std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
-    //int learnig_cost_counter = 0;
     double lr, reg, previoius_learning_cost = 0;
     chrono::time_point<chrono::system_clock> start, end_training;
     chrono::duration<double> epoch_duration, overall_duration;
-    //Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
     Layers_features **nabla, **deltanabla, **nabla_momentum, **layer_helper;
     try
     {
