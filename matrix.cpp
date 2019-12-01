@@ -7,15 +7,13 @@ Matrix::Matrix(int r,int c) : data(NULL)
         this->row = r;
     else
         {
-            cerr << "The matrix must contain more than 0 rows!\n";
-            throw exception();
+            throw invalid_argument("The matrix must contain more than 0 rows!\n");
         }
     if(c >= 0)
         this->col = c;
     else
         {
-            cerr << "The matrix must contain more than 0 colums!\n";
-            throw exception();
+            throw invalid_argument("The matrix must contain more than 0 colums!\n");
         }
     try
         {
@@ -78,10 +76,9 @@ Matrix::~Matrix()
 
 Matrix::Matrix (const Matrix& mtx)
 {
-    //this->destruct();
     this->equality(mtx);
-
 }
+
 Matrix & Matrix::operator= (const Matrix& mtx)
 {
     this->destruct();
@@ -95,8 +92,7 @@ Matrix Matrix::operator* (const Matrix& other)
     int debug1 = col;
     if(col != other.row)
         {
-            std::cerr << "the condition of the if statement is fales in the operator Matrix::operator*\n";
-            throw std::exception();
+            throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
         }
     else
         {
@@ -122,8 +118,7 @@ Matrix Matrix::operator/(const Matrix &mtx)
 {
     if((this->col != mtx.col) && (this->row != mtx.row))
     {
-        cerr << "The row or the colum is not equal of the matrixes in the division operator\n";
-        throw exception();
+        throw invalid_argument("in the division the matrices must have the same size");
     }
     Matrix ret(this->row, this->col);
     for(int i = 0; i < this->row; i++)
@@ -154,8 +149,7 @@ void Matrix::operator+=(const Matrix& mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
         {
-            std::cerr << "the matrices cannot be added!\n";
-            throw std::exception();
+            throw std::invalid_argument("in the addition matrices must have the same size");
         }
     for(int i = 0; i < this->row; i++)
         {
@@ -194,8 +188,7 @@ Matrix Matrix::operator+(const Matrix &mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
         {
-            std::cerr << "the matrices cannot be added!\n";
-            throw std::exception();
+            throw std::invalid_argument("in the addition matrices must have the same size");
         }
     Matrix sum(this->row, this->col);
     for(int i = 0; i < this->row; i++)
@@ -230,8 +223,7 @@ Matrix hadamart_product(Matrix &mtx1, Matrix &mtx2)
         }
     else
         {
-            std::cerr << "the condition of the if statement is fales in the function Matrix::hadamart_product\n";
-            throw std::exception();
+            throw std::invalid_argument("in the hadamart product matrices must have the same size");
         }
 }
 
@@ -420,8 +412,7 @@ Matrix* Matrix::remove_rows(Matrix &rows_to_remove)
 {
     if(rows_to_remove.row != this->row)
     {
-        cerr << "Not decided about each row if it needs to be deleted or not\n";
-        throw exception();
+        throw std::invalid_argument("Not decided about each row if it needs to be deleted or not\n");
     }
     int count_of_remaining = 0;
     for(int i = 0; i < rows_to_remove.row; i++)
@@ -449,8 +440,7 @@ Matrix* Matrix::remove_colums(Matrix &colums_to_remove)
 {
     if(colums_to_remove.row != this->col)
     {
-        cerr << "Not decided about each colum if it needs to be deleted or not\n";
-        throw exception();
+        throw std::invalid_argument("Not decided about each colum if it needs to be deleted or not\n");
     }
     int count_of_remaining = 0;
     for(int i = 0; i < colums_to_remove.row; i++)
