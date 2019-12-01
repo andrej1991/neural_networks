@@ -52,6 +52,10 @@
 		<Unit filename="additional.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="exceptions.cpp" />
+		<Unit filename="exceptions.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="layers/Convolutional.cpp" />
 		<Unit filename="layers/Feature_map.cpp" />
 		<Unit filename="layers/FullyConnected.cpp" />

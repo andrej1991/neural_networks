@@ -158,20 +158,22 @@ inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, 
         {
             this->layers_delta[i][0] = hadamart_product(delta[i][0], this->output_derivative[i][0]);
         }
+        dilated = this->layers_delta[i][0].dilate(this->vertical_stride, this->horizontal_stride);
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
-            dilated = this->layers_delta[i][0].dilate(this->vertical_stride, this->horizontal_stride);
-            //convolution(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
             cross_correlation(input[j][0], dilated, nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
         }
+        nabla[i]->biases[0][0].data[0][0] = this->layers_delta[i][0].sum_over_elements();
     }
     return this->layers_delta;
 }
 
-void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
 {
+    double sum;
     for(int i = 0; i < this->map_count; i++)
     {
+        this->fmap[i]->biases[0]->data[0][0] -= learning_rate * this->fmap[i]->biases[0]->data[0][0];
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
             for(int row = 0; row < this->kernel_row; row++)
@@ -180,7 +182,7 @@ void Convolutional::update_weights_and_biasses(double learning_rate, double regu
                 {
                     this->fmap[i]->weights[j]->data[row][col] =
                                     regularization_rate * this->fmap[i]->weights[j]->data[row][col] -
-                                    learning_rate * layer->fmap[i]->weights[j]->data[row][col];
+                                    learning_rate * gradient->fmap[i]->weights[j]->data[row][col];
                 }
             }
         }

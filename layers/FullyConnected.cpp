@@ -94,9 +94,9 @@ inline Matrix** FullyConnected::derivate_layers_output(Matrix **input)
     return this->output_derivative;
 }
 
-void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer)
+void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
 {
-    if((layer->get_fmap_count() != 1) + (layer->fmap[0]->get_mapdepth() != 1))
+    if((gradient->get_fmap_count() != 1) + (gradient->fmap[0]->get_mapdepth() != 1))
     {
         cerr << "the fully connected layer must have only one set of weights!!!\n";
         throw exception();
@@ -104,10 +104,10 @@ void FullyConnected::update_weights_and_biasses(double learning_rate, double reg
     int prev_outputlen = this->fmap[0]->get_col();
     for(int j = 0; j < this->outputlen; j++)
     {
-        this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * layer->fmap[0]->biases[0]->data[j][0];
+        this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * gradient->fmap[0]->biases[0]->data[j][0];
         for(int k = 0; k < prev_outputlen; k++)
         {
-            this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * layer->fmap[0]->weights[0]->data[j][k];
+            this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * gradient->fmap[0]->weights[0]->data[j][k];
         }
     }
 }

@@ -403,6 +403,19 @@ double Matrix::squared_sum_over_elements()
     return squared_sum;
 }
 
+double Matrix::sum_over_elements()
+{
+    double sum = 0;
+    for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
+        {
+            sum += this->data[i][j];
+        }
+    }
+    return sum;
+}
+
 Matrix* Matrix::remove_rows(Matrix &rows_to_remove)
 {
     if(rows_to_remove.row != this->row)
