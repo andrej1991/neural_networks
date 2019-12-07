@@ -166,22 +166,9 @@ int main(int argc, char *argv[])
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
     Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    //Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    //Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
+    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
     Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-
-
-    /*Pooling p(2, 2, MAX_POOLING, 1, 11, 11);
-    Matrix *inp = new Matrix(11, 11);
-
-    for(int i = 0; i<11;i++)
-        for(int j=0;j<11;j++)
-        {
-            inp->data[i][j] = i+j;
-        }
-    p.layers_output(&inp);
-    print_mtx(*inp);
-    print_mtx((p.get_output())[0][0]);*/
 
 
     //Network n1("../data/fully_conn.bin");
@@ -193,14 +180,17 @@ int main(int argc, char *argv[])
     Network n3("../data/conv.bin");
     Network n4("../data/conv.bin");*/
 
-    /*cout << "stohastic gradient descent\n";
+    cout << "stohastic gradient descent\n";
     //n1.check_accuracy(validation, 10, 0, true);
     n1.dropout_probability = dropout_probability;
     n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    /*cout << "momentum based gradient descent\n";
+    std::this_thread::sleep_for (std::chrono::seconds(20));
+    cout << "momentum based gradient descent\n";
     n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    std::this_thread::sleep_for (std::chrono::seconds(20));
     cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    std::this_thread::sleep_for (std::chrono::seconds(20));
     cout << "RMSprop\n";
     n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
 
