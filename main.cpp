@@ -8,6 +8,10 @@
 #include <random>
 #include <iosfwd>
 
+
+#include <thread>
+#include <chrono>
+
 using namespace std;
 
 
@@ -198,8 +202,9 @@ int main(int argc, char *argv[])
     cout << "nesterov accelerated gradient\n";
     n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);*/
     cout << "RMSprop\n";
+    n1.test(RMSPROP, m, epochs, minibatch_len, learning_rate, true, regularization_rate, denominator, momentum, validation, minibatch_count, validation_data_len, traninig_data_len);
+std::this_thread::sleep_for (std::chrono::seconds(20));
     n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
-
 
     input.close();
     required_output.close();

@@ -223,6 +223,280 @@ inline void Network::backpropagate(MNIST_data *trainig_data, Layers_features **n
     }
 }
 
+void Network::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, double learning_rate, double regularization_rate)
+{
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->backpropagate(minibatches[training_data_index], deltanabla);
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            *nabla[layer_index] += *deltanabla[layer_index];
+        }
+    }
+    for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+    {
+        this->layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, nabla[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void Network::momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
+{
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->backpropagate(minibatches[training_data_index], deltanabla);
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            *nabla[layer_index] += *deltanabla[layer_index];
+        }
+    }
+    for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+    {
+        nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0]*(1 - momentum));
+        this->layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, nabla_momentum[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void Network::nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
+{
+    for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+    {
+        this->layers[layer_index]->update_weights_and_biasses(momentum, regularization_rate, nabla_momentum[layer_index]);
+    }
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->backpropagate(minibatches[training_data_index], deltanabla);
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            *nabla[layer_index] += *deltanabla[layer_index];
+        }
+    }
+    for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+    {
+        this->layers[layer_index]->update_weights_and_biasses(-1*momentum, regularization_rate, nabla_momentum[layer_index]);
+        nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0] * learning_rate);
+        this->layers[layer_index]->update_weights_and_biasses(1, regularization_rate, nabla_momentum[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void Network::rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator)
+{
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->backpropagate(minibatches[training_data_index], deltanabla);
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            *nabla[layer_index] += *deltanabla[layer_index];
+        }
+    }
+    for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+    {
+        squared_grad_moving_avarange[layer_index][0] = (squared_grad_moving_avarange[layer_index][0] * momentum) + (nabla[layer_index][0].square_element_by() * (1 - momentum));
+        layer_helper[layer_index][0] = nabla[layer_index][0] / (squared_grad_moving_avarange[layer_index][0].sqroot() + denominator);
+        this->layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, layer_helper[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void Network::gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate,
+                                      double denominator, double momentum, MNIST_data **test_data, int minibatch_count , int test_data_len,  int trainingdata_len)
+{
+
+    if(minibatch_count < 0)
+    {
+        minibatch_count = trainingdata_len / minibatch_len;
+    }
+    Accuracy execution_accuracy;
+    MNIST_data *minibatches[minibatch_count][minibatch_len];
+    std::random_device rand;
+    std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
+    int learnig_cost_counter = 0;
+    int randomnum;
+    int biascnt;
+    double previoius_learning_cost = 0;
+    double lr, reg;
+    Matrix helper(this->layers[this->layers_num - 1]->get_output_row(), 1);
+    Matrix dropout_neurons[this->layers_num - 1];
+    chrono::time_point<chrono::system_clock> start, end_training;
+    chrono::duration<double> epoch_duration, overall_duration;
+    Layers_features **nabla, **deltanabla, **helper_1, **helper_2;
+    try
+    {
+        nabla = new Layers_features* [this->layers_num];
+        deltanabla = new Layers_features* [this->layers_num];
+        helper_1 = new Layers_features* [this->layers_num];
+        helper_2 = new Layers_features* [this->layers_num];
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+            if((this->layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->layers[i]->get_layer_type() == SOFTMAX))
+                biascnt = this->layers[i]->get_weights_row();
+            else
+                biascnt = 1;
+            nabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                           this->layers[i]->get_weights_row(),
+                                           this->layers[i]->get_weights_col(),
+                                           this->layers[i]->get_mapdepth(),
+                                           biascnt);
+            nabla[i]->zero();
+            deltanabla[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+            helper_1[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+            helper_1[i]->zero();
+            helper_2[i] = new Layers_features(this->layers[i]->get_mapcount(),
+                                                this->layers[i]->get_weights_row(),
+                                                this->layers[i]->get_weights_col(),
+                                                this->layers[i]->get_mapdepth(),
+                                                biascnt);
+        }
+    }
+    catch(bad_alloc& ba)
+    {
+        cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
+        return;
+    }
+    Layers_features** nabla_momentum = helper_1;
+    Layers_features** squared_grad_moving_avarange = helper_1;
+    helper.zero();
+    Matrix output;
+    for(int i = 0; i < epochs; i++)
+    {
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            for(int k = 0; k < minibatch_len; k++)
+            {
+                minibatches[j][k] = training_data[distribution(rand)];
+            }
+        }
+        start = chrono::system_clock::now();
+        for(int j = 0; j < minibatch_count; j++)
+        {
+            if(this->dropout_probability != 0)
+            {
+                int dropout_index = 0;
+                while(this->layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->layers[dropout_index]->get_layer_type() != SOFTMAX)
+                {
+                    dropout_index++;
+                }
+                dropout_neurons[dropout_index] = this->layers[dropout_index]->drop_out_some_neurons(dropout_probability, NULL);
+                dropout_index++;
+                for(dropout_index; dropout_index < this->layers_num - 1; dropout_index++)
+                {
+                    dropout_neurons[dropout_index] = this->layers[dropout_index]->drop_out_some_neurons(dropout_probability, &dropout_neurons[dropout_index-1]);
+                }
+                this->layers[layers_num - 1]->drop_out_some_neurons(0.0, &dropout_neurons[layers_num - 2]);
+                for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
+                {
+                    if(this->layers[layerindex]->get_layer_type() == FULLY_CONNECTED or this->layers[layerindex]->get_layer_type() == SOFTMAX)
+                    {
+                        delete nabla[layerindex];
+                        delete deltanabla[layerindex];
+                        biascnt = this->layers[layerindex]->get_weights_row();
+                        nabla[layerindex] = new Layers_features(this->layers[layerindex]->get_mapcount(),
+                                                       this->layers[layerindex]->get_weights_row(),
+                                                       this->layers[layerindex]->get_weights_col(),
+                                                       this->layers[layerindex]->get_mapdepth(),
+                                                       biascnt);
+                        deltanabla[layerindex] = new Layers_features(this->layers[layerindex]->get_mapcount(),
+                                                            this->layers[layerindex]->get_weights_row(),
+                                                            this->layers[layerindex]->get_weights_col(),
+                                                            this->layers[layerindex]->get_mapdepth(),
+                                                            biascnt);
+                    }
+                }
+            }
+            lr = learning_rate / minibatch_len;
+            reg = (1 - learning_rate * (regularization_rate / trainingdata_len));
+            switch(variant)
+            {
+                case STOCHASTIC:
+                    this->stochastic(minibatches[j], minibatch_len, nabla, deltanabla, lr, reg);
+                    break;
+                case MOMENTUM:
+                    this->momentum_based(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, lr, reg, momentum);
+                    break;
+                case NESTEROV:
+                    this->nesterov(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, lr, reg, momentum);
+                    break;
+                case RMSPROP:
+                    this->rmsprop(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, helper_2, lr, reg, momentum, denominator);
+                    break;
+                default:
+                    throw invalid_argument("Unknown gradient descent variant!");
+            }
+            if(this->dropout_probability != 0)
+            {
+                int dropout_index = 0;
+                while(this->layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->layers[dropout_index]->get_layer_type() != SOFTMAX)
+                {
+                    dropout_index++;
+                }
+                this->layers[dropout_index]->restore_neurons(NULL);
+                dropout_index++;
+                for(dropout_index; dropout_index < this->layers_num - 1; dropout_index++)
+                {
+                    this->layers[dropout_index]->restore_neurons(&dropout_neurons[dropout_index-1]);
+                }
+                this->layers[layers_num - 1]->restore_neurons(&dropout_neurons[layers_num - 2]);
+            }
+        }
+        for(int layer_index = 0; layer_index < this->layers_num; layer_index++)
+        {
+            helper_1[layer_index]->zero();
+        }
+        end_training = chrono::system_clock::now();
+        epoch_duration = end_training - start;
+        if(test_data != NULL)
+        {
+            execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost, regularization_rate);
+            if(monitor_learning_cost)
+            {
+                cout << "total cost: " << execution_accuracy.total_cost << endl;
+                if(abs((long long int)execution_accuracy.total_cost) > abs((long long int)previoius_learning_cost))
+                    learnig_cost_counter++;
+                if(learnig_cost_counter == 10)
+                {
+                    learnig_cost_counter = 0;
+                    learning_rate == 0 ? learning_rate = 1 : learning_rate /= 2.0;
+                    cout << "changing leatning rate to: " << learning_rate << endl;
+                }
+                previoius_learning_cost = execution_accuracy.total_cost;
+            }
+        }
+        if(this->monitor_training_duration)
+        {
+            cout << "    training over an epoch took: " << epoch_duration.count() << "seconds" << endl;
+            if(test_data != NULL)
+            {
+                end_training = chrono::system_clock::now();
+                overall_duration = end_training - start;
+                cout << "    the testing took: " << execution_accuracy.execution_time << "seconds" << endl;
+                cout << "    the whole epoch took: " << overall_duration.count() << "seconds" << endl;
+            }
+        }
+    }
+    for(int i = 0; i < this->layers_num; i++)
+    {
+        delete nabla[i];
+        delete deltanabla[i];
+        delete helper_1[i];
+        delete helper_2[i];
+    }
+    delete[] nabla;
+    delete[] deltanabla;
+    delete[] helper_1;
+    delete[] helper_2;
+}
+
 void Network::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
                                             double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
@@ -828,3 +1102,9 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
     return Accuracy {learning_accuracy, learning_cost, execution_time};
 }
 
+void Network::test(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate,
+                                 double denominator, double momentum, MNIST_data **test_data, int minibatch_count , int test_data_len,  int trainingdata_len)
+{
+    this->gradient_descent_variant(variant, training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate,
+                                 denominator, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
+}

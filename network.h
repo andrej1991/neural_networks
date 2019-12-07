@@ -1,9 +1,15 @@
 #ifndef NETWORK_H_INCLUDED
 #define NETWORK_H_INCLUDED
+
 #include "neuron.h"
 #include "MNIST_data.h"
 #include "matrix.h"
 #include "layers/layers.h"
+
+#define STOCHASTIC 0
+#define MOMENTUM 1
+#define NESTEROV 2
+#define RMSPROP 3
 
 struct Accuracy{
     int correct_answers;
@@ -18,6 +24,12 @@ class Network{
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
     inline void feedforward(Matrix **input);
     double cost(Matrix &required_output, int req_outp_indx);
+    void stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, double learning_rate, double regularization_rate);
+    void momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
+    void nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
+    void rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator);
+    void gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate,
+                                 double denominator, double momentum, MNIST_data **test_data, int minibatch_count , int test_data_len,  int trainingdata_len);
     public:
     double dropout_probability;
     bool monitor_training_duration;
@@ -36,6 +48,8 @@ class Network{
     ~Network();
     Matrix get_output(Matrix **input);
     Accuracy check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost = false, double regularization_rate = 0);
+    void test(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate = 0,
+                                 double denominator=0.00001, double momentum = 0.9, MNIST_data **test_data=NULL, int minibatch_count=500 , int test_data_len=10000,  int trainingdata_len=50000);
 };
 
 #endif // NETWORK_H_INCLUDED
