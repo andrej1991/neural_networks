@@ -48,8 +48,6 @@ class Network{
     ~Network();
     Matrix get_output(Matrix **input);
     Accuracy check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost = false, double regularization_rate = 0);
-    void test(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate = 0,
-                                 double denominator=0.00001, double momentum = 0.9, MNIST_data **test_data=NULL, int minibatch_count=500 , int test_data_len=10000,  int trainingdata_len=50000);
 };
 
 #endif // NETWORK_H_INCLUDED
