@@ -23,7 +23,7 @@ class Network{
     void construct_layers(LayerDescriptor **desc);
     inline void backpropagate(MNIST_data *training_data, Layers_features **nabla);
     inline void feedforward(Matrix **input);
-    double cost(Matrix &required_output, int req_outp_indx);
+    double cost(Matrix &required_output, int req_outp_indx, int test_data_len);
     void stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, double learning_rate, double regularization_rate);
     void momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
     void nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);

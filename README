@@ -2,6 +2,7 @@
 
 This program is ment for image classification with neural networks.
 
+
 2) SAMPLE CONFIG
 
 training_input: "<some path>/input.dat"
@@ -64,7 +65,6 @@ Supported neuron types are: sigmoid, tanh, relu, leaky_relu
 Supported cost functions are: quadratic, cross_entropy and log_likellyhood
 
 
-
 3) STRUCTURE OF THE TRAINING AND VALIDATION DATA
 
 Input and output has to be in a separate file.
@@ -80,4 +80,24 @@ The length of the required output vector is the same as the count of the neurons
 All the elements of that vector is stored in double.
 In case of image classification all the values are 0.0 of the required output vector, but the value of the index which is mapped to the category of the input image.
 That one value is 1.0.
+
+
+4) DEPENDENCIES
+
+libyaml-cpp
+
+
+5) BUILDING THE BINARY
+
+This project is written in Code Blocks. The project file (neural_networks.cbp) is included in the repo.
+
+
+6) EXECUTION SAMPLE
+
+The first argument of the program is the configuration file. An example in Unix based systems:
+
+/path/to/your/binary/neural_networks /path/to/your/config/config.yaml
+
+
+
 

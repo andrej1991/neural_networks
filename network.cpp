@@ -169,7 +169,7 @@ inline void Network::feedforward(Matrix **input)
         }
 }
 
-double Network::cost(Matrix &required_output, int req_outp_indx)
+double Network::cost(Matrix &required_output, int req_outp_indx, int test_data_len)
 {
     double helper = 0, result = 0;
     switch(this->costfunction_type)
@@ -181,7 +181,7 @@ double Network::cost(Matrix &required_output, int req_outp_indx)
                     helper = required_output.data[i][0] - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0];
                     result += helper * helper;
                 }
-            return 0.5 * result;
+            return (0.5 * result) / (test_data_len * 2.0);
         case CROSS_ENTROPY_CF:
             ///y(x)ln a + (1 - y(x))ln(1 - a)
             for(int i = 0; i < this->layers[this->layers_num - 1]->get_output_len(); i++)
@@ -189,10 +189,10 @@ double Network::cost(Matrix &required_output, int req_outp_indx)
                     helper += required_output.data[i][0] * log(this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]) + (1 - required_output.data[i][0]) *
                                     log(1 - this->layers[this->layers_num - 1]->get_output()[0]->data[i][0]);
                 }
-            return helper;
+            return helper / test_data_len;
         case LOG_LIKELIHOOD_CF:
             result = -1 * log(this->layers[this->layers_num - 1]->get_output()[0]->data[req_outp_indx][0]);
-            return result;
+            return result / test_data_len;
         default:
             cerr << "Unknown cost function\n";
             throw exception();
@@ -553,30 +553,30 @@ Accuracy Network::check_accuracy(MNIST_data **test_data, int test_data_len, int 
         if(monitor_learning_cost)
         {
             helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 1;
-            learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0]);
-            if(regularization_rate != 0)
-            {
-                for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
-                {
-                    if(this->layers[layerindex]->get_layer_type() != POOLING)
-                    {
-                        fmaps = this->layers[layerindex]->get_feature_maps();
-                        mapcount = this->layers[layerindex]->get_mapcount();
-                        for(int mapindex = 0; mapindex < mapcount; mapindex++)
-                        {
-                            mapdepth = fmaps[mapindex]->get_mapdepth();
-                            for(int i = 0; i < mapdepth; i++)
-                            {
-                                squared_sum += fmaps[mapindex]->weights[i]->squared_sum_over_elements();
-                            }
-                        }
-                    }
-                }
-                learning_cost += ((regularization_rate/(2.0*test_data_len))*squared_sum);
-                squared_sum = 0;
-            }
+            learning_cost += this->cost(helper, test_data[j]->required_output.data[0][0], test_data_len);
             helper.data[(int)test_data[j]->required_output.data[0][0]][0] = 0;
         }
+    }
+    if((regularization_rate != 0) and (monitor_learning_cost))
+    {
+        for(int layerindex = 0; layerindex < this->layers_num; layerindex++)
+        {
+            if(this->layers[layerindex]->get_layer_type() != POOLING)
+            {
+                fmaps = this->layers[layerindex]->get_feature_maps();
+                mapcount = this->layers[layerindex]->get_mapcount();
+                for(int mapindex = 0; mapindex < mapcount; mapindex++)
+                {
+                    mapdepth = fmaps[mapindex]->get_mapdepth();
+                    for(int i = 0; i < mapdepth; i++)
+                    {
+                        squared_sum += fmaps[mapindex]->weights[i]->squared_sum_over_elements();
+                    }
+                }
+            }
+        }
+        learning_cost += ((regularization_rate/(2.0*test_data_len))*squared_sum);
+        squared_sum = 0;
     }
     end_testing = chrono::system_clock::now();
     test_duration = end_testing - start;
