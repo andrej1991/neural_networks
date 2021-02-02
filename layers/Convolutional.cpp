@@ -76,7 +76,7 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 inline void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
 {
     //convolution(padded_delta[0],kernel, helper);
-    cross_correlation(padded_delta[0],kernel, helper);
+    cross_correlation(padded_delta[0],kernel, helper, 1, 1);
     delta_helper[0] += helper;
 }
 

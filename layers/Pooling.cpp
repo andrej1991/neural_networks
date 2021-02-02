@@ -135,7 +135,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
             {
                 this->get_2D_weights(j, i, kernel, next_layers_fmaps);
                 //convolution(padded_delta[0],kernel, helper);
-                cross_correlation(padded_delta[j][0],kernel, helper);
+                cross_correlation(padded_delta[j][0],kernel, helper, 1, 1);
                 this->layers_delta_helper[i][0] += helper;
             }
         }
@@ -158,7 +158,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
             this->layers_delta_helper[i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
-                cross_correlation(padded_delta[j][0], next_layers_fmaps[j]->weights[i][0], helper);
+                cross_correlation(padded_delta[j][0], next_layers_fmaps[j]->weights[i][0], helper, 1, 1);
                 this->layers_delta_helper[i][0] += helper;
             }
         }
