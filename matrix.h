@@ -11,12 +11,12 @@ using namespace std;
 
 class Matrix
 {
-    //public:
     int row,col;
     inline void destruct();
     inline void equality(const Matrix &mtx);
     public:
     double **data;
+    double *dv;
     Matrix(int row = 1,int col = 1);
     ~Matrix();
     Matrix(const Matrix& mtx);
@@ -35,8 +35,8 @@ class Matrix
     Matrix square_element_by();
     Matrix dilate(int vertical_stride, int horizontal_stride);
     Matrix zero_padd(int top, int right, int bottom, int left);
-    friend void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride = 1, int horizontal_stride = 1);
-    friend void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride = 1, int horizontal_stride = 1);
+    friend void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride);
+    friend void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride);
     friend void print_mtx_list(Matrix **mtx, int list_len);
     friend void print_mtx(Matrix &mtx);
     int get_row();

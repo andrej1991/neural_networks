@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 #include "matrix.h"
 
 Matrix::Matrix(int r,int c) : data(NULL)
@@ -6,43 +7,41 @@ Matrix::Matrix(int r,int c) : data(NULL)
     if(r > 0)
         this->row = r;
     else
-        {
-            throw invalid_argument("The matrix must contain more than 0 rows!\n");
-        }
+    {
+        throw invalid_argument("The matrix must contain more than 0 rows!\n");
+    }
     if(c >= 0)
         this->col = c;
     else
-        {
-            throw invalid_argument("The matrix must contain more than 0 colums!\n");
-        }
+    {
+        throw invalid_argument("The matrix must contain more than 0 colums!\n");
+    }
     try
+    {
+        this->data = new double* [r];
+        this->dv = new double [r*c];
+        for(int i = 0; i < r; i++)
         {
-            this->data = new double* [r];
-            for(int i = 0; i < r; i++)
-                {
-                    this->data[i] = new double [c];
-                    for(int j = 0; j < c; j++)
-                        {
-                            this->data[i][j] = 0;
-                        }
-                }
+            this->data[i] = &(this->dv[i*c]);
+            for(int j = 0; j < c; j++)
+            {
+                this->data[i][j] = 0;
+            }
         }
+    }
     catch(bad_alloc& ba)
-        {
-            cerr << "Matrix::constructor: bad_alloc caught: " << ba.what() << endl;
-            throw;
-        }
+    {
+        cerr << "Matrix::constructor: bad_alloc caught: " << ba.what() << endl;
+        throw;
+    }
 }
 
 inline void Matrix::destruct()
 {
     if(this->data != NULL)
     {
-        for(int i = 0; i < this->row; i++)
-        {
-            delete this->data[i];
-        }
         delete[] this->data;
+        delete this->dv;
         this->data = NULL;
     }
 }
@@ -52,21 +51,20 @@ inline void Matrix::equality(const Matrix &mtx)
     row = mtx.row;
     col = mtx.col;
     try
-       {
-            data = new double*[row];
-            for(int i = 0; i < row; i++)
-                data[i] = new double [col];
-       }
-    catch(bad_alloc& ba)
-        {
-            cerr << "Matrix::copyconstructor: bad_alloc caught: " << ba.what() << endl;
-            throw;
-        }
-    for(int i = 0; i < row; i++)
     {
-        for(int j = 0; j < col; j++)
-            data[i][j] = mtx.data[i][j];
+        data = new double*[row];
+        this->dv = new double [row * col];
+        for(int i = 0; i < row; i++)
+        {
+            this->data[i] = &(this->dv[i*col]);
+        }
     }
+    catch(bad_alloc& ba)
+    {
+        cerr << "Matrix::copyconstructor: bad_alloc caught: " << ba.what() << endl;
+        throw;
+    }
+    memcpy(this->dv, mtx.dv, row * col * sizeof(double));
 }
 
 Matrix::~Matrix()
