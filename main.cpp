@@ -171,14 +171,9 @@ int main(int argc, char *argv[])
     Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
 
 
+
     //Network n1("../data/fully_conn.bin");
-    //Network n2("../data/fully_conn.bin");
-    //Network n3("../data/fully_conn.bin");
-    //Network n4("../data/fully_conn.bin");
-    /*Network n1("../data/conv.bin");
-    Network n2("../data/conv.bin");
-    Network n3("../data/conv.bin");
-    Network n4("../data/conv.bin");*/
+
 
     cout << "stohastic gradient descent\n";
     //n1.check_accuracy(validation, 10, 0, true);
