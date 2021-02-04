@@ -1,7 +1,7 @@
 #ifndef NEURON_H_INCLUDED
 #define NEURON_H_INCLUDED
 
-#include "matrix.h"
+#include "../matrix/matrix.h"
 
 #define SIGMOID 0
 #define RELU 1

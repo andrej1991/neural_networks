@@ -2,9 +2,9 @@
 #include <fstream>
 #include <yaml.h>
 #include <string>
-#include "MNIST_data.h"
+#include "data_loader/MNIST_data.h"
 #include "network.h"
-#include "matrix.h"
+#include "matrix/matrix.h"
 #include <random>
 #include <iosfwd>
 
