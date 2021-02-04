@@ -23,7 +23,7 @@
 				<Option object_output="../obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="../data/fully_connected.yaml ../data/convolutional.yaml" />
+				<Option parameters="../data/convolutional.yaml ../data/fully_connected.yaml" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-std=c++11" />
@@ -45,16 +45,16 @@
 			<Add option="-m64" />
 			<Add option="-lyaml-cpp" />
 		</Linker>
-		<Unit filename="MNIST_data.cpp" />
-		<Unit filename="MNIST_data.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="additional.cpp" />
 		<Unit filename="additional.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="exceptions.cpp" />
-		<Unit filename="exceptions.h">
+		<Unit filename="data_loader/MNIST_data.cpp" />
+		<Unit filename="data_loader/MNIST_data.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="exceptions/exceptions.cpp" />
+		<Unit filename="exceptions/exceptions.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="layers/Convolutional.cpp" />
@@ -73,8 +73,8 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="main.cpp" />
-		<Unit filename="matrix.cpp" />
-		<Unit filename="matrix.h">
+		<Unit filename="matrix/matrix.cpp" />
+		<Unit filename="matrix/matrix.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="network.cpp">
@@ -83,13 +83,10 @@
 		<Unit filename="network.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="neuron.cpp" />
-		<Unit filename="neuron.h">
+		<Unit filename="neurons/neuron.cpp" />
+		<Unit filename="neurons/neuron.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Extensions>
-			<code_completion />
-			<debugger />
-		</Extensions>
+		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

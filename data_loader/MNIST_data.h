@@ -1,7 +1,7 @@
 #ifndef MNIST_DATA_H_INCLUDED
 #define MNIST_DATA_H_INCLUDED
 #include <fstream>
-#include "matrix.h"
+#include "../matrix/matrix.h"
 
 class MNIST_data{
     public:

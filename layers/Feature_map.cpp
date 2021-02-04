@@ -1,6 +1,6 @@
 #include <random>
 #include "layers.h"
-#include "../matrix.h"
+#include "../matrix/matrix.h"
 
 Feature_map::Feature_map(int row, int col, int depth ,int biascnt):
                 mapdepth(depth)/*, row(row), col(col)*/

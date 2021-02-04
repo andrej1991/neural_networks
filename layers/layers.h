@@ -3,9 +3,9 @@
 
 #include <iostream>
 
-#include "../neuron.h"
-#include "../MNIST_data.h"
-#include "../matrix.h"
+#include "../neurons/neuron.h"
+#include "../data_loader/MNIST_data.h"
+#include "../matrix/matrix.h"
 
 #define QUADRATIC_CF 0
 #define CROSS_ENTROPY_CF 1
