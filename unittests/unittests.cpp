@@ -493,9 +493,313 @@ void test_cross_correlation_positive1_with_strides()
     ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
 }
 
-
-TEST(MatrixTest, BasicOperationsPass)
+void test_rot180_positive()
 {
+    Matrix A(4,3), Result(4,3), ExpectedResult(4,3);
+    double helper1[4][3] = {{1, 2, 4},
+                           {8, 16, 32},
+                           {64, 128, 256},
+                           {512, 1024, 2048}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[4][3] = {{2048, 1024, 512},
+                           {256, 128, 64},
+                           {32, 16, 8},
+                           {4, 2, 1}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.rot180();
+    ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
+}
+
+void test_sqroot_positive()
+{
+    Matrix A(4,3), Result(4,3), ExpectedResult(4,3);
+    double helper1[4][3] = {{0, 1, 4},
+                           {9, 16, 49},
+                           {81, 25, 256},
+                           {400, 100, 36}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.sqroot();
+    ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
+}
+
+void test_square_element_by_positive()
+{
+    Matrix A(4,3), Result(4,3), ExpectedResult(4,3);
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[4][3] = {{0, 1, 4},
+                           {9, 16, 49},
+                           {81, 25, 256},
+                           {400, 100, 36}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.square_element_by();
+    ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
+}
+
+void test_dilate_stride1_positive()
+{
+    Matrix A(4,3), Result(7,5), ExpectedResult(7,5);
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 7; row++)
+    {
+        for (int col = 0; col < 5; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[7][5] = {{0, 0, 1, 0, 2},
+                           {0, 0, 0, 0, 0},
+                           {3, 0, 4, 0, 7},
+                           {0, 0, 0, 0, 0},
+                           {9, 0, 5, 0, 16},
+                           {0, 0, 0, 0, 0},
+                           {20, 0, 10, 0, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.dilate(1, 1);
+    ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
+}
+
+void test_dilate_wider_stride_positive()
+{
+    Matrix A(4,3), Result(10,9), ExpectedResult(10,9);
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[10][9] = {{0, 0, 0, 0, 1, 0, 0, 0, 2},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {3, 0, 0, 0, 4, 0, 0, 0, 7},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {9, 0, 0, 0, 5, 0, 0, 0, 16},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {20, 0, 0, 0, 10, 0, 0, 0, 6}};
+    for (int row = 0; row < 10; row++)
+    {
+        for (int col = 0; col < 9; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.dilate(2, 3);
+    ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
+}
+
+void test_zero_padd_positive()
+{
+    Matrix A(4,3), Result(8,9), ExpectedResult(8,9);
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[8][9] = {{0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 1, 2, 0, 0},
+                           {0, 0, 0, 0, 3, 4, 7, 0, 0},
+                           {0, 0, 0, 0, 9, 5, 16, 0, 0},
+                           {0, 0, 0, 0, 20, 10, 6, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},
+                           {0, 0, 0, 0, 0, 0, 0, 0, 0},};
+    for (int row = 0; row < 8; row++)
+    {
+        for (int col = 0; col < 9; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.zero_padd(1, 2, 3, 4);
+    ASSERT_EQ(true, test_matrixes_for_equality(Result, ExpectedResult));
+}
+
+void test_remove_rows_positive()
+{
+    ///TODO teardown
+    Matrix A(7,8), *Result, ExpectedResult(4,8), RowsToRemove(7,1);
+    double helper1[7][8] = {{1, 2, 4, 8, 16, 32, 64, 128},
+                            {3, 6, 9, 12, 18, 21, 24, 27},
+                            {2, 3, 5, 7, 11, 13, 17, 19},
+                            {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
+                            {30, 33, 36, 39, 42, 45, 48, 51},
+                            {23, 29, 31, 37, 41, 47, 53, 59},
+                            {49, 50, 51, 52, 53, 54, 55, 56}};
+    for (int row = 0; row < 7; row++)
+    {
+        for (int col = 0; col < 8; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    RowsToRemove.data[1][0] = 1;
+    RowsToRemove.data[4][0] = 1;
+    RowsToRemove.data[5][0] = 1;
+    double helper2[4][8] = {{1, 2, 4, 8, 16, 32, 64, 128},
+                            {2, 3, 5, 7, 11, 13, 17, 19},
+                            {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
+                            {49, 50, 51, 52, 53, 54, 55, 56}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 8; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.remove_rows(RowsToRemove);
+    ASSERT_EQ(true, test_matrixes_for_equality(*Result, ExpectedResult));
+}
+
+
+void test_remove_colums_positive()
+{
+    ///TODO teardown
+    Matrix A(7,8), *Result, ExpectedResult(7,5), ColumsToRemove(8,1);
+    double helper1[7][8] = {{1, 2, 4, 8, 16, 32, 64, 128},
+                            {3, 6, 9, 12, 18, 21, 24, 27},
+                            {2, 3, 5, 7, 11, 13, 17, 19},
+                            {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
+                            {30, 33, 36, 39, 42, 45, 48, 51},
+                            {23, 29, 31, 37, 41, 47, 53, 59},
+                            {49, 50, 51, 52, 53, 54, 55, 56}};
+    for (int row = 0; row < 7; row++)
+    {
+        for (int col = 0; col < 8; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    ColumsToRemove.data[1][0] = 1;
+    ColumsToRemove.data[4][0] = 1;
+    ColumsToRemove.data[5][0] = 1;
+    double helper2[7][5] = {{1, 4, 8, 64, 128},
+                            {3, 9, 12, 24, 27},
+                            {2, 5, 7, 17, 19},
+                            {256, 1024, 2048, 16384, 32768},
+                            {30, 36, 39, 48, 51},
+                            {23, 31, 37, 53, 59},
+                            {49, 51, 52, 55, 56}};
+    for (int row = 0; row < 7; row++)
+    {
+        for (int col = 0; col < 5; col++)
+        {
+            ExpectedResult.data[row][col] = helper2[row][col];
+        }
+    }
+    Result = A.remove_colums(ColumsToRemove);
+    ASSERT_EQ(true, test_matrixes_for_equality(*Result, ExpectedResult));
+}
+
+void test_sum_over_elements()
+{
+    Matrix A(4,3);
+    double Result, ExpectedResult;
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    ExpectedResult = 83;
+    Result = A.sum_over_elements();
+    ASSERT_DOUBLE_EQ (ExpectedResult, Result);
+}
+
+void test_squared_sum_over_elements()
+{
+    Matrix A(4,3);
+    double Result, ExpectedResult;
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
+    {
+        for (int col = 0; col < 3; col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    ExpectedResult = 977;
+    Result = A.squared_sum_over_elements();
+    ASSERT_DOUBLE_EQ (ExpectedResult, Result);
+}
+
+TEST(MatrixBasicOperationsTest, BasicOperationsPass)
+{
+    ///TODO write each line as a separate testcase
+    ///TODO use get_row and get_col instead of hardcoded numbers
     test_mtx_to_mtx_multyply_pass();
     test_mtx_to_double_multyply_pass();
     test_divide_matrixes_pass();
@@ -505,53 +809,39 @@ TEST(MatrixTest, BasicOperationsPass)
     test_mtx_plus_equal_double_pass();
     test_hadamart_pass();
     test_transpose_pass();
-    test_convolution_positive1();
+    test_rot180_positive();
+    test_sqroot_positive();
+    test_square_element_by_positive();
+    //test_dilate_stride1_positive();
+    //test_dilate_wider_stride_positive();
+    //test_convolution_positive1();
+    //test_cross_correlation_positive1();
     //test_cross_correlation_positive1_with_strides();
     //test_convolution_positive1_with_strides();
+    test_zero_padd_positive();
+    test_remove_rows_positive();
+    test_remove_colums_positive();
+    test_sum_over_elements();
+    test_squared_sum_over_elements();
 }
 
 
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-    /*Matrix Input(7,8), Kernel(2,2), Result(6, 7), ExpectedResult(6,7);
-    double helper1[7][8] = {{1, 2, 4, 8, 16, 32, 64, 128},
-                            {3, 6, 9, 12, 18, 21, 24, 27},
-                            {2, 3, 5, 7, 11, 13, 17, 19},
-                            {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
-                            {30, 33, 36, 39, 42, 45, 48, 51},
-                            {23, 29, 31, 37, 41, 47, 53, 59},
-                            {49, 50, 51, 52, 53, 54, 55, 56}};
-    double helper2[2][2] = {{1.1, 2.2},
-                            {3.3, 4.4}};
-    double helper3[6][7] = {{41.8, 70.4, 104.5, 162.8, 239.8, 350.9, 550},
-                            {36.3, 58.3, 83.6, 124.3, 159.5, 193.6, 225.5},
-                            {3106.4, 6209.5, 12411.3, 24812.7, 49602.3, 99174.9, 198307},
-                            {1652.2, 3083.3, 5922.4, 11577.5, 22864.6, 45415.7, 90494.8},
-                            {309.1, 347.6, 390.5, 437.8, 487.3, 543.4, 599.5},
-                            {470.8, 489.5, 512.6, 535.7, 561, 588.5, 616}};
-    for (int row=0; row<7; row++)
+    return RUN_ALL_TESTS();//*/
+    /*Matrix A(4,3), Result(10,9), ExpectedResult(7,5);
+    double helper1[4][3] = {{0, 1, 2},
+                           {3, 4, 7},
+                           {9, 5, 16},
+                           {20, 10, 6}};
+    for (int row = 0; row < 4; row++)
     {
-        for (int col=0; col < 8; col++)
+        for (int col = 0; col < 3; col++)
         {
-            Input.data[row][col] = helper1[row][col];
+            A.data[row][col] = helper1[row][col];
         }
     }
-    for(int row=0; row<2; row++)
-    {
-        for(int col=0; col<2; col++)
-        {
-            Kernel.data[row][col] = helper2[row][col];
-        }
-    }
-    for(int row=0; row<6; row++)
-    {
-        for(int col=0; col<7; col++)
-        {
-            ExpectedResult.data[row][col] = helper3[row][col];
-        }
-    }
-    cross_correlation(Input, Kernel, Result, 2, 2);
-    print_mtx(Result);*/
+    Result = A.dilate(3, 3);
+    print_mtx(Result);//*/
 }
