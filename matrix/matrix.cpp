@@ -68,9 +68,9 @@ inline void Matrix::equality(const Matrix &mtx)
 }
 
 Matrix::~Matrix()
-    {
-        this->destruct();
-    }
+{
+    this->destruct();
+}
 
 Matrix::Matrix (const Matrix& mtx)
 {
@@ -89,27 +89,27 @@ Matrix Matrix::operator* (const Matrix& other)
 {
     int debug1 = col;
     if(col != other.row)
-        {
-            throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
-        }
+    {
+        throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
+    }
     else
+    {
+        Matrix mtx(row, other.col);
+        double c = 0;
+        for(int k = 0; k < row; k++)
         {
-            Matrix mtx(row, other.col);
-            double c = 0;
-            for(int k = 0; k < row; k++)
+            for(int l = 0; l < other.col; l++)
+            {
+                for(int i = 0; i < col; i++)
                 {
-                    for(int l = 0; l < other.col; l++)
-                        {
-                            for(int i = 0; i < col; i++)
-                                {
-                                    c += data[k][i] * other.data[i][l];
-                                }
-                            mtx.data[k][l] = c;
-                            c = 0;
-                        }
+                    c += data[k][i] * other.data[i][l];
                 }
-            return mtx;
+                mtx.data[k][l] = c;
+                c = 0;
+            }
         }
+        return mtx;
+    }
 }
 
 Matrix Matrix::operator/(const Matrix &mtx)
@@ -146,27 +146,27 @@ Matrix Matrix::operator*(double d)
 void Matrix::operator+=(const Matrix& mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
-        {
-            throw std::invalid_argument("in the addition matrices must have the same size");
-        }
+    {
+        throw std::invalid_argument("in the addition matrices must have the same size");
+    }
     for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    this->data[i][j] += mtx.data[i][j];
-                }
+            this->data[i][j] += mtx.data[i][j];
         }
+    }
 }
 
 void Matrix::operator+=(double d)
 {
     for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    this->data[i][j] += d;
-                }
+            this->data[i][j] += d;
         }
+    }
 }
 
 Matrix Matrix::operator+(double d)
@@ -185,17 +185,17 @@ Matrix Matrix::operator+(double d)
 Matrix Matrix::operator+(const Matrix &mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
-        {
-            throw std::invalid_argument("in the addition matrices must have the same size");
-        }
+    {
+        throw std::invalid_argument("in the addition matrices must have the same size");
+    }
     Matrix sum(this->row, this->col);
     for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    sum.data[i][j] = this->data[i][j] + mtx.data[i][j];
-                }
+            sum.data[i][j] = this->data[i][j] + mtx.data[i][j];
         }
+    }
     return sum;
 }
 
@@ -212,29 +212,29 @@ int Matrix::get_col()
 Matrix hadamart_product(Matrix &mtx1, Matrix &mtx2)
 {
     if((mtx1.row == mtx2.row) * (mtx1.col == mtx2.col))
-        {
-            Matrix result(mtx1.row, mtx1.col);
-            for(int i = 0; i < mtx1.row; i++)
-                for(int j = 0; j < mtx1.col; j++)
-                    result.data[i][j] = mtx1.data[i][j] * mtx2.data[i][j];
-            return result;
-        }
+    {
+        Matrix result(mtx1.row, mtx1.col);
+        for(int i = 0; i < mtx1.row; i++)
+            for(int j = 0; j < mtx1.col; j++)
+                result.data[i][j] = mtx1.data[i][j] * mtx2.data[i][j];
+        return result;
+    }
     else
-        {
-            throw std::invalid_argument("in the hadamart product matrices must have the same size");
-        }
+    {
+        throw std::invalid_argument("in the hadamart product matrices must have the same size");
+    }
 }
 
 Matrix Matrix::transpose()
 {
     Matrix tr_mtx(this->col,this->row);
     for(int i = 0; i < this->row; i++)
+    {
+        for(int  j= 0; j < this->col; j++)
         {
-            for(int  j= 0; j < this->col; j++)
-                {
-                    tr_mtx.data[j][i]=this->data[i][j];
-                }
+            tr_mtx.data[j][i]=this->data[i][j];
         }
+    }
     return tr_mtx;
 }
 
@@ -244,15 +244,15 @@ Matrix Matrix::rot180()
     int i2 = 0;
     int j2 = 0;
     for(int i = this->row - 1; i >= 0; i--)
+    {
+        for(int j = this->col - 1; j >= 0; j--)
         {
-            for(int j = this->col - 1; j >= 0; j--)
-                {
-                    ret.data[i][j] = this->data[i2][j2];
-                    j2++;
-                }
-            i2++;
-            j2 = 0;
+            ret.data[i][j] = this->data[i2][j2];
+            j2++;
         }
+        i2++;
+        j2 = 0;
+    }
     return ret;
 }
 
@@ -288,12 +288,12 @@ Matrix Matrix::zero_padd(int top, int right, int bottom, int left)
     int padded_col = this->col + left + right;
     Matrix ret(padded_row, padded_col);
     for(int i = 0; i < this->row; i++)
+    {
+        for(int j = 0; j < this->col; j++)
         {
-            for(int j = 0; j < this->col; j++)
-                {
-                    ret.data[top + i][left + j] = this->data[i][j];
-                }
+            ret.data[top + i][left + j] = this->data[i][j];
         }
+    }
     return ret;
 }
 
@@ -302,26 +302,26 @@ void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output,  int verti
     double helper;
     int r, c;
     r = c = 0;
-    int vertical_step = (input.row - kernel.row) / vertical_stride + 1;
-    int horizontal_step = (input.col - kernel.col) / horizontal_stride + 1;
-    for(int i = 0; i < vertical_step; i += vertical_stride)
+    int row_limit = input.row - kernel.row;
+    int colum_limit = input.col - kernel.col;
+    for(int i = 0; i <= row_limit; i += vertical_stride)
+    {
+        for(int j = 0; j <= colum_limit; j += horizontal_stride)
         {
-            for(int j = 0; j < horizontal_step; j += horizontal_stride)
+            helper = 0;
+            for(int k = 0; k < kernel.row; k++)
+            {
+                for(int l = 0; l < kernel.col; l++)
                 {
-                    helper = 0;
-                    for(int k = 0; k < kernel.row; k++)
-                        {
-                            for(int l = 0; l < kernel.col; l++)
-                                {
-                                    helper += kernel.data[k][l] * input.data[i + k][j + l];
-                                }
-                        }
-                    output.data[r][c] = helper;
-                    c++;
+                    helper += kernel.data[k][l] * input.data[i + k][j + l];
                 }
-            r++;
-            c = 0;
+            }
+            output.data[r][c] = helper;
+            c++;
         }
+        r++;
+        c = 0;
+    }
 }
 
 void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride)
@@ -330,23 +330,23 @@ void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_str
     int r, c;
     r = c = 0;
     for(int i = kernel.row-1; i < input.row; i += vertical_stride)
+    {
+        for(int j = kernel.col-1; j < input.col; j += horizontal_stride)
         {
-            for(int j = kernel.col-1; j < input.col; j += horizontal_stride)
+            helper = 0;
+            for(int k = kernel.row-1; k >= 0; k--)
+            {
+                for(int l = kernel.col-1; l >= 0; l--)
                 {
-                    helper = 0;
-                    for(int k = kernel.row-1; k >= 0; k--)
-                        {
-                            for(int l = kernel.col-1; l >= 0; l--)
-                                {
-                                    helper += kernel.data[k][l] * input.data[i - k][j - l];
-                                }
-                        }
-                    output.data[r][c] = helper;
-                    c++;
+                    helper += kernel.data[k][l] * input.data[i - k][j - l];
                 }
-            r++;
-            c = 0;
+            }
+            output.data[r][c] = helper;
+            c++;
         }
+        r++;
+        c = 0;
+    }
 }
 
 Matrix Matrix::dilate(int vertical_stride, int horizontal_stride)
