@@ -5,7 +5,7 @@
 
 using namespace std;
 
-bool test_matrixes_for_equality(Matrix A, Matrix B)
+bool test_matrixes_for_equality(Matrix A, Matrix B, double epsilon = 1E-10)
 {
     int rowA = A.get_row();
     int rowB = B.get_row();
@@ -19,13 +19,13 @@ bool test_matrixes_for_equality(Matrix A, Matrix B)
     {
         for(int c = 0; c < colA; c++)
         {
-            if( abs(A.data[r][c] - B.data[r][c]) > 1E-10)
+            if( abs(A.data[r][c] - B.data[r][c]) > epsilon)
             {
                 cerr << "[r:" << r << "  " << "c:" << c << "] [ERROR]\n"; 
                 cerr << "[ result: " << A.data[r][c] << "] [ERROR]\n";
                 cerr << "[ expected result: " << B.data[r][c] << "] [ERROR]\n"; 
                 return false;
-            }            
+            }
         }
     }
     return true;
@@ -424,7 +424,7 @@ TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1)
                                                           {3.3, 4.4}};
     double helper3[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{41.8, 70.4, 104.5, 162.8, 239.8, 350.9, 550},
                                                                           {36.3, 58.3, 83.6, 124.3, 159.5, 193.6, 225.5},
-                                                                          {3106.4, 6209.5, 12411.3, 24812.7, 49602.3, 99174.9, 198307},
+                                                                          {3106.4, 6209.5, 12411.3, 24812.7, 49602.3, 99174.9, 198306.9},
                                                                           {1652.2, 3083.3, 5922.4, 11577.5, 22864.6, 45415.7, 90494.8},
                                                                           {309.1, 347.6, 390.5, 437.8, 487.3, 543.4, 599.5},
                                                                           {470.8, 489.5, 512.6, 535.7, 561, 588.5, 616}};
@@ -453,7 +453,7 @@ TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1)
     ASSERT_TRUE(test_matrixes_for_equality(Result, ExpectedResult));
 }
 
-TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1_with_strides)
+TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1_with_strides2)
 {
     Matrix Input(7,8), Kernel(2,2), Result(3, 4), ExpectedResult(3,4);
     double helper1[Input.get_row()][Input.get_col()] = {{1, 2, 4, 8, 16, 32, 64, 128},
@@ -466,7 +466,7 @@ TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1_with_strides)
     double helper2[Kernel.get_row()][Kernel.get_col()] = {{1.1, 2.2},
                                                           {3.3, 4.4}};
     double helper3[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{41.8, 104.5, 239.8, 550},
-                                                                          {3106.4, 12411.3, 49602.3, 198307},
+                                                                          {3106.4, 12411.3, 49602.3, 198306.9},
                                                                           {309.1, 390.5, 487.3, 599.5}};
     for (int row=0; row<Input.get_row(); row++)
     {
@@ -492,6 +492,46 @@ TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1_with_strides)
     cross_correlation(Input, Kernel, Result, 2, 2);
     ASSERT_TRUE(test_matrixes_for_equality(Result, ExpectedResult));
 }
+
+TEST(MatrixBasicOperationsTest, test_cross_correlation_positive1_with_strides3)
+{
+    Matrix Input(7,8), Kernel(2,2), Result(6, 7), ExpectedResult(6,7);
+    double helper1[Input.get_row()][Input.get_col()] = {{1, 2, 4, 8, 16, 32, 64, 128},
+                                                        {3, 6, 9, 12, 18, 21, 24, 27},
+                                                        {2, 3, 5, 7, 11, 13, 17, 19},
+                                                        {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
+                                                        {30, 33, 36, 39, 42, 45, 48, 51},
+                                                        {23, 29, 31, 37, 41, 47, 53, 59},
+                                                        {49, 50, 51, 52, 53, 54, 55, 56}};
+    double helper2[Kernel.get_row()][Kernel.get_col()] = {{1.1, 2.2},
+                                                          {3.3, 4.4}};
+    double helper3[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{41.8,162.8, 550},
+                                                                          {1652.2,11577.5, 90494.8}};
+    for (int row=0; row<Input.get_row(); row++)
+    {
+        for (int col=0; col < Input.get_col(); col++)
+        {
+            Input.data[row][col] = helper1[row][col];
+        }
+    }
+    for(int row=0; row<Kernel.get_row(); row++)
+    {
+        for(int col=0; col<Kernel.get_col(); col++)
+        {
+            Kernel.data[row][col] = helper2[row][col];
+        }
+    }
+    for(int row=0; row<ExpectedResult.get_row(); row++)
+    {
+        for(int col=0; col<ExpectedResult.get_col(); col++)
+        {
+            ExpectedResult.data[row][col] = helper3[row][col];
+        }
+    }
+    cross_correlation(Input, Kernel, Result, 3, 3);
+    ASSERT_TRUE(test_matrixes_for_equality(Result, ExpectedResult));
+}
+
 
 TEST(MatrixBasicOperationsTest, test_rot180_positive)
 {
@@ -582,7 +622,7 @@ TEST(MatrixBasicOperationsTest, test_square_element_by_positive)
 
 TEST(MatrixBasicOperationsTest, test_dilate_stride1_positive)
 {
-    Matrix A(4,3), Result(7,5), ExpectedResult(7,5);
+    Matrix A(4,3), Result(4,3), ExpectedResult(4,3);
     double helper1[A.get_row()][A.get_col()] = {{0, 1, 2},
                                                 {3, 4, 7},
                                                 {9, 5, 16},
@@ -594,13 +634,10 @@ TEST(MatrixBasicOperationsTest, test_dilate_stride1_positive)
             A.data[row][col] = helper1[row][col];
         }
     }
-    double helper2[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{0, 0, 1, 0, 2},
-                                                                          {0, 0, 0, 0, 0},
-                                                                          {3, 0, 4, 0, 7},
-                                                                          {0, 0, 0, 0, 0},
-                                                                          {9, 0, 5, 0, 16},
-                                                                          {0, 0, 0, 0, 0},
-                                                                          {20, 0, 10, 0, 6}};
+    double helper2[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{0, 1, 2},
+                                                                          {3, 4, 7},
+                                                                          {9, 5, 16},
+                                                                          {20, 10, 6}};
     for (int row = 0; row < ExpectedResult.get_row(); row++)
     {
         for (int col = 0; col < ExpectedResult.get_col(); col++)
@@ -614,7 +651,7 @@ TEST(MatrixBasicOperationsTest, test_dilate_stride1_positive)
 
 TEST(MatrixBasicOperationsTest, test_dilate_wider_stride_positive)
 {
-    Matrix A(4,3), Result(10,9), ExpectedResult(10,9);
+    Matrix A(4,3), Result(7,7), ExpectedResult(7,7);
     double helper1[A.get_row()][A.get_col()] = {{0, 1, 2},
                                                 {3, 4, 7},
                                                 {9, 5, 16},
@@ -626,16 +663,13 @@ TEST(MatrixBasicOperationsTest, test_dilate_wider_stride_positive)
             A.data[row][col] = helper1[row][col];
         }
     }
-    double helper2[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{0, 0, 0, 0, 1, 0, 0, 0, 2},
-                                                                          {0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                                                          {0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                                                          {3, 0, 0, 0, 4, 0, 0, 0, 7},
-                                                                          {0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                                                          {0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                                                          {9, 0, 0, 0, 5, 0, 0, 0, 16},
-                                                                          {0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                                                          {0, 0, 0, 0, 0, 0, 0, 0, 0},
-                                                                          {20, 0, 0, 0, 10, 0, 0, 0, 6}};
+    double helper2[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{0, 0, 0, 1, 0, 0, 2},
+                                                                          {0, 0, 0, 0, 0, 0, 0},
+                                                                          {3, 0, 0, 4, 0, 0, 7},
+                                                                          {0, 0, 0, 0, 0, 0, 0},
+                                                                          {9, 0, 0, 5, 0, 0, 16},
+                                                                          {0, 0, 0, 0, 0, 0, 0},
+                                                                          {20, 0, 0, 10, 0, 0, 6}};
     for (int row = 0; row < ExpectedResult.get_row(); row++)
     {
         for (int col = 0; col < ExpectedResult.get_col(); col++)
@@ -801,18 +835,40 @@ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();//*/
-    /*Matrix A(4,3), Result(10,9), ExpectedResult(7,5);
-    double helper1[4][3] = {{0, 1, 2},
-                           {3, 4, 7},
-                           {9, 5, 16},
-                           {20, 10, 6}};
-    for (int row = 0; row < 4; row++)
+    /*Matrix Input(7,8), Kernel(2,2), Result(3, 4), ExpectedResult(3,4);
+    double helper1[Input.get_row()][Input.get_col()] = {{1, 2, 4, 8, 16, 32, 64, 128},
+                                                        {3, 6, 9, 12, 18, 21, 24, 27},
+                                                        {2, 3, 5, 7, 11, 13, 17, 19},
+                                                        {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
+                                                        {30, 33, 36, 39, 42, 45, 48, 51},
+                                                        {23, 29, 31, 37, 41, 47, 53, 59},
+                                                        {49, 50, 51, 52, 53, 54, 55, 56}};
+    double helper2[Kernel.get_row()][Kernel.get_col()] = {{1.1, 2.2},
+                                                          {3.3, 4.4}};
+    double helper3[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{41.8, 104.5, 239.8, 550},
+                                                                          {3106.4, 12411.3, 49602.3, 198307},
+                                                                          {309.1, 390.5, 487.3, 599.5}};
+    for (int row=0; row<Input.get_row(); row++)
     {
-        for (int col = 0; col < 3; col++)
+        for (int col=0; col < Input.get_col(); col++)
         {
-            A.data[row][col] = helper1[row][col];
+            Input.data[row][col] = helper1[row][col];
         }
     }
-    Result = A.dilate(3, 3);
+    for(int row=0; row<Kernel.get_row(); row++)
+    {
+        for(int col=0; col<Kernel.get_col(); col++)
+        {
+            Kernel.data[row][col] = helper2[row][col];
+        }
+    }
+    for(int row=0; row<ExpectedResult.get_row(); row++)
+    {
+        for(int col=0; col<ExpectedResult.get_col(); col++)
+        {
+            ExpectedResult.data[row][col] = helper3[row][col];
+        }
+    }
+    cross_correlation(Input, Kernel, Result, 3, 3);
     print_mtx(Result);//*/
 }

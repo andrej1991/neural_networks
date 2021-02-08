@@ -21,8 +21,11 @@ objects: prepare
 	g++ -c ../neurons/neuron.cpp -o $(object_dir)/neuron.o
 	g++ -c unittests.cpp -o $(object_dir)/unittests.o
 
+all_general: objects
+    g++ $(object_files) -O3 -W -std=c++11 -lgtest -lpthread -o $(binary_dir)/neural_net_unit_tests
+
 all: objects
-	g++ $(object_files) -O3 -lgtest -lpthread -o $(binary_dir)/neural_net_unit_tests
+	g++ $(object_files) -O3 -W -march=corei7 -std=c++11 -m64 -lgtest -lpthread -o $(binary_dir)/neural_net_unit_tests
 	
 clean:
 	rm -f $(object_dir)/*.o
