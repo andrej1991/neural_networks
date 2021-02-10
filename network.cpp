@@ -33,8 +33,6 @@ Network::Network(char *data): monitor_training_duration(false)
     if(file.is_open())
         {
             int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride;
-            //LayerDescriptor **dsc = new LayerDescriptor* [this->layers_num];
-            LayerDescriptor *dsc[this->layers_num];
             file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
@@ -42,6 +40,7 @@ Network::Network(char *data): monitor_training_duration(false)
             file.read(reinterpret_cast<char *>(&(this->costfunction_type)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(this->dropout_probability)), sizeof(double));
             this->total_layers_num = this->layers_num + 1;
+            LayerDescriptor *dsc[this->layers_num];
             for(int i = 0; i < this->layers_num; i++)
                 {
                     file.read(reinterpret_cast<char *>(&f_layer_type), sizeof(int));
