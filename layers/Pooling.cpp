@@ -1,4 +1,5 @@
 #include "layers.h"
+#include <string.h>
 
 Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row, int input_col, int next_layers_type):
                 fmap_count(prev_layers_fmapcount), map_row(row), map_col(col), pooling_type(pooling_type), next_layers_type(next_layers_type)
@@ -90,16 +91,24 @@ void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature
 {
     int kernelsize = kernel.get_row() * kernel.get_col();
     int starting_pos = kernelsize * fmap_id;
-    int endpos = starting_pos + kernelsize;
     int index = starting_pos;
-    for(int col = 0; col < kernel.get_col(); col++)
+    memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
+    /*for(int col = 0; col < kernel.get_col(); col++)
     {
         for(int row = 0; row < kernel.get_row(); row++)
         {
             kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
             index++;
         }
-    }
+    }*/
+    /*for(int row = 0; row < kernel.get_row(); row++)
+    {
+        for(int col = 0; col < kernel.get_col(); col++)
+        {
+            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
+            index++;
+        }
+    }*/
 }
 
 inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **delta)
@@ -241,23 +250,34 @@ inline void Pooling::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup
 
 void Pooling::set_input(Matrix **input)
 {
-    cerr << "Pooling layer cannot be an inpu layer! Set input is not possible." << endl;
+    cerr << "Pooling layer cannot be an input layer! Set input is not possible." << endl;
     throw exception();
 }
 
 void Pooling::flatten()
 {
     int i = 0;
+    int output_size = this->output_row * this->output_col;
+    int output_size_in_bytes = output_size * sizeof(double);
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
     {
-        for(int col = 0; col < this->output_col; col++)
+        memcpy(&(this->flattened_output[0]->dv[map_index*output_size]), this->outputs[map_index]->dv, output_size_in_bytes);
+        /*for(int col = 0; col < this->output_col; col++)
         {
             for(int row = 0; row < this->output_row; row++)
             {
                 this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
                 i++;
             }
-        }
+        }*/
+        /*for(int row = 0; row < this->output_row; row++)
+        {
+            for(int col = 0; col < this->output_col; col++)
+            {
+                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
+                i++;
+            }
+        }*/
     }
 }
 

@@ -11,12 +11,12 @@ using namespace std;
 
 class Matrix
 {
-    //public:
     int row,col;
     inline void destruct();
     inline void equality(const Matrix &mtx);
     public:
     double **data;
+    double *dv;
     Matrix(int row = 1,int col = 1);
     ~Matrix();
     Matrix(const Matrix& mtx);

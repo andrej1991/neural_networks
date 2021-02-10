@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 #include "layers.h"
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
@@ -61,16 +62,24 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 {
     int kernelsize = kernel.get_row() * kernel.get_col();
     int starting_pos = kernelsize * fmap_id;
-    int endpos = starting_pos + kernelsize;
     int index = starting_pos;
-    for(int col = 0; col < kernel.get_col(); col++)
+    memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
+    /*for(int col = 0; col < kernel.get_col(); col++)
     {
         for(int row = 0; row < kernel.get_row(); row++)
         {
             kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
             index++;
         }
-    }
+    }*/
+    /*for(int row = 0; row < kernel.get_row(); row++)
+    {
+        for(int col = 0; col < kernel.get_col(); col++)
+        {
+            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
+            index++;
+        }
+    }*/
 }
 
 inline void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
@@ -231,16 +240,27 @@ inline Matrix** Convolutional::derivate_layers_output(Matrix **input)
 void Convolutional::flatten()
 {
     int i = 0;
+    int output_size = this->output_row * this->output_col;
+    int output_size_in_bytes = output_size * sizeof(double);
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
-        for(int col = 0; col < this->output_col; col++)
+        memcpy(&(this->flattened_output[0]->dv[map_index*output_size]), this->outputs[map_index]->dv, output_size_in_bytes);
+        /*for(int col = 0; col < this->output_col; col++)
         {
             for(int row = 0; row < this->output_row; row++)
             {
                 this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
                 i++;
             }
-        }
+        }*/
+        /*for(int row = 0; row < this->output_row; row++)
+        {
+            for(int col = 0; col < this->output_col; col++)
+            {
+                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
+                i++;
+            }
+        }*/
     }
 }
 

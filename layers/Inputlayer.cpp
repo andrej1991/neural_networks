@@ -8,17 +8,17 @@ InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_typ
     this->layer_type = INPUTLAYER;
     this->outputs = new Matrix* [input_channel_count];
     for(int i = 0; i < input_channel_count; i++)
-        {
-            outputs[i] = new Matrix(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
-        }
+    {
+        outputs[i] = new Matrix(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
+    }
 }
 
 InputLayer::~InputLayer()
 {
     for(int i = 0; i < this->input_channel_count; i++)
-        {
-            delete this->outputs[i];
-        }
+    {
+        delete this->outputs[i];
+    }
     delete[] this->outputs;
 }
 
@@ -46,27 +46,19 @@ void InputLayer::set_input(Matrix **input)
 {
     ///TODO modify this function to work with FC layer and convolutional layer
     if(this->next_layers_type == FULLY_CONNECTED)
+    {
+        for (int i = 0; i < this->input_channel_count; i++)
         {
-            for (int i = 0; i < this->input_channel_count; i++)
-                {
-                    this->outputs[i][0] = input[i][0];
-                }
+            this->outputs[i][0] = input[i][0];
         }
+    }
     else if(this->next_layers_type == CONVOLUTIONAL)
+    {
+        for(int l = 0; l < this->input_channel_count; l++)
         {
-            for(int l = 0; l < this->input_channel_count; l++)
-                {
-                    //int debug1 = this->outputs[l]->get_col();
-                    //int debug2 = this->outputs[l]->get_row();
-                    for(int i = 0; i < this->row; i++)
-                        {
-                            for(int j = 0; j < this->col; j++)
-                                {
-                                    this->outputs[l][0].data[i][j] = input[l][0].data[i][j];
-                                }
-                        }
-                }
+            this->outputs[l][0] = input[l][0];
         }
+    }
 }
 
 inline Matrix** InputLayer::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error)
