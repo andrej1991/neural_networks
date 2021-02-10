@@ -1,8 +1,8 @@
 object_dir = ../../obj/unittest
 binary_dir = ../../bin/unittest
 object_files = $(object_dir)/matrix.o $(object_dir)/MNIST_data.o $(object_dir)/exceptions.o $(object_dir)/Convolutional.o $(object_dir)/Feature_map.o $(object_dir)/FullyConnected.o $(object_dir)/Inputlayer.o $(object_dir)/layerdescriptor.o $(object_dir)/layers.o $(object_dir)/Pooling.o $(object_dir)/Softmax.o $(object_dir)/neuron.o $(object_dir)/network.o $(object_dir)/additional.o 
-general_compiler_options = -O3 -std=c++11 -lgtest -lpthread
-customized_compiler_options = -O3 -march=corei7 -std=c++11 -m64 -lgtest -lpthread
+general_compiler_options = -s -O3 -std=c++11 -lgtest -lpthread
+customized_compiler_options = -s -O3 -march=corei7 -std=c++11 -m64 -lgtest -lpthread
 
 prepare:
 	mkdir -p $(binary_dir)

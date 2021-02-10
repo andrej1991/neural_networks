@@ -1,3 +1,5 @@
+/*a block test for camparing the network parameters after a single training input
+the network is inicialized by test_network_no_strides_in_conv_layer.bin before the "learning" process*/
 #include <gtest/gtest.h>
 #include <iostream>
 #include <fstream>
@@ -10,8 +12,6 @@ using namespace std;
 
 int test_params(char *training_input, char *required_training_output, char *ref)
 {
-    //char training_input[] = "./data/test_data/input_for_8.dat";
-    //char required_training_output[] = "./data/test_data/required_output_for_8.dat";
     int input_row, input_col, output_size, epochs, minibatch_len, minibatch_count, validation_data_len, traninig_data_len;
     double learning_rate, regularization_rate;
     learning_rate = 0.003;
@@ -30,32 +30,37 @@ int test_params(char *training_input, char *required_training_output, char *ref)
     n1.stochastic_gradient_descent(&m, epochs, minibatch_len, learning_rate, false, regularization_rate, NULL, minibatch_count, validation_data_len, traninig_data_len);
     char outputfile[] = "/tmp/test_network_output_8.bin";
     n1.store(outputfile);
-    ifstream reference, x;
+    /*ifstream reference, out;
     reference.open(ref, ios::in|ios::binary );
-    x.open("/tmp/test_network_output_8.bin", ios::in|ios::binary);
+    out.open(outputfile, ios::in|ios::binary);
     reference.seekg(192);
-    x.seekg(192);
+    out.seekg(192);
     double helper1, helper2;
     while(reference.good())
     {
         reference.read(reinterpret_cast<char *>(&(helper1)), sizeof(double));
-        x.read(reinterpret_cast<char *>(&(helper2)), sizeof(double));
-        if ( abs(helper1 - helper2) < 1E-10)
+        out.read(reinterpret_cast<char *>(&(helper2)), sizeof(double));
+        if ( abs(helper1 - helper2) > 1E-10)
+        {
+            cerr << "reference " << helper1 << endl;
+            cerr << "actual " << helper2 << endl;
             return -1;
-    }
+        }
+    }*/
     //int ret = system("diff ./data/verification_results/test_network_output_8.bin /tmp/test_network_output_8.bin");
     //ASSERT_EQ(0, ret);
-    //string Result(outputfile), Verification("./data/verification_results/test_network_output_8.bin"), command("diff ");
-    /*command += Result + " " + Verification;
+    string Result(outputfile), Verification(ref), command("diff ");
+    command += Result + " " + Verification;
     int ret = system(command.c_str());
-    ASSERT_EQ(0, ret);*/
     system("rm -f /tmp/test_network_output_8.bin");
-    return 0;
+    return ret;
 }
 
 TEST(FullNetworkLearningParameterTest, test_matrix_parameters_for_single_fixed_input_learning)
 {
     ASSERT_EQ(0, test_params("./data/test_data/input_for_8.dat", "./data/test_data/required_output_for_8.dat", "./data/verification_results/test_network_output_8.bin"));
+    ASSERT_EQ(0, test_params("./data/test_data/input_for_0.dat", "./data/test_data/required_output_for_0.dat", "./data/verification_results/test_network_output_0.bin"));
+    ASSERT_EQ(0, test_params("./data/test_data/input_for_1.dat", "./data/test_data/required_output_for_1.dat", "./data/verification_results/test_network_output_1.bin"));
 }
 
 
