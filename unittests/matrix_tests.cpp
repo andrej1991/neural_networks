@@ -834,41 +834,5 @@ TEST(MatrixBasicOperationsTest, test_squared_sum_over_elements_positive)
 int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();//*/
-    /*Matrix Input(7,8), Kernel(2,2), Result(3, 4), ExpectedResult(3,4);
-    double helper1[Input.get_row()][Input.get_col()] = {{1, 2, 4, 8, 16, 32, 64, 128},
-                                                        {3, 6, 9, 12, 18, 21, 24, 27},
-                                                        {2, 3, 5, 7, 11, 13, 17, 19},
-                                                        {256, 512, 1024, 2048, 4096, 8192, 16384, 32768},
-                                                        {30, 33, 36, 39, 42, 45, 48, 51},
-                                                        {23, 29, 31, 37, 41, 47, 53, 59},
-                                                        {49, 50, 51, 52, 53, 54, 55, 56}};
-    double helper2[Kernel.get_row()][Kernel.get_col()] = {{1.1, 2.2},
-                                                          {3.3, 4.4}};
-    double helper3[ExpectedResult.get_row()][ExpectedResult.get_col()] = {{41.8, 104.5, 239.8, 550},
-                                                                          {3106.4, 12411.3, 49602.3, 198307},
-                                                                          {309.1, 390.5, 487.3, 599.5}};
-    for (int row=0; row<Input.get_row(); row++)
-    {
-        for (int col=0; col < Input.get_col(); col++)
-        {
-            Input.data[row][col] = helper1[row][col];
-        }
-    }
-    for(int row=0; row<Kernel.get_row(); row++)
-    {
-        for(int col=0; col<Kernel.get_col(); col++)
-        {
-            Kernel.data[row][col] = helper2[row][col];
-        }
-    }
-    for(int row=0; row<ExpectedResult.get_row(); row++)
-    {
-        for(int col=0; col<ExpectedResult.get_col(); col++)
-        {
-            ExpectedResult.data[row][col] = helper3[row][col];
-        }
-    }
-    cross_correlation(Input, Kernel, Result, 3, 3);
-    print_mtx(Result);//*/
+    return RUN_ALL_TESTS();
 }

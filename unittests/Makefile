@@ -1,6 +1,8 @@
 object_dir = ../../obj/unittest
 binary_dir = ../../bin/unittest
-object_files = $(object_dir)/matrix.o $(object_dir)/MNIST_data.o $(object_dir)/exceptions.o $(object_dir)/Convolutional.o $(object_dir)/Feature_map.o $(object_dir)/FullyConnected.o $(object_dir)/Inputlayer.o $(object_dir)/layerdescriptor.o $(object_dir)/layers.o $(object_dir)/Pooling.o $(object_dir)/Softmax.o $(object_dir)/neuron.o $(object_dir)/unittests.o
+object_files = $(object_dir)/matrix.o $(object_dir)/MNIST_data.o $(object_dir)/exceptions.o $(object_dir)/Convolutional.o $(object_dir)/Feature_map.o $(object_dir)/FullyConnected.o $(object_dir)/Inputlayer.o $(object_dir)/layerdescriptor.o $(object_dir)/layers.o $(object_dir)/Pooling.o $(object_dir)/Softmax.o $(object_dir)/neuron.o $(object_dir)/network.o $(object_dir)/additional.o 
+general_compiler_options = -O3 -std=c++11 -lgtest -lpthread
+customized_compiler_options = -O3 -march=corei7 -std=c++11 -m64 -lgtest -lpthread
 
 prepare:
 	mkdir -p $(binary_dir)
@@ -19,13 +21,17 @@ objects: prepare
 	g++ -c ../layers/Pooling.cpp -o $(object_dir)/Pooling.o
 	g++ -c ../layers/Softmax.cpp -o $(object_dir)/Softmax.o
 	g++ -c ../neurons/neuron.cpp -o $(object_dir)/neuron.o
-	g++ -c unittests.cpp -o $(object_dir)/unittests.o
+	g++ -c ../network.cpp -o $(object_dir)/network.o
+	g++ -c ../additional.cpp -o $(object_dir)/additional.o
+	g++ -c matrix_tests.cpp -o $(object_dir)/matrix_tests.o
+	g++ -c parameters_tests.cpp -o $(object_dir)/parameters_tests.o
 
 all_general: objects
-    g++ $(object_files) -O3 -W -std=c++11 -lgtest -lpthread -o $(binary_dir)/neural_net_unit_tests
+	g++ $(object_files) $(object_dir)/matrix_tests.o $(general_compiler_options) -o $(binary_dir)/neural_net_matrix_unit_tests
 
 all: objects
-	g++ $(object_files) -O3 -W -march=corei7 -std=c++11 -m64 -lgtest -lpthread -o $(binary_dir)/neural_net_unit_tests
+	g++ $(object_files) $(object_dir)/matrix_tests.o $(customized_compiler_options) -o $(binary_dir)/neural_net_matrix_unit_tests
+	g++ $(object_files) $(object_dir)/parameters_tests.o $(customized_compiler_options) -o $(binary_dir)/neural_net_parameters_unit_tests
 	
 clean:
 	rm -f $(object_dir)/*.o
