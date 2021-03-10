@@ -289,10 +289,11 @@ Matrix Matrix::zero_padd(int top, int right, int bottom, int left)
     Matrix ret(padded_row, padded_col);
     for(int i = 0; i < this->row; i++)
     {
-        for(int j = 0; j < this->col; j++)
+        memcpy(&(ret.data[top + i][left]), this->data[i], this->col * sizeof(double));
+        /*for(int j = 0; j < this->col; j++)
         {
             ret.data[top + i][left + j] = this->data[i][j];
-        }
+        }*/
     }
     return ret;
 }
