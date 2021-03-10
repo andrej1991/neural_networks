@@ -30,7 +30,7 @@ int test_params(char *training_input, char *required_training_output, char *ref)
     n1.stochastic_gradient_descent(&m, epochs, minibatch_len, learning_rate, false, regularization_rate, NULL, minibatch_count, validation_data_len, traninig_data_len);
     char outputfile[] = "/tmp/test_network_output_8.bin";
     n1.store(outputfile);
-    /*ifstream reference, out;
+    ifstream reference, out;
     reference.open(ref, ios::in|ios::binary );
     out.open(outputfile, ios::in|ios::binary);
     reference.seekg(192);
@@ -46,9 +46,7 @@ int test_params(char *training_input, char *required_training_output, char *ref)
             cerr << "actual " << helper2 << endl;
             return -1;
         }
-    }*/
-    //int ret = system("diff ./data/verification_results/test_network_output_8.bin /tmp/test_network_output_8.bin");
-    //ASSERT_EQ(0, ret);
+    }
     string Result(outputfile), Verification(ref), command("diff ");
     command += Result + " " + Verification;
     int ret = system(command.c_str());
