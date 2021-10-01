@@ -7,6 +7,7 @@ the network is inicialized by test_network_no_strides_in_conv_layer.bin before t
 #include "../matrix/matrix.h"
 #include "../data_loader/MNIST_data.h"
 #include "../network.h"
+#include "../SGD.h"
 
 using namespace std;
 
@@ -23,11 +24,12 @@ int test_params(char *training_input, char *required_training_output, char *ref)
     ifstream input, required_output;
     input.open(training_input, ios::in|ios::binary);
     required_output.open(required_training_output, ios::in|ios::binary);
-    Network n1("./data/test_network_no_strides_in_conv_layer.bin");
+    Network n1("./data/test_network_no_strides_in_conv_layer.bin");    cout << "fasza so far\n";
+    StochasticGradientDescent learn(n1, 2, 0);
     MNIST_data *m;
     m = new MNIST_data(input_row, input_col, output_size, 1);
     m->load_data(input, required_output);
-    n1.stochastic_gradient_descent(&m, epochs, minibatch_len, learning_rate, false, regularization_rate, NULL, minibatch_count, validation_data_len, traninig_data_len);
+    learn.stochastic_gradient_descent(&m, epochs, minibatch_len, learning_rate, false, regularization_rate, NULL, minibatch_count, validation_data_len, traninig_data_len);
     char outputfile[] = "/tmp/test_network_output_8.bin";
     n1.store(outputfile);
     ifstream reference, out;
