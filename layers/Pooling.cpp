@@ -111,7 +111,7 @@ void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature
     }*/
 }
 
-inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **delta)
+inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **delta, int threadindex)
 {
     int in_row = input[0][0].get_row();
     int in_col = input[0][0].get_col();
@@ -208,7 +208,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
     return this->layers_delta;
 }
 
-inline void Pooling::layers_output(Matrix **input)
+void Pooling::layers_output(Matrix **input, int threadindex)
 {
     switch(this->pooling_type)
     {
@@ -221,13 +221,13 @@ inline void Pooling::layers_output(Matrix **input)
     }
 }
 
-inline Matrix** Pooling::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
+Matrix** Pooling::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     cerr << "Pooling layer cannot be the last layer!" << endl;
     throw exception();
 }
 
-inline Matrix** Pooling::derivate_layers_output(Matrix **input)
+Matrix** Pooling::derivate_layers_output(Matrix **input, int threadindex)
 {
     cerr << "The output of pooling layer cannot be derived!" << endl;
     throw exception();
@@ -248,7 +248,7 @@ inline void Pooling::add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup
     return;
 }
 
-void Pooling::set_input(Matrix **input)
+void Pooling::set_input(Matrix **input, int threadindex)
 {
     cerr << "Pooling layer cannot be an input layer! Set input is not possible." << endl;
     throw exception();
@@ -281,7 +281,7 @@ void Pooling::flatten()
     }
 }
 
-inline Matrix** Pooling::get_output()
+Matrix** Pooling::get_output(int threadindex)
 {
     if(this->next_layers_type == FULLY_CONNECTED)
     {

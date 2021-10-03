@@ -98,7 +98,7 @@ inline void delete_padded_delta(Matrix **padded_delta, int limit)
     delete[] padded_delta;
 }
 
-inline Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta)
+Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta, int threadindex)
 {
     Feature_map** next_layers_fmaps;
     if(this->next_layers_type != POOLING)
@@ -208,7 +208,7 @@ inline void Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, Mat
     helper+=this->fmap[map_index]->biases[0][0].data[0][0];
 }
 
-inline void Convolutional::layers_output(Matrix **input)
+void Convolutional::layers_output(Matrix **input, int threadindex)
 {
     Matrix convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
     for(int map_index = 0; map_index < this->map_count; map_index++)
@@ -219,13 +219,13 @@ inline void Convolutional::layers_output(Matrix **input)
     }
 }
 
-inline Matrix** Convolutional::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
+Matrix** Convolutional::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     cerr << "currently the convolutional neural network needs to have atleest one fully connected layer at the output";
     throw exception();
 }
 
-inline Matrix** Convolutional::derivate_layers_output(Matrix **input)
+Matrix** Convolutional::derivate_layers_output(Matrix **input, int threadindex)
 {
     Matrix convolved(this->output_row, this->output_col), helper(this->output_row, this->output_col);
     for(int map_index = 0; map_index < this->map_count; map_index++)
@@ -264,13 +264,13 @@ void Convolutional::flatten()
     }
 }
 
-void Convolutional::set_input(Matrix **input)
+void Convolutional::set_input(Matrix **input, int threadindex)
 {
     cerr << "This function can be called only for the InputLayer!\n";
     throw exception();
 }
 
-inline Matrix** Convolutional::get_output()
+Matrix** Convolutional::get_output(int threadindex)
 {
     if(this->next_layers_type == FULLY_CONNECTED)
     {

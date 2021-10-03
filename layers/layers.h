@@ -74,13 +74,13 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error) = 0;
-    virtual inline void layers_output(Matrix **input) = 0;
-    virtual inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type) = 0;
-    virtual inline Matrix** derivate_layers_output(Matrix **input) = 0;
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex=0) = 0;
+    virtual void layers_output(Matrix **input, int threadindex=0) = 0;
+    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0) = 0;
+    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex=0) = 0;
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
-    virtual void set_input(Matrix **input) = 0;
-    virtual inline Matrix** get_output() = 0;
+    virtual void set_input(Matrix **input, int threadindex=0) = 0;
+    virtual inline Matrix** get_output(int threadindex=0) = 0;
     virtual inline Feature_map** get_feature_maps() = 0;
     virtual inline short get_layer_type() = 0;
     virtual inline int get_output_len() = 0;
@@ -94,28 +94,31 @@ class Layer{
     virtual void restore_neurons(Matrix *removed_colums = NULL) = 0;
     virtual void store(std::ofstream &params) = 0;
     virtual void load(std::ifstream &params) = 0;
-
+    virtual void set_threadcount(int threadcount);
+    virtual inline int get_threadcount();
 };
 
 class FullyConnected : public Layer {
     friend class Softmax;
-    Matrix **output, **output_derivative, **output_error, **output_error_helper, **layers_delta;
+    Matrix ***output, ***output_derivative, ***output_error, ***output_error_helper, ***layers_delta;
     Matrix *removed_rows, *backup_weights, *backup_biases, *backup_output, *backup_output_derivative, *backpup_output_error, *backup_output_error_helper, *backup_layers_delta;
     int neuron_type, outputlen, backup_outputlen;
     bool dropout_happened;
     short int layer_type;
     Neuron neuron;
     Feature_map **fmap;
+    int threadcount;
+    virtual void destroy_dinamic_data();
     public:
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
-    virtual inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
-    virtual inline void layers_output(Matrix **input);
-    virtual inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
-    virtual inline Matrix** derivate_layers_output(Matrix **input);
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
+    virtual void layers_output(Matrix **input, int threadindex=0);
+    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
+    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    virtual void set_input(Matrix **input);
-    virtual inline Matrix** get_output();
+    virtual void set_input(Matrix **input, int threadindex=0);
+    virtual inline Matrix** get_output(int threadindex=0);
     virtual inline Feature_map** get_feature_maps();
     virtual inline short get_layer_type();
     virtual inline int get_output_len();
@@ -129,16 +132,18 @@ class FullyConnected : public Layer {
     virtual void restore_neurons(Matrix *removed_colums = NULL);
     virtual void store(std::ofstream &params);
     virtual void load(std::ifstream &params);
+    void set_threadcount(int threadcount);
+    inline int get_threadcount();
 };
 
 class Softmax : public FullyConnected {
     public:
     Softmax(int row, int col);
     ~Softmax();
-    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
-    inline void layers_output(Matrix **input);
-    inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
-    inline Matrix** derivate_layers_output(Matrix **input);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
+    void layers_output(Matrix **input, int threadindex=0);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
 };
 
 class Convolutional : public Layer {
@@ -148,17 +153,17 @@ class Convolutional : public Layer {
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col;
     short int layer_type;
     Neuron neuron;
-    inline void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
+    void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
-    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
-    inline void layers_output(Matrix **input);
-    inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
-    inline Matrix** derivate_layers_output(Matrix **input);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
+    void layers_output(Matrix **input, int threadindex=0);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    void set_input(Matrix **input);
-    inline Matrix** get_output();
+    void set_input(Matrix **input, int threadindex=0);
+    inline Matrix** get_output(int threadindex=0);
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();
@@ -180,20 +185,21 @@ class Convolutional : public Layer {
 
 
 class InputLayer : public Layer {
+    int threadcount;
     public:
     short int layer_type, next_layers_type;
     int outputlen, row, col, input_channel_count;
-    Matrix **outputs;
+    Matrix ***outputs;
     Padding padd;
     InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error);
-    inline void layers_output(Matrix **input);
-    inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
-    inline Matrix** derivate_layers_output(Matrix **input);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
+    void layers_output(Matrix **input, int threadindex=0);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    void set_input(Matrix **input);
-    inline Matrix** get_output();
+    void set_input(Matrix **input, int threadindex=0);
+    inline Matrix** get_output(int threadindex=0);
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();
@@ -207,6 +213,8 @@ class InputLayer : public Layer {
     void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
+    void set_threadcount(int threadcount);
+    inline int get_threadcount();
 };
 
 class Pooling : public Layer {
@@ -218,15 +226,15 @@ class Pooling : public Layer {
     public:
     Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col, int next_layers_type);
     ~Pooling();
-    inline Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error);
-    inline void layers_output(Matrix **input);
-    inline Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type);
-    inline Matrix** derivate_layers_output(Matrix **input);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex=0);
+    void layers_output(Matrix **input, int threadindex=0);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(Matrix **input);
-    inline Matrix** get_output();
+    void set_input(Matrix **input, int threadindex=0);
+    Matrix** get_output(int threadindex=0);
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();

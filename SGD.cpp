@@ -7,7 +7,7 @@
 
 StochasticGradientDescent::StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability):
                                                     neunet(neunet), costfunction_type(costfunction_type), dropout_probability(dropout_probability),
-                                                    tp(4){};
+                                                    tp(2){};
 
 StochasticGradientDescent::~StochasticGradientDescent()
 {

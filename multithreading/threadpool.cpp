@@ -10,7 +10,7 @@ Job::Job(int id, Network *neunet):id(id)
 
 void Job::work(int threadid)
 {
-    this->neunet->backpropagate(this->training_data, this->deltanabla, this->costfunction_type);
+    this->neunet->backpropagate(this->training_data, this->deltanabla, this->costfunction_type, this->id);
     pthread_mutex_lock(&(this->nabla_lock));
     for(int layer_index = 0; layer_index < this->neunet->layers_num; layer_index++)
     {
