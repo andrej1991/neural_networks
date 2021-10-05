@@ -179,25 +179,11 @@ void FullyConnected::set_threadcount(int threadcnt)
 {
     this->destroy_dinamic_data();
     this->threadcount = threadcnt;
-
-
     this->output = new Matrix**[threadcnt];
-
-
-    this->output_derivative = new Matrix**[1];
-
-
-    this->output_error = new Matrix**[1];
-
-
-    this->output_error_helper = new Matrix**[1];
-
-
-    this->layers_delta = new Matrix**[1];
-
-
-
-
+    this->output_derivative = new Matrix**[threadcnt];
+    this->output_error = new Matrix**[threadcnt];
+    this->output_error_helper = new Matrix**[threadcnt];
+    this->layers_delta = new Matrix**[threadcnt];
     for(int i = 0; i < threadcnt; i++)
     {
         this->output[i] = new Matrix* [1];

@@ -16,7 +16,7 @@ void Job::work(int threadid)
     {
         this->nabla[layer_index][0] += this->deltanabla[layer_index][0];
     }
-    pthread_mutex_lock(&(this->nabla_lock));
+    pthread_mutex_unlock(&(this->nabla_lock));
 }
 
 

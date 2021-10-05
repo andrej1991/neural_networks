@@ -5,9 +5,11 @@
 #include "matrix/matrix.h"
 #include "additional.h"
 
+#define threadc 8
+
 StochasticGradientDescent::StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability):
                                                     neunet(neunet), costfunction_type(costfunction_type), dropout_probability(dropout_probability),
-                                                    tp(2){};
+                                                    tp(threadc){};
 
 StochasticGradientDescent::~StochasticGradientDescent()
 {
@@ -44,21 +46,22 @@ double StochasticGradientDescent::cost(Matrix &required_output, int req_outp_ind
     }
 }
 
-void StochasticGradientDescent::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, double learning_rate, double regularization_rate)
+void StochasticGradientDescent::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, double learning_rate, double regularization_rate)
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
         this->job[training_data_index]->costfunction_type = this->costfunction_type;
         this->job[training_data_index]->training_data = minibatches[training_data_index];
-        this->job[training_data_index]->deltanabla = deltanabla;
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
         this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
         /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
             *nabla[layer_index] += *deltanabla[layer_index];
         }*/
-        this->tp.push(this->job[training_data_index]);
     }
+    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         this->neunet.layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, nabla[layer_index]);
@@ -138,6 +141,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
     this->job = new Job* [minibatch_len];
     for(int i = 0; i < minibatch_len; i++)
         this->job[i] = new Job(i, &(this->neunet));
+    this->neunet.set_threadcount(minibatch_len);
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     std::random_device rand;
@@ -151,11 +155,15 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
     Matrix dropout_neurons[this->neunet.layers_num - 1];
     chrono::time_point<chrono::system_clock> start, end_training;
     chrono::duration<double> epoch_duration, overall_duration;
-    Layers_features **nabla, **deltanabla, **helper_1, **helper_2;
+    Layers_features **nabla, ***deltanabla, **helper_1, **helper_2;
     try
     {
+        deltanabla = new Layers_features** [minibatch_len];
         nabla = new Layers_features* [this->neunet.layers_num];
-        deltanabla = new Layers_features* [this->neunet.layers_num];
+        for(int i = 0; i < minibatch_len; i++)
+        {
+            deltanabla[i] = new Layers_features* [this->neunet.layers_num];
+        }
         helper_1 = new Layers_features* [this->neunet.layers_num];
         helper_2 = new Layers_features* [this->neunet.layers_num];
         for(int i = 0; i < this->neunet.layers_num; i++)
@@ -171,11 +179,14 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                                            this->neunet.layers[i]->get_mapdepth(),
                                            biascnt);
             nabla[i]->zero();
-            deltanabla[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
-                                                this->neunet.layers[i]->get_weights_row(),
-                                                this->neunet.layers[i]->get_weights_col(),
-                                                this->neunet.layers[i]->get_mapdepth(),
-                                                biascnt);
+            for(int j = 0; j < minibatch_len; j++)
+            {
+                deltanabla[j][i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
+                                                    this->neunet.layers[i]->get_weights_row(),
+                                                    this->neunet.layers[i]->get_weights_col(),
+                                                    this->neunet.layers[i]->get_mapdepth(),
+                                                    biascnt);
+            }
             helper_1[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
                                                 this->neunet.layers[i]->get_weights_row(),
                                                 this->neunet.layers[i]->get_weights_col(),
@@ -229,18 +240,22 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                     if(this->neunet.layers[layerindex]->get_layer_type() == FULLY_CONNECTED or this->neunet.layers[layerindex]->get_layer_type() == SOFTMAX)
                     {
                         delete nabla[layerindex];
-                        delete deltanabla[layerindex];
+
                         biascnt = this->neunet.layers[layerindex]->get_weights_row();
                         nabla[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
                                                        this->neunet.layers[layerindex]->get_weights_row(),
                                                        this->neunet.layers[layerindex]->get_weights_col(),
                                                        this->neunet.layers[layerindex]->get_mapdepth(),
                                                        biascnt);
-                        deltanabla[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
-                                                            this->neunet.layers[layerindex]->get_weights_row(),
-                                                            this->neunet.layers[layerindex]->get_weights_col(),
-                                                            this->neunet.layers[layerindex]->get_mapdepth(),
-                                                            biascnt);
+                        for(int jobindex = 0; jobindex < minibatch_len; jobindex++)
+                        {
+                            delete deltanabla[jobindex][layerindex];
+                            deltanabla[jobindex][layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
+                                                                                   this->neunet.layers[layerindex]->get_weights_row(),
+                                                                                   this->neunet.layers[layerindex]->get_weights_col(),
+                                                                                   this->neunet.layers[layerindex]->get_mapdepth(),
+                                                                                   biascnt);
+                        }
                     }
                 }
             }
@@ -251,7 +266,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                 case STOCHASTIC:
                     this->stochastic(minibatches[j], minibatch_len, nabla, deltanabla, lr, reg);
                     break;
-                case MOMENTUM:
+                /*case MOMENTUM:
                     this->momentum_based(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, lr, reg, momentum);
                     break;
                 case NESTEROV:
@@ -259,7 +274,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                     break;
                 case RMSPROP:
                     this->rmsprop(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, helper_2, lr, reg, momentum, denominator);
-                    break;
+                    break;*/
                 default:
                     throw invalid_argument("Unknown gradient descent variant!");
             }
@@ -314,6 +329,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
             }
         }
     }
+    //this->neunet.set_threadcount(1);
     for(int i = 0; i < this->neunet.layers_num; i++)
     {
         delete nabla[i];

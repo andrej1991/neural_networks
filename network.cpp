@@ -165,7 +165,7 @@ void Network::feedforward(Matrix **input, int threadindex)
     this->layers[-1]->set_input(input, threadindex);
     for(int i = 0; i < this->layers_num; i++)
     {
-        this->layers[i]->layers_output(this->layers[i - 1]->get_output(), threadindex);
+        this->layers[i]->layers_output(this->layers[i - 1]->get_output(threadindex), threadindex);
     }
 }
 
@@ -173,7 +173,7 @@ Matrix Network::get_output(Matrix **input, int threadindex)
 {
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input, threadindex);
-    Matrix ret = *(this->layers[this->layers_num - 1]->get_output()[0]);
+    Matrix ret = *(this->layers[this->layers_num - 1]->get_output(threadindex)[0]);
     return ret;
 }
 
