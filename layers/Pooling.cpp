@@ -93,22 +93,6 @@ void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature
     int starting_pos = kernelsize * fmap_id;
     int index = starting_pos;
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
-    /*for(int col = 0; col < kernel.get_col(); col++)
-    {
-        for(int row = 0; row < kernel.get_row(); row++)
-        {
-            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
-            index++;
-        }
-    }*/
-    /*for(int row = 0; row < kernel.get_row(); row++)
-    {
-        for(int col = 0; col < kernel.get_col(); col++)
-        {
-            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
-            index++;
-        }
-    }*/
 }
 
 inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **delta, int threadindex)
@@ -262,22 +246,6 @@ void Pooling::flatten()
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
     {
         memcpy(&(this->flattened_output[0]->dv[map_index*output_size]), this->outputs[map_index]->dv, output_size_in_bytes);
-        /*for(int col = 0; col < this->output_col; col++)
-        {
-            for(int row = 0; row < this->output_row; row++)
-            {
-                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
-                i++;
-            }
-        }*/
-        /*for(int row = 0; row < this->output_row; row++)
-        {
-            for(int col = 0; col < this->output_col; col++)
-            {
-                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
-                i++;
-            }
-        }*/
     }
 }
 

@@ -64,22 +64,6 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
     int starting_pos = kernelsize * fmap_id;
     int index = starting_pos;
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
-    /*for(int col = 0; col < kernel.get_col(); col++)
-    {
-        for(int row = 0; row < kernel.get_row(); row++)
-        {
-            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
-            index++;
-        }
-    }*/
-    /*for(int row = 0; row < kernel.get_row(); row++)
-    {
-        for(int col = 0; col < kernel.get_col(); col++)
-        {
-            kernel.data[row][col] = next_layers_fmap[0]->weights[0]->data[neuron_id][index];
-            index++;
-        }
-    }*/
 }
 
 inline void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
@@ -106,7 +90,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         next_layers_fmaps = next_layer->get_feature_maps();
     }
     int next_layers_fmapcount = next_layer->get_mapcount();
-    this->derivate_layers_output(input);
+    this->derivate_layers_output(input, threadindex);
     Matrix **padded_delta;
     Matrix helper(this->output_row, this->output_col);
     Matrix dilated;
@@ -245,22 +229,6 @@ void Convolutional::flatten()
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
         memcpy(&(this->flattened_output[0]->dv[map_index*output_size]), this->outputs[map_index]->dv, output_size_in_bytes);
-        /*for(int col = 0; col < this->output_col; col++)
-        {
-            for(int row = 0; row < this->output_row; row++)
-            {
-                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
-                i++;
-            }
-        }*/
-        /*for(int row = 0; row < this->output_row; row++)
-        {
-            for(int col = 0; col < this->output_col; col++)
-            {
-                this->flattened_output[0]->data[i][0] = this->outputs[map_index]->data[row][col];
-                i++;
-            }
-        }*/
     }
 }
 
