@@ -146,43 +146,6 @@ class Softmax : public FullyConnected {
     Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
 };
 
-class Convolutional : public Layer {
-    Matrix **outputs, **flattened_output, **layers_delta, **output_derivative, **layers_delta_helper;
-    Feature_map **fmap;
-    Padding pad;
-    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col;
-    short int layer_type;
-    Neuron neuron;
-    void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
-    public:
-    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
-    ~Convolutional();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
-    void layers_output(Matrix **input, int threadindex=0);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
-    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
-    void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    void set_input(Matrix **input, int threadindex=0);
-    inline Matrix** get_output(int threadindex=0);
-    inline Feature_map** get_feature_maps();
-    inline short get_layer_type();
-    inline int get_output_len();
-    inline int get_output_row();
-    inline int get_output_col();
-    void flatten();
-    int get_mapcount();
-    int get_mapdepth();
-    int get_weights_row();
-    int get_weights_col();
-    int get_vertical_stride();
-    int get_horizontal_stride();
-    void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
-    Matrix drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL){};
-    void restore_neurons(Matrix *removed_colums = NULL){};
-    void store(std::ofstream &params);
-    void load(std::ifstream &params);
-};
-
 
 class InputLayer : public Layer {
     int threadcount;

@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
                 neuron_type = get_neuron_type(it, i);
                 try
                 {
-                    ;//vertical_stride = it->second["vertical_stride"].as<int>();
+                    vertical_stride = it->second["vertical_stride"].as<int>();
                 }
                 catch(YAML::InvalidNode)
                 {
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
                 }
                 try
                 {
-                    ;//horizontal_stride = it->second["horizontal_stride"].as<int>();
+                    horizontal_stride = it->second["horizontal_stride"].as<int>();
                 }
                 catch(YAML::InvalidNode)
                 {

@@ -1,4 +1,5 @@
 #include "layers.h"
+#include "Convolutional.h"
 #include <string.h>
 
 Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row, int input_col, int next_layers_type):

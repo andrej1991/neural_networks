@@ -23,11 +23,12 @@ Matrix::Matrix(int r,int c) : data(NULL)
         for(int i = 0; i < r; i++)
         {
             this->data[i] = &(this->dv[i*c]);
-            for(int j = 0; j < c; j++)
+            /*for(int j = 0; j < c; j++)
             {
                 this->data[i][j] = 0;
-            }
+            }*/
         }
+        memset((void*) this->dv, 0, sizeof(double)*row*col);
     }
     catch(bad_alloc& ba)
     {
@@ -378,9 +379,10 @@ Matrix Matrix::dilate(int vertical_stride, int horizontal_stride)
 
 void Matrix::zero()
 {
-    for(int i = 0; i < this->row; i++)
+    /*for(int i = 0; i < this->row; i++)
         for(int j = 0; j < this->col; j++)
-            this->data[i][j] = 0;
+            this->data[i][j] = 0;*/
+    memset((void*) this->dv, 0, sizeof(double)*row*col);
 }
 
 double Matrix::squared_sum_over_elements()
