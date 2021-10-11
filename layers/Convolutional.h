@@ -34,6 +34,8 @@ class Convolutional : public Layer {
     short int layer_type;
     Neuron neuron;
     void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
+    void destory_outputs_and_erros();
+    void build_outputs_and_errors();
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
@@ -61,8 +63,8 @@ class Convolutional : public Layer {
     void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-    void set_threadcount(int threadcnt);
-    int get_threadcount();
+    virtual void set_threadcount(int threadcnt);
+    virtual int get_threadcount();
 };
 
 #endif // CONVOLUTIONAL_H_INCLUDED

@@ -5,6 +5,7 @@
 #include <math.h>
 #include "layers/layers.h"
 #include "layers/Convolutional.h"
+#include "layers/Pooling.h"
 
 using namespace std;
 ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int costfunction_type = CROSS_ENTROPY_CF, bool dropout = false

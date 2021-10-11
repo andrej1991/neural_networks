@@ -70,6 +70,9 @@
 		<Unit filename="layers/FullyConnected.cpp" />
 		<Unit filename="layers/Inputlayer.cpp" />
 		<Unit filename="layers/Pooling.cpp" />
+		<Unit filename="layers/Pooling.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="layers/Softmax.cpp" />
 		<Unit filename="layers/layerdescriptor.cpp">
 			<Option weight="40" />

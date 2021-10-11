@@ -5,11 +5,10 @@
 #include "matrix/matrix.h"
 #include "additional.h"
 
-#define threadc 8
 
 StochasticGradientDescent::StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability):
                                                     neunet(neunet), costfunction_type(costfunction_type), dropout_probability(dropout_probability),
-                                                    tp(threadc){};
+                                                    tp(4){};
 
 StochasticGradientDescent::~StochasticGradientDescent()
 {
@@ -329,7 +328,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
             }
         }
     }
-    //this->neunet.set_threadcount(1);
+    this->neunet.set_threadcount(1);
     for(int i = 0; i < this->neunet.layers_num; i++)
     {
         delete nabla[i];

@@ -73,11 +73,12 @@ void InputLayer::set_threadcount(int threadcnt)
     for(int i = 0; i < this->threadcount; i++)
     {
         for(int j = 0; j < this->input_channel_count; j++)
-    {
-        delete this->outputs[i][j];
+        {
+            delete this->outputs[i][j];
+        }
+    delete[] this->outputs[i];
     }
     delete[] this->outputs;
-    }
     this->threadcount = threadcnt;
     this->outputs = new Matrix** [threadcnt];
     for(int i = 0; i < threadcnt; i++)

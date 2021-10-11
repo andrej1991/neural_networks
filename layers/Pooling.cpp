@@ -1,9 +1,11 @@
 #include "layers.h"
 #include "Convolutional.h"
+#include "Pooling.h"
 #include <string.h>
 
 Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row, int input_col, int next_layers_type):
-                fmap_count(prev_layers_fmapcount), map_row(row), map_col(col), pooling_type(pooling_type), next_layers_type(next_layers_type)
+                fmap_count(prev_layers_fmapcount), map_row(row), map_col(col), pooling_type(pooling_type), next_layers_type(next_layers_type),
+                input_row(input_row), input_col(input_col)
 {
     this->output_row = input_row / row;
     if(input_row % row)
@@ -11,24 +13,31 @@ Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, 
     this->output_col = input_col / col;
     if(input_col % col)
         output_col++;
-    this->pooling_memory = new Matrix* [prev_layers_fmapcount];
-    this->layers_delta = new Matrix* [prev_layers_fmapcount];
-    this->layers_delta_helper = new Matrix* [prev_layers_fmapcount];
-    this->outputs = new Matrix* [prev_layers_fmapcount];
-    this->flattened_output = new Matrix* [1];
-    this->flattened_output[0] = new Matrix(this->fmap_count * this->output_row * this->output_col, 1);
+    this->threadcount = 1;
+    /*this->pooling_memory = new Matrix** [1];
+    this->pooling_memory[0] = new Matrix* [prev_layers_fmapcount];
+    this->layers_delta = new Matrix** [1];
+    this->layers_delta[0] = new Matrix* [prev_layers_fmapcount];
+    this->layers_delta_helper = new Matrix** [1];
+    this->layers_delta_helper[0] = new Matrix* [prev_layers_fmapcount];
+    this->outputs = new Matrix** [1];
+    this->outputs[0] = new Matrix* [prev_layers_fmapcount];
+    this->flattened_output = new Matrix** [1];
+    this->flattened_output[0] = new Matrix* [1];
+    this->flattened_output[0][0] = new Matrix(this->fmap_count * this->output_row * this->output_col, 1);
     for(int i = 0; i < prev_layers_fmapcount; i++)
     {
-        this->pooling_memory[i] = new Matrix(input_row, input_col);
-        this->layers_delta[i] = new Matrix(input_row, input_col);
-        this->layers_delta_helper[i] = new Matrix(this->output_row, this->output_col);
-        this->outputs[i] = new Matrix(this->output_row, this->output_col);
-    }
+        this->pooling_memory[0][i] = new Matrix(input_row, input_col);
+        this->layers_delta[0][i] = new Matrix(input_row, input_col);
+        this->layers_delta_helper[0][i] = new Matrix(this->output_row, this->output_col);
+        this->outputs[0][i] = new Matrix(this->output_row, this->output_col);
+    }*/
+    this->build_outputs_and_errors();
 }
 
 Pooling::~Pooling()
 {
-    for(int i = 0; i < this->fmap_count; i++)
+    /*for(int i = 0; i < this->fmap_count; i++)
     {
         delete this->pooling_memory[i];
         delete this->layers_delta[i];
@@ -36,10 +45,64 @@ Pooling::~Pooling()
     }
     delete[] this->pooling_memory;
     delete[] this->layers_delta;
-    delete[] this->outputs;
+    delete[] this->outputs;*/
+    this->destory_outputs_and_erros();
 }
 
-inline void Pooling::max_pooling(Matrix **input)
+void Pooling::destory_outputs_and_erros()
+{
+    for(int i = 0; i < this->threadcount; i++)
+    {
+        for(int j = 0; j < this->fmap_count; j++)
+        {
+            delete this->outputs[i][j];
+            delete this->pooling_memory[i][j];
+            delete this->layers_delta[i][j];
+            delete this->layers_delta_helper[i][j];
+        }
+        delete[] this->outputs[i];
+        delete[] this->flattened_output[i];
+        delete[] this->pooling_memory[i];
+        delete[] this->layers_delta[i];
+        delete[] this->layers_delta_helper[i];
+    }
+    delete[] this->outputs;
+    delete[] this->flattened_output;
+    delete[] this->pooling_memory;
+    delete[] this->layers_delta;
+    delete[] this->layers_delta_helper;
+
+    delete this->backprop_helper;
+}
+
+void Pooling::build_outputs_and_errors()
+{
+    this->backprop_helper = new conv_backprop_helper(this->threadcount, this->output_row, this->output_col);
+
+    this->outputs = new Matrix** [this->threadcount];
+    this->flattened_output = new Matrix** [this->threadcount];
+    this->pooling_memory = new Matrix** [this->threadcount];
+    this->layers_delta = new Matrix** [this->threadcount];
+    this->layers_delta_helper = new Matrix** [this->threadcount];
+    for(int i = 0; i < this->threadcount; i++)
+    {
+        this->outputs[i] = new Matrix* [this->fmap_count];
+        this->flattened_output[i] = new Matrix* [1];
+        this->pooling_memory[i] = new Matrix* [this->fmap_count];
+        this->layers_delta[i] = new Matrix* [this->fmap_count];
+        this->layers_delta_helper[i] = new Matrix* [this->fmap_count];
+        this->flattened_output[i][0] = new Matrix(this->fmap_count * this->output_row * this->output_col, 1);
+        for(int j = 0; j < this->fmap_count; j++)
+        {
+            this->pooling_memory[i][j] = new Matrix(input_row, input_col);
+            this->layers_delta[i][j] = new Matrix(input_row, input_col);
+            this->layers_delta_helper[i][j] = new Matrix(this->output_row, this->output_col);
+            this->outputs[i][j] = new Matrix(this->output_row, this->output_col);
+        }
+    }
+}
+
+inline void Pooling::max_pooling(Matrix **input, int threadindex)
 {
     int in_row = input[0][0].get_row();
     int in_col = input[0][0].get_col();
@@ -48,7 +111,7 @@ inline void Pooling::max_pooling(Matrix **input)
     input_c_index = input_r_index = 0;
     for(int mapindex = 0; mapindex < this->fmap_count; mapindex++)
     {
-        this->pooling_memory[mapindex][0].zero();
+        this->pooling_memory[threadindex][mapindex][0].zero();
         for(int output_r = 0; output_r < this->output_row; output_r++)
         {
             for(int output_c = 0; output_c < this->output_col; output_c++)
@@ -68,8 +131,8 @@ inline void Pooling::max_pooling(Matrix **input)
                         }
                     }
                 }
-                this->outputs[mapindex]->data[output_r][output_c] = max;
-                this->pooling_memory[mapindex]->data[max_r_index][max_c_index] = 1;
+                this->outputs[threadindex][mapindex]->data[output_r][output_c] = max;
+                this->pooling_memory[threadindex][mapindex]->data[max_r_index][max_c_index] = 1;
                 input_c_index += this->map_col;
             }
             input_c_index = 0;
@@ -124,13 +187,13 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
         Matrix kernel(this->output_row, this->output_col);
         for(int i = 0; i < this->fmap_count; i++)
         {
-            this->layers_delta_helper[i][0].zero();
+            this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_neuroncount; j++)
             {
                 this->get_2D_weights(j, i, kernel, next_layers_fmaps);
                 //convolution(padded_delta[0],kernel, helper);
                 cross_correlation(padded_delta[j][0],kernel, helper, 1, 1);
-                this->layers_delta_helper[i][0] += helper;
+                this->layers_delta_helper[threadindex][i][0] += helper;
             }
         }
         delete_padded_delta(padded_delta, next_layers_neuroncount);
@@ -149,11 +212,11 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
         }
         for(int i = 0; i < this->fmap_count; i++)
         {
-            this->layers_delta_helper[i][0].zero();
+            this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
                 cross_correlation(padded_delta[j][0], next_layers_fmaps[j]->weights[i][0], helper, 1, 1);
-                this->layers_delta_helper[i][0] += helper;
+                this->layers_delta_helper[threadindex][i][0] += helper;
             }
         }
         delete_padded_delta(padded_delta, next_layers_fmapcount);
@@ -165,7 +228,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
     }
     for(int mapindex = 0; mapindex < this->fmap_count; mapindex++)
     {
-        this->layers_delta[mapindex][0].zero();
+        this->layers_delta[threadindex][mapindex][0].zero();
         for(int output_r = 0; output_r < this->output_row; output_r++)
         {
             for(int output_c = 0; output_c < this->output_col; output_c++)
@@ -174,13 +237,13 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
                 {
                     for(int map_c_index = 0; map_c_index < this->map_col and (delta_c_index + map_c_index) < in_col; map_c_index++)
                     {
-                        if(pooling_memory[mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] == 1)
+                        if(pooling_memory[threadindex][mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] == 1)
                         {
-                            layers_delta[mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] = this->layers_delta_helper[mapindex]->data[output_r][output_c];
+                            layers_delta[threadindex][mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] = this->layers_delta_helper[threadindex][mapindex]->data[output_r][output_c];
                         }
                         else
                         {
-                            layers_delta[mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] = 0;
+                            layers_delta[threadindex][mapindex]->data[delta_r_index + map_r_index][delta_c_index + map_c_index] = 0;
                         }
                     }
                 }
@@ -190,7 +253,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
             delta_r_index += this->map_row;
         }
     }
-    return this->layers_delta;
+    return this->layers_delta[threadindex];
 }
 
 void Pooling::layers_output(Matrix **input, int threadindex)
@@ -198,12 +261,28 @@ void Pooling::layers_output(Matrix **input, int threadindex)
     switch(this->pooling_type)
     {
     case MAX_POOLING:
-        this->max_pooling(input);
+        this->max_pooling(input, threadindex);
         break;
     default:
         cerr << "Unknown pooling type" << endl;
         throw exception();
     }
+}
+
+void Pooling::set_threadcount(int threadcnt)
+{
+
+    this->destory_outputs_and_erros();
+
+    this->threadcount = threadcnt;
+
+    this->build_outputs_and_errors();
+
+}
+
+int Pooling::get_threadcount()
+{
+    return this->threadcount;
 }
 
 Matrix** Pooling::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
@@ -239,14 +318,14 @@ void Pooling::set_input(Matrix **input, int threadindex)
     throw exception();
 }
 
-void Pooling::flatten()
+void Pooling::flatten(int threadindex)
 {
     int i = 0;
     int output_size = this->output_row * this->output_col;
     int output_size_in_bytes = output_size * sizeof(double);
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
     {
-        memcpy(&(this->flattened_output[0]->dv[map_index*output_size]), this->outputs[map_index]->dv, output_size_in_bytes);
+        memcpy(&(this->flattened_output[threadindex][0]->dv[map_index*output_size]), this->outputs[threadindex][map_index]->dv, output_size_in_bytes);
     }
 }
 
@@ -254,11 +333,11 @@ Matrix** Pooling::get_output(int threadindex)
 {
     if(this->next_layers_type == FULLY_CONNECTED)
     {
-        this->flatten();
-        return this->flattened_output;
+        this->flatten(threadindex);
+        return this->flattened_output[threadindex];
     }
     else
-        return this->outputs;
+        return this->outputs[threadindex];
 }
 
 inline Feature_map** Pooling::get_feature_maps()
