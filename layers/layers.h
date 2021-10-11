@@ -101,7 +101,7 @@ class Layer{
 class FullyConnected : public Layer {
     friend class Softmax;
     Matrix ***output, ***output_derivative, ***output_error, ***output_error_helper, ***layers_delta;
-    Matrix *removed_rows, *backup_weights, *backup_biases, *backup_output, *backup_output_derivative, *backpup_output_error, *backup_output_error_helper, *backup_layers_delta;
+    Matrix *removed_rows, *backup_weights, *backup_biases, ***backup_output, ***backup_output_derivative, ***backpup_output_error, ***backup_output_error_helper, ***backup_layers_delta;
     int neuron_type, outputlen, backup_outputlen;
     bool dropout_happened;
     short int layer_type;
@@ -109,6 +109,7 @@ class FullyConnected : public Layer {
     Feature_map **fmap;
     int threadcount;
     virtual void destroy_dinamic_data();
+    virtual void build_dinamic_data();
     public:
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();

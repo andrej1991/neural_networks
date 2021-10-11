@@ -178,10 +178,10 @@ int main(int argc, char *argv[])
     StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
 
     cout << "stohastic gradient descent\n";
-    //n1.check_accuracy(validation, 10, 0, true);
+    //learning.check_accuracy(validation, 10, 0, true);
     //n1.dropout_probability = dropout_probability;
     learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    /*std::this_thread::sleep_for (std::chrono::seconds(20));
+    std::this_thread::sleep_for (std::chrono::seconds(20));
     cout << "momentum based gradient descent\n";
     learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     std::this_thread::sleep_for (std::chrono::seconds(20));
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
     learning.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     std::this_thread::sleep_for (std::chrono::seconds(20));
     cout << "RMSprop\n";
-    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
 
     input.close();
     required_output.close();

@@ -14,38 +14,11 @@ Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, 
     if(input_col % col)
         output_col++;
     this->threadcount = 1;
-    /*this->pooling_memory = new Matrix** [1];
-    this->pooling_memory[0] = new Matrix* [prev_layers_fmapcount];
-    this->layers_delta = new Matrix** [1];
-    this->layers_delta[0] = new Matrix* [prev_layers_fmapcount];
-    this->layers_delta_helper = new Matrix** [1];
-    this->layers_delta_helper[0] = new Matrix* [prev_layers_fmapcount];
-    this->outputs = new Matrix** [1];
-    this->outputs[0] = new Matrix* [prev_layers_fmapcount];
-    this->flattened_output = new Matrix** [1];
-    this->flattened_output[0] = new Matrix* [1];
-    this->flattened_output[0][0] = new Matrix(this->fmap_count * this->output_row * this->output_col, 1);
-    for(int i = 0; i < prev_layers_fmapcount; i++)
-    {
-        this->pooling_memory[0][i] = new Matrix(input_row, input_col);
-        this->layers_delta[0][i] = new Matrix(input_row, input_col);
-        this->layers_delta_helper[0][i] = new Matrix(this->output_row, this->output_col);
-        this->outputs[0][i] = new Matrix(this->output_row, this->output_col);
-    }*/
     this->build_outputs_and_errors();
 }
 
 Pooling::~Pooling()
 {
-    /*for(int i = 0; i < this->fmap_count; i++)
-    {
-        delete this->pooling_memory[i];
-        delete this->layers_delta[i];
-        delete this->outputs[i];
-    }
-    delete[] this->pooling_memory;
-    delete[] this->layers_delta;
-    delete[] this->outputs;*/
     this->destory_outputs_and_erros();
 }
 
@@ -142,15 +115,6 @@ inline void Pooling::max_pooling(Matrix **input, int threadindex)
     }
 }
 
-inline void delete_padded_delta(Matrix **padded_delta, int limit)
-{
-    for(int i = 0; i < limit; i++)
-    {
-        delete padded_delta[i];
-    }
-    delete[] padded_delta;
-}
-
 void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap)
 {
     int kernelsize = kernel.get_row() * kernel.get_col();
@@ -168,58 +132,42 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
     delta_c_index = delta_r_index = 0;
     Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
     int next_layers_fmapcount = next_layer->get_mapcount();
-    Matrix **padded_delta;
-    Matrix helper(this->output_row, this->output_col);
-    Matrix dilated;
     if(next_layers_type == FULLY_CONNECTED or next_layers_type == SOFTMAX)
     {
         int next_layers_neuroncount = delta[0]->get_row();
-        padded_delta = new Matrix* [next_layers_neuroncount];
-        for(int i = 0; i < next_layers_neuroncount; i++)
+        if(this->backprop_helper->padded_delta[threadindex] == NULL)
         {
-            padded_delta[i] = new Matrix;
-            padded_delta[i][0].data[0][0] = delta[0][0].data[i][0];
-            padded_delta[i][0] = padded_delta[i][0].zero_padd((this->output_row-1)/2,
-                                                     (this->output_col-1)/2,
-                                                     (this->output_row-1)/2,
-                                                     (this->output_col-1)/2);
+            this->backprop_helper->set_padded_delta_1d(delta, next_layers_neuroncount, (this->output_row-1)/2, (this->output_col-1)/2,
+                                                       (this->output_row-1)/2, (this->output_col-1)/2, threadindex);
         }
-        Matrix kernel(this->output_row, this->output_col);
         for(int i = 0; i < this->fmap_count; i++)
         {
             this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_neuroncount; j++)
             {
-                this->get_2D_weights(j, i, kernel, next_layers_fmaps);
-                //convolution(padded_delta[0],kernel, helper);
-                cross_correlation(padded_delta[j][0],kernel, helper, 1, 1);
-                this->layers_delta_helper[threadindex][i][0] += helper;
+                this->get_2D_weights(j, i, this->backprop_helper->kernel[threadindex][0], next_layers_fmaps);
+                cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], this->backprop_helper->kernel[threadindex][0], this->backprop_helper->helper[threadindex][0], 1, 1);
+                this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
             }
         }
-        delete_padded_delta(padded_delta, next_layers_neuroncount);
+        this->backprop_helper->zero(threadindex);
     }
     else if(next_layers_type == CONVOLUTIONAL)
     {
-        padded_delta = new Matrix* [next_layers_fmapcount];
-        for(int i = 0; i < next_layers_fmapcount; i++)
+        if(this->backprop_helper->padded_delta[threadindex] == NULL)
         {
-            padded_delta[i] = new Matrix;
-            dilated = delta[i][0].dilate(static_cast<Convolutional*>(next_layer)->get_vertical_stride(), static_cast<Convolutional*>(next_layer)->get_horizontal_stride());
-            padded_delta[i][0] = dilated.zero_padd((next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-                                                     (next_layers_fmaps[i]->weights[0]->get_col()-1)/2,
-                                                     (next_layers_fmaps[i]->weights[0]->get_row()-1)/2,
-                                                     (next_layers_fmaps[i]->weights[0]->get_col()-1)/2);
+            this->backprop_helper->set_padded_delta_2d(delta, next_layers_fmapcount, next_layer, threadindex);
         }
         for(int i = 0; i < this->fmap_count; i++)
         {
             this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
-                cross_correlation(padded_delta[j][0], next_layers_fmaps[j]->weights[i][0], helper, 1, 1);
-                this->layers_delta_helper[threadindex][i][0] += helper;
+                cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0], 1, 1);
+                this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
             }
         }
-        delete_padded_delta(padded_delta, next_layers_fmapcount);
+        this->backprop_helper->zero(threadindex);
     }
     else if(next_layers_type == POOLING)
     {

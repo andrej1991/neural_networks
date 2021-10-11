@@ -5,21 +5,6 @@
 FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     neuron(neuron_type)
 {
-    this->output = new Matrix**[1];
-    this->output[0] = new Matrix* [1];
-    this->output[0][0] = new Matrix(row, 1);
-    this->output_derivative = new Matrix**[1];
-    this->output_derivative[0] = new Matrix*[1];
-    this->output_derivative[0][0] = new Matrix(row, 1);
-    this->output_error = new Matrix**[1];
-    this->output_error[0] = new Matrix*[1];
-    this->output_error[0][0] = new Matrix(row, 1);
-    this->output_error_helper = new Matrix**[1];
-    this->output_error_helper[0] = new Matrix*[1];
-    this->output_error_helper[0][0] = new Matrix(row, 1);
-    this->layers_delta = new Matrix**[1];
-    this->layers_delta[0] = new Matrix*[1];
-    this->layers_delta[0][0] = new Matrix(row, 1);
     this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
@@ -31,22 +16,13 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     this->removed_rows = NULL;
     this->backup_outputlen = row;
     this->threadcount = 1;
+    this->build_dinamic_data();
 }
 
 FullyConnected::~FullyConnected()
 {
-    /*delete this->output[0];
-    delete[] this->output;
     delete this->fmap[0];
     delete[] this->fmap;
-    delete this->output_derivative[0];
-    delete[] this->output_derivative;
-    delete this->output_error[0];
-    delete[] this->output_error;
-    delete this->output_error_helper[0];
-    delete[] this->output_error_helper;
-    delete this->layers_delta[0];
-    delete[] this->layers_delta;*/
     this->destroy_dinamic_data();
 }
 
@@ -70,6 +46,28 @@ void FullyConnected::destroy_dinamic_data()
     delete[] this->output_error;
     delete[] this->output_error_helper;
     delete[] this->layers_delta;
+}
+
+void FullyConnected::build_dinamic_data()
+{
+    this->output = new Matrix**[this->threadcount];
+    this->output_derivative = new Matrix**[this->threadcount];
+    this->output_error = new Matrix**[this->threadcount];
+    this->output_error_helper = new Matrix**[this->threadcount];
+    this->layers_delta = new Matrix**[this->threadcount];
+    for(int i = 0; i < this->threadcount; i++)
+    {
+        this->output[i] = new Matrix* [1];
+        this->output_derivative[i] = new Matrix*[1];
+        this->output_error[i] = new Matrix*[1];
+        this->output_error_helper[i] = new Matrix*[1];
+        this->layers_delta[i] = new Matrix*[1];
+        this->output[i][0] = new Matrix(this->outputlen, 1);
+        this->output_derivative[i][0] = new Matrix(this->outputlen, 1);
+        this->output_error[i][0] = new Matrix(this->outputlen, 1);
+        this->output_error_helper[i][0] = new Matrix(this->outputlen, 1);
+        this->layers_delta[i][0] = new Matrix(this->outputlen, 1);
+    }
 }
 
 void FullyConnected::layers_output(Matrix **input, int threadindex)
@@ -165,8 +163,6 @@ Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Featur
     this->layers_delta[threadindex][0][0] = hadamart_product(multiplied, this->output_derivative[threadindex][0][0]);
     nabla[0][0].biases[0][0] = this->layers_delta[threadindex][0][0];
     nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
-    //delete output_derivate[0];
-    //delete[] output_derivate;
     return this->layers_delta[threadindex];
 }
 
@@ -179,24 +175,7 @@ void FullyConnected::set_threadcount(int threadcnt)
 {
     this->destroy_dinamic_data();
     this->threadcount = threadcnt;
-    this->output = new Matrix**[threadcnt];
-    this->output_derivative = new Matrix**[threadcnt];
-    this->output_error = new Matrix**[threadcnt];
-    this->output_error_helper = new Matrix**[threadcnt];
-    this->layers_delta = new Matrix**[threadcnt];
-    for(int i = 0; i < threadcnt; i++)
-    {
-        this->output[i] = new Matrix* [1];
-        this->output_derivative[i] = new Matrix*[1];
-        this->output_error[i] = new Matrix*[1];
-        this->output_error_helper[i] = new Matrix*[1];
-        this->layers_delta[i] = new Matrix*[1];
-        this->output[i][0] = new Matrix(this->outputlen, 1);
-        this->output_derivative[i][0] = new Matrix(this->outputlen, 1);
-        this->output_error[i][0] = new Matrix(this->outputlen, 1);
-        this->output_error_helper[i][0] = new Matrix(this->outputlen, 1);
-        this->layers_delta[i][0] = new Matrix(this->outputlen, 1);
-    }
+    this->build_dinamic_data();
 }
 
 inline Matrix** FullyConnected::get_output(int threadindex)
@@ -265,9 +244,9 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     int remaining, dropped_out = 0;
     if(probability > 0.0)
     {
-        cerr << "Dropout is not working on multipele threads at the moment\n";
+        cerr << "Dropout is not working safely because the Convolutional/Pooling->backprop_helper is built statically not dinamically\n";
         throw exception();
-        /*for (int i = 0; i < this->outputlen; i++)
+        for (int i = 0; i < this->outputlen; i++)
         {
             if(distribution(rand) < probability)
             {
@@ -278,7 +257,7 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
             {
                 this->removed_rows->data[i][0] = 0;
             }
-        }*/
+        }
     }
     if(dropped_out > 0)
     {
@@ -290,26 +269,22 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
         if(colums_to_remove == NULL)
             return this->removed_rows[0];
     }
-    /*remaining = this->outputlen - dropped_out;
+    remaining = this->outputlen - dropped_out;
     this->backup_weights = this->fmap[0]->weights[0];
     if(dropout_happened)
     {
         this->backup_biases = this->fmap[0]->biases[0];
         this->fmap[0]->weights[0] = this->backup_weights->remove_rows(this->removed_rows[0]);
         this->fmap[0]->biases[0] = this->backup_biases->remove_rows(this->removed_rows[0]);
-        this->backup_output = this->output[0];
-        this->output[0] = new Matrix(remaining, 1);
-        this->backup_output_derivative = this->output_derivative[0];
-        this->output_derivative[0] = new Matrix(remaining, 1);
-        this->backpup_output_error = this->output_error[0];
-        this->output_error[0] = new Matrix(remaining, 1);
+        this->backup_output = this->output;
+        this->backup_output_derivative = this->output_derivative;
+        this->backpup_output_error = this->output_error;
         if(probability == 0)
             throw exception();
-        this->backup_output_error_helper = this->output_error_helper[0];
-        this->output_error_helper[0] = new Matrix(remaining, 1);
-        this->backup_layers_delta = this->layers_delta[0];
-        this->layers_delta[0] = new Matrix(remaining, 1);
+        this->backup_output_error_helper = this->output_error_helper;
+        this->backup_layers_delta = this->layers_delta;
         this->outputlen = remaining;
+        this->build_dinamic_data();
     }
     if(colums_to_remove != NULL)
     {
@@ -317,13 +292,13 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
         this->fmap[0]->weights[0] = backup->remove_colums(colums_to_remove[0]);
         if(dropout_happened)
             delete backup;
-    }*/
+    }
     return this->removed_rows[0];
 }
 
 void FullyConnected::restore_neurons(Matrix *removed_colums)
 {
-    /*if(this->dropout_happened == false and removed_colums == NULL)
+    if(this->dropout_happened == false and removed_colums == NULL)
         return;
     int backup_col = this->backup_weights->get_col();
     int r = 0, c = 0;
@@ -351,18 +326,14 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
     {
         delete this->fmap[0]->biases[0];
         this->fmap[0]->biases[0] = this->backup_biases;
-        delete this->output[0];
-        this->output[0] = this->backup_output;
-        delete this->output_derivative[0];
-        this->output_derivative[0] = this->backup_output_derivative;
-        delete this->output_error[0];
-        this->output_error[0] = this->backpup_output_error;
-        delete this->output_error_helper[0];
-        this->output_error_helper[0] = this->backup_output_error_helper;
-        delete this->layers_delta[0];
-        this->layers_delta[0] = this->backup_layers_delta;
+        this->destroy_dinamic_data();
+        this->output = this->backup_output;
+        this->output_derivative = this->backup_output_derivative;
+        this->output_error = this->backpup_output_error;
+        this->output_error_helper = this->backup_output_error_helper;
+        this->layers_delta = this->backup_layers_delta;
         this->outputlen = this->backup_outputlen;
-    }*/
+    }
 }
 
 void FullyConnected::store(std::ofstream &params)

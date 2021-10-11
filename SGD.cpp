@@ -68,16 +68,22 @@ void StochasticGradientDescent::stochastic(MNIST_data **minibatches, int minibat
     }
 }
 
-void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
+void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
             *nabla[layer_index] += *deltanabla[layer_index];
-        }
+        }*/
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
     }
+    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0]*(1 - momentum));
@@ -86,7 +92,7 @@ void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int min
     }
 }
 
-void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
+void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
 {
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
@@ -94,12 +100,18 @@ void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch
     }
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
             *nabla[layer_index] += *deltanabla[layer_index];
-        }
+        }*/
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
     }
+    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         this->neunet.layers[layer_index]->update_weights_and_biasses(-1*momentum, regularization_rate, nabla_momentum[layer_index]);
@@ -109,16 +121,22 @@ void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch
     }
 }
 
-void StochasticGradientDescent::rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator)
+void StochasticGradientDescent::rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator)
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
             *nabla[layer_index] += *deltanabla[layer_index];
-        }
+        }*/
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
     }
+    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         squared_grad_moving_avarange[layer_index][0] = (squared_grad_moving_avarange[layer_index][0] * momentum) + (nabla[layer_index][0].square_element_by() * (1 - momentum));
@@ -265,7 +283,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                 case STOCHASTIC:
                     this->stochastic(minibatches[j], minibatch_len, nabla, deltanabla, lr, reg);
                     break;
-                /*case MOMENTUM:
+                case MOMENTUM:
                     this->momentum_based(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, lr, reg, momentum);
                     break;
                 case NESTEROV:
@@ -273,7 +291,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                     break;
                 case RMSPROP:
                     this->rmsprop(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, helper_2, lr, reg, momentum, denominator);
-                    break;*/
+                    break;
                 default:
                     throw invalid_argument("Unknown gradient descent variant!");
             }

@@ -22,9 +22,9 @@ class StochasticGradientDescent{
     public:
     double cost(Matrix &required_output, int req_outp_indx, int test_data_len);
     void stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, double learning_rate, double regularization_rate);
-    void momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
-    void nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
-    void rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features **deltanabla, Layers_features **nabla_momentum, Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator);
+    void momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
+    void nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum);
+    void rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum, Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator);
     void gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate,
                                  double denominator, double momentum, MNIST_data **test_data, int minibatch_count , int test_data_len,  int trainingdata_len);
     public:
