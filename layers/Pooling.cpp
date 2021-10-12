@@ -119,7 +119,6 @@ void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature
 {
     int kernelsize = kernel.get_row() * kernel.get_col();
     int starting_pos = kernelsize * fmap_id;
-    int index = starting_pos;
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
 }
 
@@ -128,13 +127,16 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
     int in_row = input[0][0].get_row();
     int in_col = input[0][0].get_col();
     int delta_r_index, delta_c_index;
-    double max;
     delta_c_index = delta_r_index = 0;
     Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
     int next_layers_fmapcount = next_layer->get_mapcount();
     if(next_layers_type == FULLY_CONNECTED or next_layers_type == SOFTMAX)
     {
         int next_layers_neuroncount = delta[0]->get_row();
+        if(this->backprop_helper->get_layercount(threadindex) != next_layers_neuroncount)
+        {
+            this->backprop_helper->delete_padded_delta(threadindex);
+        }
         if(this->backprop_helper->padded_delta[threadindex] == NULL)
         {
             this->backprop_helper->set_padded_delta_1d(delta, next_layers_neuroncount, (this->output_row-1)/2, (this->output_col-1)/2,
@@ -154,6 +156,10 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
     }
     else if(next_layers_type == CONVOLUTIONAL)
     {
+        if(this->backprop_helper->get_layercount(threadindex) != next_layers_fmapcount)
+        {
+            this->backprop_helper->delete_padded_delta(threadindex);
+        }
         if(this->backprop_helper->padded_delta[threadindex] == NULL)
         {
             this->backprop_helper->set_padded_delta_2d(delta, next_layers_fmapcount, next_layer, threadindex);
@@ -268,7 +274,6 @@ void Pooling::set_input(Matrix **input, int threadindex)
 
 void Pooling::flatten(int threadindex)
 {
-    int i = 0;
     int output_size = this->output_row * this->output_col;
     int output_size_in_bytes = output_size * sizeof(double);
     for(int map_index = 0; map_index < this->fmap_count; map_index++)

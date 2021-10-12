@@ -32,50 +32,53 @@ conv_backprop_helper::conv_backprop_helper(int threadcnt, int row, int col)
     this->helper = new Matrix* [threadcnt];
     this->kernel = new Matrix* [threadcnt];
     this->threadcount = threadcnt;
+    this->layer_count = new int[threadcnt];
     for(int i = 0; i < threadcnt; i++)
     {
         this->helper[i] = new Matrix(row, col);
         this->kernel[i] = new Matrix(row, col);
         this->padded_delta[i] = NULL;
+        this->layer_count[i] = 0;
     }
 }
 
 conv_backprop_helper::~conv_backprop_helper()
 {
-    this->delete_padded_delta();
-    delete[] this->padded_delta;
     for(int i = 0; i < this->threadcount; i++)
     {
         delete this->helper[i];
         delete this->kernel[i];
+        this->delete_padded_delta(i);
     }
+    delete[] this->padded_delta;
     delete[] dilated;
     delete helper;
     delete kernel;
 }
 
-void conv_backprop_helper::delete_padded_delta()
+void conv_backprop_helper::delete_padded_delta(int threadindx)
 {
-    if(this->padded_delta[0] == NULL)
+    if(this->padded_delta[threadindx] == NULL)
     {
         return;
     }
-    for(int i = 0; i < this->threadcount; i++)
-    {
-        for(int j = 0; j < this->layer_count; j++)
+    //for(int i = 0; i < this->threadcount; i++)
+    //{
+        for(int j = 0; j < this->layer_count[threadindx]; j++)
         {
-            delete this->padded_delta[i][j];
+            delete this->padded_delta[threadindx][j];
         }
-        delete[] this->padded_delta[i];
-        this->padded_delta[i] = NULL;
-    }
+        delete[] this->padded_delta[threadindx];
+        this->padded_delta[threadindx] = NULL;
+        this->layer_count[threadindx] = 0;
+    //}
     //delete[] this->padded_delta;
     //this->padded_delta = NULL;
 }
 
 void conv_backprop_helper::set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt)
 {
-    this->layer_count = next_layers_neuroncount;
+    this->layer_count[threadcnt] = next_layers_neuroncount;
     padded_delta[threadcnt] = new Matrix* [next_layers_neuroncount];
     for(int j = 0; j < next_layers_neuroncount; j++)
     {
@@ -87,7 +90,7 @@ void conv_backprop_helper::set_padded_delta_1d(Matrix **delta, int next_layers_n
 
 void conv_backprop_helper::set_padded_delta_2d(Matrix **delta, int next_layers_fmapcount, Layer *next_layer, int threadcnt)
 {
-    this->layer_count = next_layers_fmapcount;
+    this->layer_count[threadcnt] = next_layers_fmapcount;
     padded_delta[threadcnt] = new Matrix* [next_layers_fmapcount];
     Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
     for(int j = 0; j < next_layers_fmapcount; j++)
@@ -103,10 +106,15 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix **delta, int next_layers_f
 
 void conv_backprop_helper::zero(int threadid)
 {
-    for(int i = 0; i < this->layer_count; i++)
+    for(int i = 0; i < this->layer_count[threadid]; i++)
     {
         this->padded_delta[threadid][i]->zero();
     }
+}
+
+int conv_backprop_helper::get_layercount(int threadidx)
+{
+    return this->layer_count[threadidx];
 }
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
@@ -207,7 +215,6 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 {
     int kernelsize = kernel.get_row() * kernel.get_col();
     int starting_pos = kernelsize * fmap_id;
-    int index = starting_pos;
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
 }
 
@@ -229,6 +236,10 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
     if(this->next_layers_type == FULLY_CONNECTED or this->next_layers_type == SOFTMAX)
     {
         int next_layers_neuroncount = delta[0]->get_row();
+        if(this->backprop_helper->get_layercount(threadindex) != next_layers_neuroncount)
+        {
+            this->backprop_helper->delete_padded_delta(threadindex);
+        }
         if(this->backprop_helper->padded_delta[threadindex] == NULL)
         {
             this->backprop_helper->set_padded_delta_1d(delta, next_layers_neuroncount, (this->output_row-1)/2, (this->output_col-1)/2,
@@ -248,6 +259,10 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
     }
     else if (this->next_layers_type == CONVOLUTIONAL)
     {
+        if(this->backprop_helper->get_layercount(threadindex) != next_layers_fmapcount)
+        {
+            this->backprop_helper->delete_padded_delta(threadindex);
+        }
         if(this->backprop_helper->padded_delta[threadindex] == NULL)
         {
             this->backprop_helper->set_padded_delta_2d(delta, next_layers_fmapcount, next_layer, threadindex);
@@ -285,7 +300,6 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
 
 void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
 {
-    double sum;
     for(int i = 0; i < this->map_count; i++)
     {
         this->fmap[i]->biases[0]->data[0][0] -= learning_rate * this->fmap[i]->biases[0]->data[0][0];
@@ -345,7 +359,6 @@ Matrix** Convolutional::derivate_layers_output(Matrix **input, int threadindex)
 
 void Convolutional::flatten(int threadindex)
 {
-    int i = 0;
     int output_size = this->output_row * this->output_col;
     int output_size_in_bytes = output_size * sizeof(double);
     for(int map_index = 0; map_index < this->map_count; map_index++)

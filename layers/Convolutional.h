@@ -13,15 +13,16 @@ class conv_output_helper{
 
 class conv_backprop_helper{
     int threadcount;
-    int layer_count;
+    int *layer_count;
     public:
     Matrix ***padded_delta, **helper, *dilated, **kernel;
     conv_backprop_helper(int threadcnt, int row, int col);
     ~conv_backprop_helper();
     void set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt);
     void set_padded_delta_2d(Matrix **delta, int next_layers_fmapcount, Layer *next_layer, int threadcnt);
-    void delete_padded_delta();
+    void delete_padded_delta(int threadindx);
     void zero(int threadid);
+    int get_layercount(int threadidx);
 };
 
 class Convolutional : public Layer {

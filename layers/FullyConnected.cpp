@@ -244,8 +244,6 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     int remaining, dropped_out = 0;
     if(probability > 0.0)
     {
-        cerr << "Dropout is not working safely because the Convolutional/Pooling->backprop_helper is built statically not dinamically\n";
-        throw exception();
         for (int i = 0; i < this->outputlen; i++)
         {
             if(distribution(rand) < probability)

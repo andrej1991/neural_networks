@@ -164,7 +164,6 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
     std::random_device rand;
     std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     int learnig_cost_counter = 0;
-    int randomnum;
     int biascnt;
     double previoius_learning_cost = 0;
     double lr, reg;
@@ -222,8 +221,8 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
     }
-    Layers_features** nabla_momentum = helper_1;
-    Layers_features** squared_grad_moving_avarange = helper_1;
+    //Layers_features** nabla_momentum = helper_1;
+    //Layers_features** squared_grad_moving_avarange = helper_1;
     helper.zero();
     Matrix output;
     for(int i = 0; i < epochs; i++)
