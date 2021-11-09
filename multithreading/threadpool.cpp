@@ -22,6 +22,10 @@ void Job::work(int threadid)
 
 ThreadPool::ThreadPool(int threadcount): thread_count(threadcount), queue_len(0), remaining_work(0)
 {
+    if(this->thread_count < 1)
+    {
+        throw invalid_argument("The thread count must be bigger than 0!");
+    }
     this->jobqueue_lock = PTHREAD_MUTEX_INITIALIZER;
     this->remaining_work_lock = PTHREAD_MUTEX_INITIALIZER;
     this->t = new thread[threadcount];

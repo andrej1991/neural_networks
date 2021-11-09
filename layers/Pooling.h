@@ -16,15 +16,15 @@ class Pooling : public Layer {
     public:
     Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col, int next_layers_type);
     ~Pooling();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex=0);
-    void layers_output(Matrix **input, int threadindex=0);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
-    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex);
+    void layers_output(Matrix **input, int threadindex);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes);
     inline void add_back_removed_neurons(Matrix **w_bckup, Matrix **b_bckup, int *layers_bckup, int **indexes);
-    void set_input(Matrix **input, int threadindex=0);
-    Matrix** get_output(int threadindex=0);
+    void set_input(Matrix **input, int threadindex);
+    Matrix** get_output(int threadindex = 0);
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();

@@ -26,7 +26,7 @@ InputLayer::~InputLayer()
 
 void InputLayer::layers_output(Matrix **input, int threadindex)
 {
-    this->set_input(input);
+    this->set_input(input, threadindex);
 }
 
 Matrix** InputLayer::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)

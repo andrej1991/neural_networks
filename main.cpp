@@ -73,6 +73,15 @@ int main(int argc, char *argv[])
         cerr << "the probability of dropout must be between 0 - 1!" << endl;
         throw exception();
     }
+    int thread_count;
+    if(config["thread_count"])
+    {
+        thread_count = config["thread_count"].as<int>();
+    }
+    else
+    {
+        thread_count = 1;
+    }
     int minibatch_count = config["minibatch_count"].as<int>();
     double momentum = config["momentum"].as<double>();
     double denominator = config["denominator"].as<double>();
@@ -175,7 +184,7 @@ int main(int argc, char *argv[])
 
     //Network n1("../data/fully_conn.bin");
 
-    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
+    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability, thread_count);
 
     cout << "stohastic gradient descent\n";
     //learning.check_accuracy(validation, 10, 0, true);

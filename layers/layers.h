@@ -74,13 +74,13 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex=0) = 0;
-    virtual void layers_output(Matrix **input, int threadindex=0) = 0;
-    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0) = 0;
-    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex=0) = 0;
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex) = 0;
+    virtual void layers_output(Matrix **input, int threadindex) = 0;
+    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex) = 0;
+    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex) = 0;
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
-    virtual void set_input(Matrix **input, int threadindex=0) = 0;
-    virtual inline Matrix** get_output(int threadindex=0) = 0;
+    virtual void set_input(Matrix **input, int threadindex) = 0;
+    virtual inline Matrix** get_output(int threadindex = 0) = 0;
     virtual inline Feature_map** get_feature_maps() = 0;
     virtual inline short get_layer_type() = 0;
     virtual inline int get_output_len() = 0;
@@ -113,13 +113,13 @@ class FullyConnected : public Layer {
     public:
     FullyConnected(int row, int prev_row, int neuron_type);
     ~FullyConnected();
-    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
-    virtual void layers_output(Matrix **input, int threadindex=0);
-    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
-    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    virtual void layers_output(Matrix **input, int threadindex);
+    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex);
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    virtual void set_input(Matrix **input, int threadindex=0);
-    virtual inline Matrix** get_output(int threadindex=0);
+    virtual void set_input(Matrix **input, int threadindex);
+    virtual inline Matrix** get_output(int threadindex = 0);
     virtual inline Feature_map** get_feature_maps();
     virtual inline short get_layer_type();
     virtual inline int get_output_len();
@@ -141,10 +141,10 @@ class Softmax : public FullyConnected {
     public:
     Softmax(int row, int col);
     ~Softmax();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
-    void layers_output(Matrix **input, int threadindex=0);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
-    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    void layers_output(Matrix **input, int threadindex);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex);
 };
 
 
@@ -157,13 +157,13 @@ class InputLayer : public Layer {
     Padding padd;
     InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex=0);
-    void layers_output(Matrix **input, int threadindex=0);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex=0);
-    Matrix** derivate_layers_output(Matrix **input, int threadindex=0);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    void layers_output(Matrix **input, int threadindex);
+    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix** derivate_layers_output(Matrix **input, int threadindex);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
-    void set_input(Matrix **input, int threadindex=0);
-    inline Matrix** get_output(int threadindex=0);
+    void set_input(Matrix **input, int threadindex);
+    inline Matrix** get_output(int threadindex = 0);
     inline Feature_map** get_feature_maps();
     inline short get_layer_type();
     inline int get_output_len();

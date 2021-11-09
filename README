@@ -9,6 +9,7 @@ training_input: "<some path>/input.dat"
 required_training_output: "<some path>/required_output.dat"
 validation_input: "<some path>/validation_input.dat"
 required_validation_output: "<some path>/validation_output.dat"
+thread_count: <number of threads you want the network to run on>
 input_row: 28
 input_col: 28
 input_channel_count: 1  #in case of RGB picture it's 3

@@ -38,7 +38,7 @@ class StochasticGradientDescent{
                                     double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);
     void rmsprop(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost = false,
                                     double regularization_rate = 0, double denominator=0.00001, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);
-    StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability = 0);
+    StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability = 0, int thread_count = 4);
     ~StochasticGradientDescent();
     Accuracy check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost = false, double regularization_rate = 0);
 };
