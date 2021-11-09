@@ -4,12 +4,14 @@ InputLayer::InputLayer(int row, int col, int input_channel_count, int neuron_typ
     next_layers_type(next_layers_type), padd(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), input_channel_count(input_channel_count),
     row(row), col(col)
 {
+    this->threadcount = 1;
     this->outputlen = row;
     this->layer_type = INPUTLAYER;
-    this->outputs = new Matrix* [input_channel_count];
+    this->outputs = new Matrix** [1];
+    this->outputs[0] = new Matrix* [input_channel_count];
     for(int i = 0; i < input_channel_count; i++)
     {
-        outputs[i] = new Matrix(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
+        outputs[0][i] = new Matrix(row + p.top_padding + p.bottom_padding, col + p.left_padding + p.right_padding);
     }
 }
 
@@ -17,22 +19,22 @@ InputLayer::~InputLayer()
 {
     for(int i = 0; i < this->input_channel_count; i++)
     {
-        delete this->outputs[i];
+        delete this->outputs[0][i];
     }
     delete[] this->outputs;
 }
 
-inline void InputLayer::layers_output(Matrix **input)
+void InputLayer::layers_output(Matrix **input, int threadindex)
 {
-    this->set_input(input);
+    this->set_input(input, threadindex);
 }
 
-inline Matrix** InputLayer::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
+Matrix** InputLayer::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     ;
 }
 
-inline Matrix** InputLayer::derivate_layers_output(Matrix **input)
+Matrix** InputLayer::derivate_layers_output(Matrix **input, int threadindex)
 {
     ;
 }
@@ -42,33 +44,61 @@ void InputLayer::update_weights_and_biasses(double learning_rate, double regular
     ;
 }
 
-void InputLayer::set_input(Matrix **input)
+void InputLayer::set_input(Matrix **input, int threadindex)
 {
     ///TODO modify this function to work with FC layer and convolutional layer
     if(this->next_layers_type == FULLY_CONNECTED)
     {
         for (int i = 0; i < this->input_channel_count; i++)
         {
-            this->outputs[i][0] = input[i][0];
+            this->outputs[threadindex][i][0] = input[i][0];
         }
     }
     else if(this->next_layers_type == CONVOLUTIONAL)
     {
         for(int l = 0; l < this->input_channel_count; l++)
         {
-            this->outputs[l][0] = input[l][0];
+            this->outputs[threadindex][l][0] = input[l][0];
         }
     }
 }
 
-inline Matrix** InputLayer::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error)
+inline int InputLayer::get_threadcount()
+{
+    return this->threadcount;
+}
+
+void InputLayer::set_threadcount(int threadcnt)
+{
+    for(int i = 0; i < this->threadcount; i++)
+    {
+        for(int j = 0; j < this->input_channel_count; j++)
+        {
+            delete this->outputs[i][j];
+        }
+    delete[] this->outputs[i];
+    }
+    delete[] this->outputs;
+    this->threadcount = threadcnt;
+    this->outputs = new Matrix** [threadcnt];
+    for(int i = 0; i < threadcnt; i++)
+    {
+        this->outputs[i] = new Matrix* [input_channel_count];
+        for(int j = 0; j < input_channel_count; j++)
+        {
+            outputs[i][j] = new Matrix(row + padd.top_padding + padd.bottom_padding, col + padd.left_padding + padd.right_padding);
+        }
+    }
+}
+
+Matrix** InputLayer::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex)
 {
     ;
 }
 
-inline Matrix** InputLayer::get_output()
+inline Matrix** InputLayer::get_output(int threadindex)
 {
-    return this->outputs;
+    return this->outputs[threadindex];
 }
 
 inline Feature_map** InputLayer::get_feature_maps()
@@ -113,7 +143,7 @@ int InputLayer::get_mapcount()
 
 int InputLayer::get_mapdepth()
 {
-    1;
+    return 1;
 }
 
 void InputLayer::store(std::ofstream &params)

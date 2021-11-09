@@ -88,7 +88,6 @@ Matrix & Matrix::operator= (const Matrix& mtx)
 
 Matrix Matrix::operator* (const Matrix& other)
 {
-    int debug1 = col;
     if(col != other.row)
     {
         throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
@@ -104,6 +103,7 @@ Matrix Matrix::operator* (const Matrix& other)
                 for(int i = 0; i < col; i++)
                 {
                     c += data[k][i] * other.data[i][l];
+                    //c += data[k][i] * 1;
                 }
                 mtx.data[k][l] = c;
                 c = 0;

@@ -5,8 +5,8 @@
 Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
 {
     this->layer_type = SOFTMAX;
-    delete this->output_derivative[0];
-    this->output_derivative[0] = new Matrix(this->outputlen, this->outputlen);
+    delete this->output_derivative[0][0];
+    this->output_derivative[0][0] = new Matrix(this->outputlen, this->outputlen);
 }
 
 Softmax::~Softmax()
@@ -14,13 +14,13 @@ Softmax::~Softmax()
     ;
 }
 
-inline Matrix** Softmax::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error)
+inline Matrix** Softmax::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex)
 {
     cerr << "Softamx layer can only be an output layer!!!\n";
     throw exception();
 }
 
-inline void Softmax::layers_output(Matrix **input)
+void Softmax::layers_output(Matrix **input, int threadindex)
 {
     Matrix weighted_input(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     Matrix output_helper(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
@@ -34,60 +34,60 @@ inline void Softmax::layers_output(Matrix **input)
     }
     for(int i = 0; i < this->outputlen; i++)
     {
-        this->output[0]->data[i][0] = output_helper.data[i][0] / nominator;
+        this->output[threadindex][0]->data[i][0] = output_helper.data[i][0] / nominator;
     }
 }
 
-inline Matrix** Softmax::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type)
+Matrix** Softmax::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     switch(costfunction_type)
     {
     case QUADRATIC_CF:
         for(int i = 0; i < this->outputlen; i++)
         {
-            this->output_error_helper[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+            this->output_error_helper[threadindex][0][0].data[i][0] = this->output[threadindex][0][0].data[i][0] - required_output.data[i][0];
         }
-        this->derivate_layers_output(input);
-        this->output_error[0][0] = this->output_derivative[0][0] * this->output_error_helper[0][0];
-        return this->output_error;
+        this->derivate_layers_output(input, threadindex);
+        this->output_error[threadindex][0][0] = this->output_derivative[threadindex][0][0] * this->output_error_helper[threadindex][0][0];
+        return this->output_error[threadindex];
     case LOG_LIKELIHOOD_CF:
         for(int i = 0; i < this->outputlen; i++)
         {
-            this->output_error[0][0].data[i][0] = this->output[0][0].data[i][0] - required_output.data[i][0];
+            this->output_error[threadindex][0][0].data[i][0] = this->output[threadindex][0][0].data[i][0] - required_output.data[i][0];
         }
-        return this->output_error;
+        return this->output_error[threadindex];
     case CROSS_ENTROPY_CF:
-        this->derivate_layers_output(input);
+        this->derivate_layers_output(input, threadindex);
         for(int i = 0; i < this->outputlen; i++)
         {
-            this->output_error[0][0].data[i][0] = (this->output_derivative[0]->data[i][0] * (this->output[0][0].data[i][0] - required_output.data[i][0])) /
-                                    (this->output[0][0].data[i][0] * (1 - this->output[0][0].data[i][0]));
+            this->output_error[threadindex][0][0].data[i][0] = (this->output_derivative[threadindex][0]->data[i][0] * (this->output[threadindex][0][0].data[i][0] - required_output.data[i][0])) /
+                                    (this->output[threadindex][0][0].data[i][0] * (1 - this->output[threadindex][0][0].data[i][0]));
         }
-        return this->output_error;
+        return this->output_error[threadindex];
     default:
         cerr << "Unknown cost function\n";
         throw exception();
     };
 }
 
-inline Matrix** Softmax::derivate_layers_output(Matrix **input)
+Matrix** Softmax::derivate_layers_output(Matrix **input, int threadindex)
 {
-    this->layers_output(input);
+    this->layers_output(input, threadindex);
     for(int row = 0; row < this->outputlen; row ++)
     {
         for(int col = 0; col < this->outputlen; col++)
         {
             if(row == col)
             {
-                this->output_derivative[0]->data[row][col] = this->output[0]->data[row][0] * (1 - this->output[0]->data[col][0]);
+                this->output_derivative[threadindex][0]->data[row][col] = this->output[threadindex][0]->data[row][0] * (1 - this->output[threadindex][0]->data[col][0]);
             }
             else
             {
-                this->output_derivative[0]->data[row][col] = -1 * this->output[0]->data[row][0] * this->output[0]->data[col][0];
+                this->output_derivative[threadindex][0]->data[row][col] = -1 * this->output[threadindex][0]->data[row][0] * this->output[threadindex][0]->data[col][0];
             }
         }
     }
-    return this->output_derivative;
+    return this->output_derivative[threadindex];
 }
 
 

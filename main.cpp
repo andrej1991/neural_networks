@@ -7,6 +7,7 @@
 #include "matrix/matrix.h"
 #include <random>
 #include <iosfwd>
+#include "SGD.h"
 
 
 #include <thread>
@@ -71,6 +72,15 @@ int main(int argc, char *argv[])
     {
         cerr << "the probability of dropout must be between 0 - 1!" << endl;
         throw exception();
+    }
+    int thread_count;
+    if(config["thread_count"])
+    {
+        thread_count = config["thread_count"].as<int>();
+    }
+    else
+    {
+        thread_count = 1;
     }
     int minibatch_count = config["minibatch_count"].as<int>();
     double momentum = config["momentum"].as<double>();
@@ -165,29 +175,25 @@ int main(int argc, char *argv[])
         validation[i] = new MNIST_data(input_row, input_col, 1, 1);
         validation[i]->load_data(validation_input_data, validation_output_data);
     }
-    /*Network n1(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n2(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);
-    Network n4(layer_count, layers, input_row, input_col, input_channel_count, costfunction_type);*/
+
+    Network n1(layer_count, layers, input_row, input_col, input_channel_count);
+    /*Network n2(layer_count, layers, input_row, input_col, input_channel_count);
+    Network n3(layer_count, layers, input_row, input_col, input_channel_count);
+    Network n4(layer_count, layers, input_row, input_col, input_channel_count);*/
 
 
+    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability, thread_count);
 
-    Network n1("./unittests/data/test_network_no_strides_in_conv_layer.bin");
-    n1.store("/tmp/test_network_output_8.bin");
+    cout << "stohastic gradient descent\n";
+    //learning.check_accuracy(validation, 10, 0, true);
+    //n1.dropout_probability = dropout_probability;
+    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
-    /*cout << "stohastic gradient descent\n";
-    //n1.check_accuracy(validation, 10, 0, true);
-    n1.dropout_probability = dropout_probability;
-    n1.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    std::this_thread::sleep_for (std::chrono::seconds(20));
-    cout << "momentum based gradient descent\n";
-    n2.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    std::this_thread::sleep_for (std::chrono::seconds(20));
-    cout << "nesterov accelerated gradient\n";
-    n3.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    std::this_thread::sleep_for (std::chrono::seconds(20));
     cout << "RMSprop\n";
-    n4.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);*/
+
+    //learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+
 
     input.close();
     required_output.close();
