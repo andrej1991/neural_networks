@@ -24,6 +24,7 @@ class Network{
     ~Network();
     Matrix get_output(Matrix **input, int threadindex=0);
     friend class StochasticGradientDescent;
+    friend class StochasticGradientDescentMultiThread;
     friend class Job;
     void set_threadcount(int threadcnt);
     int get_threadcount();

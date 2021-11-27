@@ -6,9 +6,8 @@
 #include "additional.h"
 
 
-StochasticGradientDescent::StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability, int thread_count):
-                                                    neunet(neunet), costfunction_type(costfunction_type), dropout_probability(dropout_probability),
-                                                    tp(thread_count){};
+StochasticGradientDescent::StochasticGradientDescent(Network &neunet, int costfunction_type, double dropout_probability):
+                                                    neunet(neunet), costfunction_type(costfunction_type), dropout_probability(dropout_probability){};
 
 StochasticGradientDescent::~StochasticGradientDescent()
 {
@@ -50,18 +49,12 @@ void StochasticGradientDescent::stochastic(MNIST_data **minibatches, int minibat
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        this->job[training_data_index]->costfunction_type = this->costfunction_type;
-        this->job[training_data_index]->training_data = minibatches[training_data_index];
-        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
-        this->job[training_data_index]->nabla = nabla;
-        this->tp.push(this->job[training_data_index]);
-        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        this->neunet.backpropagate(minibatches[training_data_index], deltanabla[0], this->costfunction_type, 0);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
-            *nabla[layer_index] += *deltanabla[layer_index];
-        }*/
+            *nabla[layer_index] += *deltanabla[0][layer_index];
+        }
     }
-    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         this->neunet.layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, nabla[layer_index]);
@@ -74,18 +67,12 @@ void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int min
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        this->neunet.backpropagate(minibatches[training_data_index], deltanabla[0], this->costfunction_type, 0);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
-            *nabla[layer_index] += *deltanabla[layer_index];
-        }*/
-        this->job[training_data_index]->costfunction_type = this->costfunction_type;
-        this->job[training_data_index]->training_data = minibatches[training_data_index];
-        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
-        this->job[training_data_index]->nabla = nabla;
-        this->tp.push(this->job[training_data_index]);
+            *nabla[layer_index] += *deltanabla[0][layer_index];
+        }
     }
-    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0]*(1 - momentum));
@@ -103,18 +90,12 @@ void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch
     }
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        this->neunet.backpropagate(minibatches[training_data_index], deltanabla[0], this->costfunction_type, 0);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
-            *nabla[layer_index] += *deltanabla[layer_index];
-        }*/
-        this->job[training_data_index]->costfunction_type = this->costfunction_type;
-        this->job[training_data_index]->training_data = minibatches[training_data_index];
-        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
-        this->job[training_data_index]->nabla = nabla;
-        this->tp.push(this->job[training_data_index]);
+            *nabla[layer_index] += *deltanabla[0][layer_index];
+        }
     }
-    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         this->neunet.layers[layer_index]->update_weights_and_biasses(-1*momentum, regularization_rate, nabla_momentum[layer_index]);
@@ -130,18 +111,12 @@ void StochasticGradientDescent::rmsprop(MNIST_data **minibatches, int minibatch_
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
-        /*this->neunet.backpropagate(minibatches[training_data_index], deltanabla, this->costfunction_type);
+        this->neunet.backpropagate(minibatches[training_data_index], deltanabla[0], this->costfunction_type, 0);
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
         {
-            *nabla[layer_index] += *deltanabla[layer_index];
-        }*/
-        this->job[training_data_index]->costfunction_type = this->costfunction_type;
-        this->job[training_data_index]->training_data = minibatches[training_data_index];
-        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
-        this->job[training_data_index]->nabla = nabla;
-        this->tp.push(this->job[training_data_index]);
+            *nabla[layer_index] += *deltanabla[0][layer_index];
+        }
     }
-    this->tp.wait();
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
         squared_grad_moving_avarange[layer_index][0] = (squared_grad_moving_avarange[layer_index][0] * momentum) + (nabla[layer_index][0].square_element_by() * (1 - momentum));
@@ -160,11 +135,6 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
     {
         minibatch_count = trainingdata_len / minibatch_len;
     }
-
-    this->job = new Job* [minibatch_len];
-    for(int i = 0; i < minibatch_len; i++)
-        this->job[i] = new Job(i, &(this->neunet));
-    this->neunet.set_threadcount(minibatch_len);
     Accuracy execution_accuracy;
     MNIST_data *minibatches[minibatch_count][minibatch_len];
     std::random_device rand;
@@ -227,8 +197,6 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
         cerr<<"operator new failed in the function: Network::update_weights_and_biasses"<<endl;
         return;
     }
-    //Layers_features** nabla_momentum = helper_1;
-    //Layers_features** squared_grad_moving_avarange = helper_1;
     helper.zero();
     Matrix output;
     for(int i = 0; i < epochs; i++)
@@ -351,7 +319,6 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
             }
         }
     }
-    this->neunet.set_threadcount(1);
     for(int i = 0; i < this->neunet.layers_num; i++)
     {
         delete nabla[i];
@@ -468,4 +435,117 @@ Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int t
         execution_time = test_duration.count();
     }
     return Accuracy {learning_accuracy, learning_cost, execution_time};
+}
+
+
+StochasticGradientDescentMultiThread::StochasticGradientDescentMultiThread(Network &neunet, int costfunction_type, double dropout_probability, int thread_count):
+                                                    tp(thread_count), StochasticGradientDescent(neunet, costfunction_type, dropout_probability){};
+
+
+StochasticGradientDescentMultiThread::~StochasticGradientDescentMultiThread()
+{
+    ;
+}
+
+void StochasticGradientDescentMultiThread::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+                                           double learning_rate, double regularization_rate)
+{
+    //cout << "stochastic is being called\n";
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
+    }
+    this->tp.wait();
+    for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+    {
+        this->neunet.layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, nabla[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void StochasticGradientDescentMultiThread::momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+                                               Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
+{
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
+    }
+    this->tp.wait();
+    for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+    {
+        nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0]*(1 - momentum));
+        this->neunet.layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, nabla_momentum[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void StochasticGradientDescentMultiThread::nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+                                         Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
+{
+    for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+    {
+        this->neunet.layers[layer_index]->update_weights_and_biasses(momentum, regularization_rate, nabla_momentum[layer_index]);
+    }
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
+    }
+    this->tp.wait();
+    for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+    {
+        this->neunet.layers[layer_index]->update_weights_and_biasses(-1*momentum, regularization_rate, nabla_momentum[layer_index]);
+        nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0] * learning_rate);
+        this->neunet.layers[layer_index]->update_weights_and_biasses(1, regularization_rate, nabla_momentum[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void StochasticGradientDescentMultiThread::rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+                                        Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate,
+                                        double regularization_rate, double momentum, double denominator)
+{
+    for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
+    {
+        this->job[training_data_index]->costfunction_type = this->costfunction_type;
+        this->job[training_data_index]->training_data = minibatches[training_data_index];
+        this->job[training_data_index]->deltanabla = deltanabla[training_data_index];
+        this->job[training_data_index]->nabla = nabla;
+        this->tp.push(this->job[training_data_index]);
+    }
+    this->tp.wait();
+    for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+    {
+        squared_grad_moving_avarange[layer_index][0] = (squared_grad_moving_avarange[layer_index][0] * momentum) + (nabla[layer_index][0].square_element_by() * (1 - momentum));
+        layer_helper[layer_index][0] = nabla[layer_index][0] / (squared_grad_moving_avarange[layer_index][0].sqroot() + denominator);
+        this->neunet.layers[layer_index]->update_weights_and_biasses(learning_rate, regularization_rate, layer_helper[layer_index]);
+        nabla[layer_index]->zero();
+    }
+}
+
+void StochasticGradientDescentMultiThread::gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
+                                                         double regularization_rate, double denominator, double momentum, MNIST_data **test_data, int minibatch_count,
+                                                         int test_data_len,  int trainingdata_len)
+{
+    //cout << "multithreaded SGD variant is being called\n";
+    this->job = new Job* [minibatch_len];
+    for(int i = 0; i < minibatch_len; i++)
+        this->job[i] = new Job(i, &(this->neunet));
+    int prev_tc = this->neunet.get_threadcount();
+    this->neunet.set_threadcount(minibatch_len);
+    StochasticGradientDescent::gradient_descent_variant(variant, training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost,
+                                                         regularization_rate, denominator, momentum, test_data, minibatch_count,
+                                                         test_data_len, trainingdata_len);
+    this->neunet.set_threadcount(prev_tc);
 }
