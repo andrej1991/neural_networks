@@ -72,6 +72,7 @@ void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int min
         {
             *nabla[layer_index] += *deltanabla[0][layer_index];
         }
+
     }
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
     {
@@ -450,7 +451,6 @@ StochasticGradientDescentMultiThread::~StochasticGradientDescentMultiThread()
 void StochasticGradientDescentMultiThread::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                            double learning_rate, double regularization_rate)
 {
-    //cout << "stochastic is being called\n";
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
         this->job[training_data_index]->costfunction_type = this->costfunction_type;
@@ -538,7 +538,6 @@ void StochasticGradientDescentMultiThread::gradient_descent_variant(int variant,
                                                          double regularization_rate, double denominator, double momentum, MNIST_data **test_data, int minibatch_count,
                                                          int test_data_len,  int trainingdata_len)
 {
-    //cout << "multithreaded SGD variant is being called\n";
     this->job = new Job* [minibatch_len];
     for(int i = 0; i < minibatch_len; i++)
         this->job[i] = new Job(i, &(this->neunet));
