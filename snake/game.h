@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "../matrix/matrix.h"
+#include "reinforce.h"
 
 enum DIRECTION {LEFT, UP, RIGHT, DOWN};
 
@@ -55,8 +56,11 @@ class Snake
     ~Snake();
     bool handle_event(Matrix &action);
     void move();
+    void shadow_move(int &x, int &y);
     void draw(char *img);
     void put(int x_pos, int y_pos);
+    inline Colider* get_colider() {return coliders;};
+    inline int get_direction() {return direction;};
     friend class Game;
 };
 
@@ -66,11 +70,11 @@ class Game
     SDL_Event event;
     SDL_Texture *bckgrnd_texture;
     SDL_Rect background;
+    int window_w, window_h, wallcount, score;
+    public:
     Wall **walls;
     Snake *snake;
     Food *food;
-    int window_w, window_h, wallcount, score;
-    public:
     SDL_Renderer *bckgrnd_renderer;
     bool quit;
     Game(int h, int w);
@@ -78,7 +82,7 @@ class Game
     //void play();
     void draw(bool gameover);
     void drop_food();
-    friend class Network;
+    friend void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate);
 };
 
 

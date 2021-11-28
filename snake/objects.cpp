@@ -75,7 +75,7 @@ bool Snake::detect_self_colission()
     return false;
 }
 
-void Snake::move()
+void Snake::shadow_move(int &x, int &y)
 {
     switch(direction)
     {
@@ -92,6 +92,11 @@ void Snake::move()
             ypos += speed_y;
             break;
     }
+}
+
+void Snake::move()
+{
+    shadow_move(xpos, ypos);
     for(int i=length-1; i>0; i--)
     {
         coliders[i].xpos = coliders[i-1].xpos;
@@ -100,6 +105,8 @@ void Snake::move()
     coliders[0].xpos = xpos;
     coliders[0].ypos = ypos;
 }
+
+
 
 bool Snake::handle_event(Matrix &action)
 {

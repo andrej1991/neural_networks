@@ -8,6 +8,7 @@
 #include <random>
 #include <iosfwd>
 #include "SGD.h"
+#include "snake/game.h"
 
 
 #include <thread>
@@ -177,26 +178,11 @@ int main(int argc, char *argv[])
     }
 
     Network n1(layer_count, layers, input_row, input_col, input_channel_count);
-    /*Network n2(layer_count, layers, input_row, input_col, input_channel_count);
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count);
-    Network n4(layer_count, layers, input_row, input_col, input_channel_count);*/
 
 
-    //StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
-    StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
-    learning.monitor_training_duration = true;
+    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
 
-    cout << "stohastic gradient descent\n";
-    //learning.check_accuracy(validation, 10, 0, true);
-    //n1.dropout_probability = dropout_probability;
-    learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-
-
-    cout << "RMSprop\n";
-
-    //learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
-
+    reinforcement_snake(n1, learning, learning_rate, regularization_rate);
 
     input.close();
     required_output.close();

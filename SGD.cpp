@@ -320,10 +320,16 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
             }
         }
     }
+    for(int i = 0; i < minibatch_len; i++)
+    {
+        for(int j = 0; j < this->neunet.layers_num; j++)
+        {
+            delete deltanabla[i][j];
+        }
+    }
     for(int i = 0; i < this->neunet.layers_num; i++)
     {
         delete nabla[i];
-        delete deltanabla[i];
         delete helper_1[i];
         delete helper_2[i];
     }
