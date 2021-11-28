@@ -393,7 +393,7 @@ Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int t
     {
         ///TODO this is an errorprone as well
         output = this->neunet.get_output(test_data[j]->input);
-        if(getmax(output.data) == test_data[j]->required_output.data[0][0])
+        if(getmax(output.data, output.get_row()) == test_data[j]->required_output.data[0][0])
         {
             learning_accuracy++;
             avarange_confidence += output.data[int(test_data[j]->required_output.data[0][0])][0] * 100.0;

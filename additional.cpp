@@ -1,10 +1,10 @@
 #include "additional.h"
 
-int getmax(double **d)
+int getmax(double **d, int len)
 {
     double Max = d[0][0];
     int index = 0;
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < len; i++)
         {
             if(Max < d[i][0])
                 {
