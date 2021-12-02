@@ -19,7 +19,7 @@ MNIST_data::~MNIST_data()
 {
     for(int i = 0; i < this->feature_depth; i++)
     {
-        delete[] this->input[i];
+        delete this->input[i];
     }
     delete[] this->input;
 }

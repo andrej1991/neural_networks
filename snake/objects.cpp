@@ -1,6 +1,37 @@
 #include "game.h"
 #include "../additional.h"
 
+Direction::Direction(int d)
+{
+    if(d<=DOWN && d>=LEFT)
+        this->direction = d;
+    else
+    {
+        std::cerr << d << endl;
+        std::cerr << "wrong direction\n";
+        throw std::exception();
+    }
+}
+
+int Direction::operator+(int i)
+{
+    this->direction += i;
+    while(this->direction > DOWN)
+    {
+        this->direction -= 4;
+    }
+    return this->direction;
+}
+
+int Direction::operator-(int i)
+{
+    this->direction -= i;
+    while(this->direction < LEFT)
+    {
+        this->direction += 4;
+    }
+    return this->direction;
+}
 
 Wall::Wall(SDL_Renderer* wall_renderer, int x, int y, int h, int w): wall_renderer(wall_renderer)
 {
@@ -21,14 +52,13 @@ void Wall::draw(char *img)
 }
 
 
-Snake::Snake(SDL_Renderer* r, int x, int y, int w, int h): renderer(r), ypos(y)
+Snake::Snake(SDL_Renderer* r, int x, int y, int w, int h): renderer(r), ypos(y), direction(RIGHT)
 {
     length = 3;
     rect = {x + w*(length-1), y, w, h};
     xpos = x + w*(length-1);
     speed_x = w;
     speed_y = h;
-    direction = RIGHT;
     coliders = new Colider[length];
     put(x, y);
 }
@@ -51,13 +81,15 @@ Snake::~Snake()
     ;
 }
 
-bool Snake::detect_colission(Wall **w, int wallcount)
+bool Snake::detect_colission(Wall **w, int wallcount, int x, int y)
 {
-    Colider c;
+    //Colider c;
+    if(x == -1) x = this->xpos;
+    if(y == -1) y = this->ypos;
     for(int i = 0; i < wallcount; i++)
     {
-        c = w[i]->get_colider();
-        if(colission_detection(xpos, ypos, rect.w, rect.h, c))
+        //c = w[i]->get_colider();
+        if(colission_detection(x, y, rect.w, rect.h, w[i]->get_colider()))
         {
             return true;
         }
@@ -75,28 +107,28 @@ bool Snake::detect_self_colission()
     return false;
 }
 
-void Snake::shadow_move(int &x, int &y)
+void Snake::shadow_move(int &x, int &y, int dir)
 {
-    switch(direction)
+    switch(dir)
     {
         case LEFT:
-            xpos -= speed_x;
+            x -= speed_x;
             break;
         case UP:
-            ypos -= speed_y;
+            y -= speed_y;
             break;
         case RIGHT:
-            xpos += speed_x;
+            x += speed_x;
             break;
         case DOWN:
-            ypos += speed_y;
+            y += speed_y;
             break;
     }
 }
 
 void Snake::move()
 {
-    shadow_move(xpos, ypos);
+    shadow_move(xpos, ypos, direction.direction);
     for(int i=length-1; i>0; i--)
     {
         coliders[i].xpos = coliders[i-1].xpos;
@@ -114,27 +146,27 @@ bool Snake::handle_event(Matrix &action)
     switch(dir)
     {
         case LEFT:
-            if(direction != RIGHT)
+            if(direction.direction != RIGHT)
             {
-                direction = LEFT;
+                direction.direction = LEFT;
             }
             break;
         case UP:
-            if(direction != DOWN)
+            if(direction.direction != DOWN)
             {
-                direction = UP;
+                direction.direction = UP;
             }
             break;
         case RIGHT:
-            if(direction != LEFT)
+            if(direction.direction != LEFT)
             {
-                direction = RIGHT;
+                direction.direction = RIGHT;
             }
             break;
         case DOWN:
-            if(direction != UP)
+            if(direction.direction != UP)
             {
-                direction = DOWN;
+                direction.direction = DOWN;
             }
             break;
     }

@@ -61,8 +61,9 @@ void Game::draw(bool gameover)
     {
         walls[i]->draw("");
     }
+    int h = window_h/snake->coliders[0].height/2*snake->coliders[0].height;
     if(gameover)
-        snake->put(window_w/30 + 5, window_h/2);
+        snake->put(snake->coliders[0].width, h);
     snake->draw("");
     food->draw();
     SDL_RenderPresent(bckgrnd_renderer);
@@ -77,7 +78,9 @@ void Game::drop_food()
     {
         colission = false;
         food_x = rand() % window_w;
+        food_x -= food_x%snake->coliders[0].width;
         food_y = rand() % window_h;
+        food_y -= food_y%snake->coliders[0].height;
         for(int i=0; i<wallcount; i++)
         {
             if(colission_detection(food_x, food_y, food->c.width, food->c.height, walls[i]->c))
