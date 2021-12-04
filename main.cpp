@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
     StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
     learning.monitor_training_duration = false;
 
-    reinforcement_snake(n1, learning, learning_rate, regularization_rate);
+    reinforcement_snake(n1, learning, learning_rate, regularization_rate, input_row, input_col, momentum, denominator);
 
     input.close();
     required_output.close();

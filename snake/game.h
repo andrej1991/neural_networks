@@ -38,10 +38,11 @@ class Wall
 
 class Food
 {
-    Colider c;
+    //Colider c;
     SDL_Rect rect;
     SDL_Renderer* renderer;
     public:
+    Colider c;
     Food(SDL_Renderer *r, int w, int h);
     ~Food();
     void draw();
@@ -57,13 +58,16 @@ class Snake
     Colider *coliders;
     int length, xpos, ypos, speed_x, speed_y;
     Direction direction;
+    bool grow;
     public:
+    bool enable_growth;
     bool detect_colission(Wall **w, int wallcount, int x=-1, int y=-1);
     bool detect_colission(Food *f);
     bool detect_self_colission();
     Snake(SDL_Renderer* r, int x, int y, int w, int h);
     ~Snake();
     bool handle_event(Matrix &action);
+    void handle_event(SDL_Event &event);
     void move();
     void shadow_move(int &x, int &y, int dir);
     void draw(char *img);
@@ -88,11 +92,13 @@ class Game
     bool quit;
     Game(int h, int w);
     ~Game();
-    //void play();
+    void play();
     void draw(bool gameover);
     void drop_food();
     int get_wallcount() {return this->wallcount;};
-    friend void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate);
+    Snake* create_snake();
+    friend void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate,
+                                         int input_row, int input_col, double momentum, double denominator);
 };
 
 
@@ -100,19 +106,19 @@ inline bool colission_detection(int xpos, int ypos, int w, int h, Colider c)
 {
     bool x_colission = false;
     bool y_colission = false;
-    if((((xpos+w) >= c.xpos) && ((xpos+w) <= (c.xpos+c.width))) || ((xpos >= c.xpos) && (xpos <= (c.xpos+c.width))))
+    if((((xpos+w) > c.xpos) && ((xpos+w) <= (c.xpos+c.width))) || ((xpos >= c.xpos) && (xpos < (c.xpos+c.width))))
     {
         x_colission = true;
     }
-    if((((c.xpos + c.width) >= xpos) && ((c.xpos+c.width) <= (xpos+w))) || ((c.xpos >= xpos) && (c.xpos <= (xpos + w ))))
+    if((((c.xpos + c.width) > xpos) && ((c.xpos+c.width) <= (xpos+w))) || ((c.xpos >= xpos) && (c.xpos < (xpos + w ))))
     {
         x_colission = true;
     }
-    if((((ypos+h) >= c.ypos) && ((ypos+h) <= (c.ypos+c.height))) || ((ypos >= c.ypos) && (ypos <= (c.ypos+c.height))))
+    if((((ypos+h) > c.ypos) && ((ypos+h) <= (c.ypos+c.height))) || ((ypos >= c.ypos) && (ypos < (c.ypos+c.height))))
     {
         y_colission = true;
     }
-    if((((c.ypos + c.height) >= ypos) && ((c.ypos+c.height) <= (ypos+h))) || ((c.ypos >= ypos) && (c.ypos <= (ypos + h))))
+    if((((c.ypos + c.height) > ypos) && ((c.ypos+c.height) <= (ypos+h))) || ((c.ypos >= ypos) && (c.ypos < (ypos + h))))
     {
         y_colission = true;
     }
