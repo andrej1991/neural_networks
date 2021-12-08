@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         throw exception();
     }
     ifstream input, required_output, validation_input_data, validation_output_data;
-    input.open(training_input, ios::in|ios::binary);
+    /*input.open(training_input, ios::in|ios::binary);
     required_output.open(required_training_output, ios::in|ios::binary);
     validation_input_data.open(validation_input, ios::in|ios::binary);
     validation_output_data.open(required_validation_output, ios::in|ios::binary);
@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     {
         validation[i] = new MNIST_data(input_row, input_col, 1, 1);
         validation[i]->load_data(validation_input_data, validation_output_data);
-    }
+    }*/
 
     Network n1(layer_count, layers, input_row, input_col, input_channel_count);
 
@@ -185,9 +185,9 @@ int main(int argc, char *argv[])
 
     reinforcement_snake(n1, learning, learning_rate, regularization_rate, input_row, input_col, momentum, denominator);
 
-    input.close();
+    /*input.close();
     required_output.close();
     validation_input_data.close();
-    validation_output_data.close();
+    validation_output_data.close();*/
     return 0;
 }

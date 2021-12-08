@@ -112,14 +112,25 @@ bool Snake::detect_colission(Food *f)
     return false;
 }
 
-bool Snake::detect_self_colission()
+bool Snake::detect_self_colission(int x, int y)
 {
+    int upper_limit = length;
+    int lower_limit = 4;
+    if(x == -1 || y == -1)
+    {
+        y = this->ypos;
+        x = this->xpos;
+        upper_limit = length - 1;
+        lower_limit = 3;
+
+    }
     if(length > 4)
     {
-        for(int i = 4; i < length; i++)
+        for(int i = lower_limit; i < upper_limit; i++)
         {
-            if(colission_detection(xpos, ypos, rect.w, rect.h, coliders[i]))
+            if(colission_detection(x, y, rect.w, rect.h, coliders[i]))
             {
+                if(lower_limit == 4)cout << "the snake had biten it's tail\n";
                 return true;
             }
         }
