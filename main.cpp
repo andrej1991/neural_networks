@@ -177,8 +177,8 @@ int main(int argc, char *argv[])
         validation[i]->load_data(validation_input_data, validation_output_data);
     }*/
 
-    Network n1(layer_count, layers, input_row, input_col, input_channel_count);
-    //Network n1("../data/reinforcement_snake.bin");
+    //Network n1(layer_count, layers, input_row, input_col, input_channel_count);
+    Network n1("../data/reinforcement_snake.bin");
 
 
     StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);

@@ -2,6 +2,7 @@
 #define MNIST_DATA_H_INCLUDED
 #include <fstream>
 #include "../matrix/matrix.h"
+#include <SDL2/SDL.h>
 
 class MNIST_data{
     public:
@@ -12,6 +13,7 @@ class MNIST_data{
     ~MNIST_data();
     void load_data(std::ifstream &input, std::ifstream &required_output);
     void load_bmp(std::ifstream &in);
+    void load_sdl_pixels(SDL_Surface *window_surface);
 
 };
 
