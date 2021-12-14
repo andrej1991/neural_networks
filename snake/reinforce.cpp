@@ -198,27 +198,10 @@ Matrix get_correct_way(Game &g)
         int req[3] = {g.snake->get_direction().direction, (g.snake->get_direction()+1), (g.snake->get_direction()-1)};
         select_unblocked_path(g, ret, req);
         return ret;
-        /*ret.data[g.snake->get_direction().direction][0] = 1;
-        return ret;*/
+
     }
     if(food_is_behind(g))
     {
-        /*d = d+1;
-        g.snake->shadow_move(c.xpos, c.ypos, d.direction);
-        if(!(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission(c.xpos, c.ypos)))
-        {
-            ret.data[g.snake->get_direction()+1][0] = 1;
-        }
-        else
-        {
-            d = g.snake->get_direction().direction;
-            d = d-1;
-            g.snake->shadow_move(c.xpos, c.ypos, d.direction);
-            if(!(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission(c.xpos, c.ypos)))
-            {
-                ret.data[g.snake->get_direction()-1][0] = 1;
-            }
-        }*/
         int req[3] = {(g.snake->get_direction()+1), (g.snake->get_direction()-1), g.snake->get_direction().direction};
         select_unblocked_path(g, ret, req);
         return ret;
@@ -258,7 +241,6 @@ bool snake_is_totally_wrong(Matrix *action, Matrix *required_action)
         {
             if(action->data[i][0] >= (1 - 1E-5))
             {
-                //cout << "IIIIIIIIIIIIIII " << i << endl;
                 ret = true;
             }
         }
@@ -281,7 +263,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
     g.snake->enable_growth = enableg;
     //g.play();
     //return;
-    MNIST_data *d, *d2, *train_incaseof_fail;
+    MNIST_data *d, *train_incaseof_fail;
     Matrix action;
     std::vector<MNIST_data*> training;
     std::vector<MNIST_data*> training_incaseof_fail;
@@ -317,12 +299,11 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 cout << "avarange: " << avarange_score << endl;
                 sort(score_list.begin(), score_list.end());
                 cout << "median score " << score_list[score_list.size()/2] << endl;
-                cout << "szóras: " << szoras << endl;
+                cout << "szórás: " << szoras << endl;
                 cout << g.score << endl;
             }
         }
         d = new MNIST_data(input_row, input_col, 4, 3);
-        //d2 = new MNIST_data(input_row, input_col, 4, 3);
         train_incaseof_fail = new MNIST_data(input_row, input_col, 4, 3);
         if(!gameover)
         {
@@ -330,27 +311,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             SDL_LockSurface(window_surface);
             SDL_RenderReadPixels(g.bckgrnd_renderer, NULL, window_surface->format->format, window_surface->pixels, window_surface->pitch);
             d[0].load_sdl_pixels(window_surface);
-            //SDL_SaveBMP(window_surface, "../window_surface.bmp");
             SDL_UnlockSurface(window_surface);
-            /*inp.open("../window_surface.bmp");
-            d2[0].load_bmp(inp);
-            for(int i = 0; i < 3; i++)
-            {
-                for(int j=0; j<100;j++)
-                {
-                    for(int k=0; k<100;k++)
-                    {
-                        if(d[0].input[i]->data[j][k] != d2[0].input[i]->data[j][k])
-                        {
-                            cerr << d[0].input[i]->data[j][k] << endl;
-                            cerr << d2[0].input[i]->data[j][k] << endl;
-                            cerr << "fuck " << i << "  " << j << "  " << k << endl;
-                            throw exception();
-                        }
-                    }
-                }
-            }
-            //return;*/
             train_incaseof_fail[0].load_bmp(inp);
             inp.close();
             action = net.get_output(d[0].input);
@@ -375,7 +336,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 //cout << "food found\n";
                 g.score++;
                 g.drop_food();
-                gameover = false;
+//                gameover = false;
                 for(int i=0; i<training.size(); i++)
                 {
                     direction = getmax(training[i]->required_output.data, 4);
@@ -392,12 +353,14 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 else last5steps = training.size();
                 for(int i = 0; i < 8; i++)
                 {
-                    for(int i = last5steps; i > 0 ; i--)
-                        learn.rmsprop(&training[training.size()-i], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                    for(int j = last5steps; j > 0 ; j--)
+                        learn.rmsprop(&training[training.size()-j], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
                 }
                 do
                 {
+                    delete training[training.size()-1];
                     training.pop_back();
+                    delete training_incaseof_fail[training_incaseof_fail.size()-1];
                     training_incaseof_fail.pop_back();
                 }while(training.size() > 0);
             }
@@ -405,7 +368,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             {
                 if(!gameover)
                 {
-                    double k = 1;
+                    int k = 1;
                     if(snake_is_totally_wrong(&action, &(train_incaseof_fail->required_output)))
                     {
                         if(training.size() > input_col)
@@ -413,10 +376,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                         else
                             k = 10;
                     }
-                    //for(int i = 0; i < k; i++)
-                    //{
-                        learn.rmsprop(&train_incaseof_fail, k, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
-                    //}
+                    learn.rmsprop(&train_incaseof_fail, k, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
                     if(training.size() > sqrt(input_col*input_col + input_row*input_row)*2 && k > 1)
                     {
                         cout << "intentionally killed\n";
@@ -438,11 +398,12 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             }
             score_list.push_back(g.score);
             g.score = 0;
-            //for(int i = 0; i < 3; i++)
-                learn.rmsprop(&training_incaseof_fail[training.size()-1], 5, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+            learn.rmsprop(&training_incaseof_fail[training.size()-1], 5, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
             do
             {
+                delete training_incaseof_fail[training_incaseof_fail.size()-1];
                 training_incaseof_fail.pop_back();
+                delete training[training.size()-1];
                 training.pop_back();
             }while(training.size() > 0);
             delete g.snake;
