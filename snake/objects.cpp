@@ -80,7 +80,7 @@ void Snake::put(int x_pos, int y_pos)
 
 Snake::~Snake()
 {
-    delete coliders;
+    delete[] coliders;
 }
 
 bool Snake::detect_colission(Wall **w, int wallcount, int x, int y)
@@ -130,7 +130,6 @@ bool Snake::detect_self_colission(int x, int y)
         {
             if(colission_detection(x, y, rect.w, rect.h, coliders[i]))
             {
-                if(lower_limit == 4)cout << "the snake had biten it's tail\n";
                 return true;
             }
         }
@@ -168,6 +167,7 @@ void Snake::move()
             coliders[i] = old_coliders[i];
         }
         coliders[length] = old_coliders[length - 1];
+        delete[] old_coliders;
     }
     shadow_move(xpos, ypos, direction.direction);
     for(int i=length-1; i>0; i--)
