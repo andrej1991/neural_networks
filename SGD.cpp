@@ -269,6 +269,10 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                 default:
                     throw invalid_argument("Unknown gradient descent variant!");
             }
+            for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+            {
+                nabla[layer_index]->zero();
+            }
             if(this->dropout_probability != 0)
             {
                 int dropout_index = 0;
