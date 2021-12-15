@@ -1,17 +1,17 @@
 #include "additional.h"
 
-int getmax(double **d)
+int getmax(double **d, int len)
 {
     double Max = d[0][0];
     int index = 0;
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < len; i++)
+    {
+        if(Max < d[i][0])
         {
-            if(Max < d[i][0])
-                {
-                    Max = d[i][0];
-                    index = i;
-                }
+            Max = d[i][0];
+            index = i;
         }
+    }
     return index;
 }
 
@@ -21,16 +21,16 @@ int partition( int *a, int l, int r) {
     i = l; j = r+1;
 
     while( 1)
-        {
-            do ++i;
-            while( a[i] <= pivot && i <= r )
-                ;
-            do --j;
-            while( a[j] > pivot );
-            if( i >= j )
-                break;
-            t = a[i]; a[i] = a[j]; a[j] = t;
-        }
+    {
+        do ++i;
+        while( a[i] <= pivot && i <= r )
+            ;
+        do --j;
+        while( a[j] > pivot );
+        if( i >= j )
+            break;
+        t = a[i]; a[i] = a[j]; a[j] = t;
+    }
     t = a[l]; a[l] = a[j]; a[j] = t;
     return j;
 }

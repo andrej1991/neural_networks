@@ -105,7 +105,7 @@ void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch
     }
 }
 
-void StochasticGradientDescent::rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescent::RMSprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                         Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate,
                                         double regularization_rate, double momentum, double denominator)
 {
@@ -230,6 +230,8 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                     if(this->neunet.layers[layerindex]->get_layer_type() == FULLY_CONNECTED or this->neunet.layers[layerindex]->get_layer_type() == SOFTMAX)
                     {
                         delete nabla[layerindex];
+                        delete helper_1[layerindex];
+                        delete helper_2[layerindex];
 
                         biascnt = this->neunet.layers[layerindex]->get_weights_row();
                         nabla[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
@@ -237,6 +239,16 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                                                        this->neunet.layers[layerindex]->get_weights_col(),
                                                        this->neunet.layers[layerindex]->get_mapdepth(),
                                                        biascnt);
+                        helper_1[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
+                                                            this->neunet.layers[layerindex]->get_weights_row(),
+                                                            this->neunet.layers[layerindex]->get_weights_col(),
+                                                            this->neunet.layers[layerindex]->get_mapdepth(),
+                                                            biascnt);
+                        helper_2[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
+                                                            this->neunet.layers[layerindex]->get_weights_row(),
+                                                            this->neunet.layers[layerindex]->get_weights_col(),
+                                                            this->neunet.layers[layerindex]->get_mapdepth(),
+                                                            biascnt);
                         for(int jobindex = 0; jobindex < minibatch_len; jobindex++)
                         {
                             delete deltanabla[jobindex][layerindex];
@@ -263,10 +275,14 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                     this->nesterov(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, lr, reg, momentum);
                     break;
                 case RMSPROP:
-                    this->rmsprop(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, helper_2, lr, reg, momentum, denominator);
+                    this->RMSprop(minibatches[j], minibatch_len, nabla, deltanabla, helper_1, helper_2, lr, reg, momentum, denominator);
                     break;
                 default:
                     throw invalid_argument("Unknown gradient descent variant!");
+            }
+            for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
+            {
+                nabla[layer_index]->zero();
             }
             if(this->dropout_probability != 0)
             {
@@ -319,10 +335,17 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
             }
         }
     }
+    for(int i = 0; i < minibatch_len; i++)
+    {
+        for(int j = 0; j < this->neunet.layers_num; j++)
+        {
+            delete deltanabla[i][j];
+        }
+    }
     for(int i = 0; i < this->neunet.layers_num; i++)
     {
         delete nabla[i];
-        delete deltanabla[i];
+        //delete[] deltanabla[i];
         delete helper_1[i];
         delete helper_2[i];
     }
@@ -342,10 +365,10 @@ void StochasticGradientDescent::stochastic_gradient_descent(MNIST_data **trainin
 void StochasticGradientDescent::momentum_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
                                             double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    if(this->dropout_probability != 0.0)
+    /*if(this->dropout_probability != 0.0)
     {
         throw invalid_argument("Known limitation that momentum_gradient_descent is not working with dropout.");
-    }
+    }*/
     this->gradient_descent_variant(MOMENTUM, training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate,
                                  0, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
@@ -364,10 +387,10 @@ void StochasticGradientDescent::nesterov_accelerated_gradient(MNIST_data **train
 void StochasticGradientDescent::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
                                             double regularization_rate, double denominator, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    if(this->dropout_probability != 0.0)
+    /*if(this->dropout_probability != 0.0)
     {
         throw invalid_argument("Known limitation that rmsprop is not working with dropout.");
-    }
+    }*/
     this->gradient_descent_variant(RMSPROP, training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate,
                                  denominator, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
@@ -392,7 +415,7 @@ Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int t
     {
         ///TODO this is an errorprone as well
         output = this->neunet.get_output(test_data[j]->input);
-        if(getmax(output.data) == test_data[j]->required_output.data[0][0])
+        if(getmax(output.data, output.get_row()) == test_data[j]->required_output.data[0][0])
         {
             learning_accuracy++;
             avarange_confidence += output.data[int(test_data[j]->required_output.data[0][0])][0] * 100.0;
@@ -512,7 +535,7 @@ void StochasticGradientDescentMultiThread::nesterov(MNIST_data **minibatches, in
     }
 }
 
-void StochasticGradientDescentMultiThread::rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescentMultiThread::RMSprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                         Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate,
                                         double regularization_rate, double momentum, double denominator)
 {

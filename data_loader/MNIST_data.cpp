@@ -19,7 +19,7 @@ MNIST_data::~MNIST_data()
 {
     for(int i = 0; i < this->feature_depth; i++)
     {
-        delete[] this->input[i];
+        delete this->input[i];
     }
     delete[] this->input;
 }
@@ -32,3 +32,24 @@ void MNIST_data::load_data(std::ifstream &input, std::ifstream &required_output)
     }
     required_output.read((char*)this->required_output.dv, this->output_vector_size  * sizeof(double));
 }
+
+void MNIST_data::load_bmp(std::ifstream &in)
+{
+    char temp_inp[4 * this->input_vector_row * this->input_vector_col];
+    in.seekg(0x7a);
+    unsigned char tmp;
+    in.read(temp_inp, this->input_vector_row * this->input_vector_col * 4);
+    for(int i = 0; i < this->input_vector_row; i++)
+    {
+        for(int j = 0; j < this->input_vector_col; j++)
+        {
+            tmp = temp_inp[4*(i * this->input_vector_col + j)];
+            this->input[0]->data[i][j] = tmp;
+            tmp = temp_inp[4*(i * this->input_vector_col + j) + 1];
+            this->input[1]->data[i][j] = tmp;
+            tmp = temp_inp[4*(i * this->input_vector_col + j) + 2];
+            this->input[2]->data[i][j] = tmp;
+        }
+    }
+}
+

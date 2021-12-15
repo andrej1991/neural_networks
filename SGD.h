@@ -25,7 +25,7 @@ class StochasticGradientDescent{
                         double learning_rate, double regularization_rate, double momentum);
     virtual void nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum,
                   double learning_rate, double regularization_rate, double momentum);
-    virtual void rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum,
+    virtual void RMSprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum,
                  Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator);
     virtual void gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate,
                                  double denominator, double momentum, MNIST_data **test_data, int minibatch_count , int test_data_len,  int trainingdata_len);
@@ -56,7 +56,7 @@ class StochasticGradientDescentMultiThread : public StochasticGradientDescent {
                         double learning_rate, double regularization_rate, double momentum);
     virtual void nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum,
                   double learning_rate, double regularization_rate, double momentum);
-    virtual void rmsprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum,
+    virtual void RMSprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla, Layers_features **nabla_momentum,
                  Layers_features **layer_helper, double learning_rate, double regularization_rate, double momentum, double denominator);
     void gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost, double regularization_rate,
                                  double denominator, double momentum, MNIST_data **test_data, int minibatch_count , int test_data_len,  int trainingdata_len);
