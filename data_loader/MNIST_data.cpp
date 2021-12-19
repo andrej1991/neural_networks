@@ -33,23 +33,53 @@ void MNIST_data::load_data(std::ifstream &input, std::ifstream &required_output)
     required_output.read((char*)this->required_output.dv, this->output_vector_size  * sizeof(double));
 }
 
-void MNIST_data::load_bmp(std::ifstream &in)
+void MNIST_data::load_bmp(const char *path)
 {
-    char temp_inp[4 * this->input_vector_row * this->input_vector_col];
-    in.seekg(0x7a);
-    unsigned char tmp;
-    in.read(temp_inp, this->input_vector_row * this->input_vector_col * 4);
-    for(int i = 0; i < this->input_vector_row; i++)
+    ifstream inp;
+    short int signature, bits_per_pixel;
+    int data_offset, width, height, compression, img_size;
+    try
     {
-        for(int j = 0; j < this->input_vector_col; j++)
+        inp.open(path, ios::in|ios::binary);
+        inp.read((char*) &signature, 2);
+        inp.seekg(0xA);
+        inp.read((char*) &data_offset, 4);
+        inp.seekg(0x12);
+        inp.read((char*) &width, 4);
+        inp.read((char*) &height, 4);
+        inp.seekg(0x1C);
+        inp.read((char*) &bits_per_pixel, 2);
+        inp.read((char*) &compression, 4);
+        inp.read((char*) &img_size, 4);
+        if(signature == 19778)
         {
-            tmp = temp_inp[4*(i * this->input_vector_col + j)];
-            this->input[0]->data[i][j] = tmp;
-            tmp = temp_inp[4*(i * this->input_vector_col + j) + 1];
-            this->input[1]->data[i][j] = tmp;
-            tmp = temp_inp[4*(i * this->input_vector_col + j) + 2];
-            this->input[2]->data[i][j] = tmp;
+            throw invalid_argument("The file is not a BMP file!\n");
         }
+        char temp_inp[4 * this->input_vector_row * this->input_vector_col];
+        inp.seekg(data_offset);
+        unsigned char tmp;
+        inp.read(temp_inp, this->input_vector_row * this->input_vector_col * 4);
+        for(int i = 0; i < this->input_vector_row; i++)
+        {
+            for(int j = 0; j < this->input_vector_col; j++)
+            {
+                tmp = temp_inp[4*(i * this->input_vector_col + j)];
+                this->input[0]->data[i][j] = tmp;
+                tmp = temp_inp[4*(i * this->input_vector_col + j) + 1];
+                this->input[1]->data[i][j] = tmp;
+                tmp = temp_inp[4*(i * this->input_vector_col + j) + 2];
+                this->input[2]->data[i][j] = tmp;
+            }
+        }
+    }
+    catch( exception &e)
+    {
+        inp.close();
+        throw e;
+    }
+    if(inp.is_open())
+    {
+        inp.close();
     }
 }
 

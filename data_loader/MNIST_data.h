@@ -11,7 +11,7 @@ class MNIST_data{
     MNIST_data(int input_row, int input_col, int output_vector_size, int feature_depth);
     ~MNIST_data();
     void load_data(std::ifstream &input, std::ifstream &required_output);
-    void load_bmp(std::ifstream &in);
+    void load_bmp(const char *path);
 
 };
 
