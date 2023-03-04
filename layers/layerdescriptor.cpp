@@ -32,8 +32,8 @@ Layers_features::Layers_features(const Layers_features &layer)
         for(int i = 0; i < mapdepth; i++)
         {
             this->fmap[map_index]->weights[i][0] = layer.fmap[map_index]->weights[i][0];
-            this->fmap[map_index]->biases[i][0] = layer.fmap[map_index]->biases[i][0];
         }
+        this->fmap[map_index]->biases[0][0] = layer.fmap[map_index]->biases[0][0];
     }
 }
 
@@ -69,8 +69,8 @@ Layers_features & Layers_features::operator= (const Layers_features &layer)
         for(int i = 0; i < mapdepth; i++)
         {
             this->fmap[map_index]->weights[i][0] = layer.fmap[map_index]->weights[i][0];
-            this->fmap[map_index]->biases[i][0] = layer.fmap[map_index]->biases[i][0];
         }
+        this->fmap[map_index]->biases[0][0] = layer.fmap[map_index]->biases[0][0];
     }
     return *this;
 }
@@ -83,8 +83,8 @@ void Layers_features::operator+= (const Layers_features &layer)
         for(int i = 0; i < mapdepth; i++)
         {
             this->fmap[map_index]->weights[i][0] += layer.fmap[map_index]->weights[i][0];
-            this->fmap[map_index]->biases[i][0] += layer.fmap[map_index]->biases[i][0];
         }
+        this->fmap[map_index]->biases[0][0] += layer.fmap[map_index]->biases[0][0];
     }
 }
 
@@ -97,8 +97,8 @@ Layers_features Layers_features::operator+(const Layers_features &layer)
         for(int i = 0; i < mapdepth; i++)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] + layer.fmap[map_index]->weights[i][0];
-            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] + layer.fmap[map_index]->biases[i][0];
         }
+        new_layer.fmap[map_index]->biases[0][0] = this->fmap[map_index]->biases[0][0] + layer.fmap[map_index]->biases[0][0];
     }
     return new_layer;
 }
@@ -112,8 +112,8 @@ Layers_features Layers_features::operator/(const Layers_features &layer)
         for(int i = 0; i < mapdepth; i++)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] / layer.fmap[map_index]->weights[i][0];
-            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] / layer.fmap[map_index]->biases[i][0];
         }
+        new_layer.fmap[map_index]->biases[0][0] = this->fmap[map_index]->biases[0][0] / layer.fmap[map_index]->biases[0][0];
     }
     return new_layer;
 }
@@ -127,8 +127,8 @@ Layers_features Layers_features::operator*(double d)
         for(int i = 0; i < mapdepth; i++)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] * d;
-            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] * d;
         }
+        new_layer.fmap[map_index]->biases[0][0] = this->fmap[map_index]->biases[0][0] * d;
     }
     return new_layer;
 }
@@ -142,8 +142,8 @@ Layers_features Layers_features::operator+(double d)
         for(int i = 0; i < mapdepth; i++)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0] + d;
-            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0] + d;
         }
+        new_layer.fmap[map_index]->biases[0][0] = this->fmap[map_index]->biases[0][0] + d;
     }
     return new_layer;
 }
@@ -157,8 +157,8 @@ Layers_features Layers_features::sqroot()
         for(int i = 0; i < mapdepth; i++)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0].sqroot();
-            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0].sqroot();
         }
+        new_layer.fmap[map_index]->biases[0][0] = this->fmap[map_index]->biases[0][0].sqroot();
     }
     return new_layer;
 }
@@ -172,8 +172,8 @@ Layers_features Layers_features::square_element_by()
         for(int i = 0; i < mapdepth; i++)
         {
             new_layer.fmap[map_index]->weights[i][0] = this->fmap[map_index]->weights[i][0].square_element_by();
-            new_layer.fmap[map_index]->biases[i][0] = this->fmap[map_index]->biases[i][0].square_element_by();
         }
+        new_layer.fmap[map_index]->biases[0][0] = this->fmap[map_index]->biases[0][0].square_element_by();
     }
     return new_layer;
 }
@@ -183,10 +183,11 @@ void Layers_features::zero()
     for(int map_index = 0; map_index < this->fmap_count; map_index++)
         {
             int mapdepth = this->fmap[map_index]->get_mapdepth();
+            this->fmap[map_index]->biases[0][0].zero();
             for(int i = 0; i < mapdepth; i++)
                 {
                     this->fmap[map_index]->weights[i][0].zero();
-                    this->fmap[map_index]->biases[i][0].zero();
+                    //this->fmap[map_index]->biases[i][0].zero();
                 }
         }
 }
