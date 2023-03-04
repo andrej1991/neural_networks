@@ -33,7 +33,7 @@ class Feature_map{
     int /*row, col,*/ mapdepth;
     public:
     Matrix **weights, **biases;
-    Feature_map(int row, int col, int mapdepth, int biascnt = -1);
+    Feature_map(int row, int col, int mapdepth, int biascnt = 1, int bias_col = 1);
     int get_col();
     int get_row();
     int get_mapdepth();
@@ -45,10 +45,10 @@ class Feature_map{
 };
 
 class Layers_features{
-    int fmap_count, biascnt;
+    int fmap_count, biasrow, biascol;
     public:
     Feature_map **fmap;
-    Layers_features(int mapcount, int row, int col, int depth, int biascnt);
+    Layers_features(int mapcount, int row, int col, int depth, int biasrow, int biascol);
     Layers_features(const Layers_features &layer);
     ~Layers_features();
     void operator+=(const Layers_features &layer);

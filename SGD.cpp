@@ -140,7 +140,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
     std::random_device rand;
     std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     int learnig_cost_counter = 0;
-    int biascnt;
+    int biasrow, biascol;
     double previoius_learning_cost = 0;
     double lr, reg;
     Matrix helper(this->neunet.layers[this->neunet.layers_num - 1]->get_output_row(), 1);
@@ -161,15 +161,13 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
         for(int i = 0; i < this->neunet.layers_num; i++)
         {
             ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
-            if((this->neunet.layers[i]->get_layer_type() == FULLY_CONNECTED) or (this->neunet.layers[i]->get_layer_type() == SOFTMAX))
-                biascnt = this->neunet.layers[i]->get_weights_row();
-            else
-                biascnt = 1;
+            biasrow = this->neunet.layers[i]->get_output_row();
+            biascol = this->neunet.layers[i]->get_output_col();
             nabla[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
                                            this->neunet.layers[i]->get_weights_row(),
                                            this->neunet.layers[i]->get_weights_col(),
                                            this->neunet.layers[i]->get_mapdepth(),
-                                           biascnt);
+                                           biasrow, biascol);
             nabla[i]->zero();
             for(int j = 0; j < minibatch_len; j++)
             {
@@ -177,19 +175,19 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                                                     this->neunet.layers[i]->get_weights_row(),
                                                     this->neunet.layers[i]->get_weights_col(),
                                                     this->neunet.layers[i]->get_mapdepth(),
-                                                    biascnt);
+                                                    biasrow, biascol);
             }
             helper_1[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
                                                 this->neunet.layers[i]->get_weights_row(),
                                                 this->neunet.layers[i]->get_weights_col(),
                                                 this->neunet.layers[i]->get_mapdepth(),
-                                                biascnt);
+                                                biasrow, biascol);
             helper_1[i]->zero();
             helper_2[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
                                                 this->neunet.layers[i]->get_weights_row(),
                                                 this->neunet.layers[i]->get_weights_col(),
                                                 this->neunet.layers[i]->get_mapdepth(),
-                                                biascnt);
+                                                biasrow, biascol);
         }
     }
     catch(bad_alloc& ba)
@@ -233,22 +231,23 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                         delete helper_1[layerindex];
                         delete helper_2[layerindex];
 
-                        biascnt = this->neunet.layers[layerindex]->get_weights_row();
+                        biasrow = this->neunet.layers[layerindex]->get_output_row();
+                        biascol = this->neunet.layers[layerindex]->get_output_col();
                         nabla[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
                                                        this->neunet.layers[layerindex]->get_weights_row(),
                                                        this->neunet.layers[layerindex]->get_weights_col(),
                                                        this->neunet.layers[layerindex]->get_mapdepth(),
-                                                       biascnt);
+                                                       biasrow, biascol);
                         helper_1[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
                                                             this->neunet.layers[layerindex]->get_weights_row(),
                                                             this->neunet.layers[layerindex]->get_weights_col(),
                                                             this->neunet.layers[layerindex]->get_mapdepth(),
-                                                            biascnt);
+                                                            biasrow, biascol);
                         helper_2[layerindex] = new Layers_features(this->neunet.layers[layerindex]->get_mapcount(),
                                                             this->neunet.layers[layerindex]->get_weights_row(),
                                                             this->neunet.layers[layerindex]->get_weights_col(),
                                                             this->neunet.layers[layerindex]->get_mapdepth(),
-                                                            biascnt);
+                                                            biasrow, biascol);
                         for(int jobindex = 0; jobindex < minibatch_len; jobindex++)
                         {
                             delete deltanabla[jobindex][layerindex];
@@ -256,7 +255,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
                                                                                    this->neunet.layers[layerindex]->get_weights_row(),
                                                                                    this->neunet.layers[layerindex]->get_weights_col(),
                                                                                    this->neunet.layers[layerindex]->get_mapdepth(),
-                                                                                   biascnt);
+                                                                                   biasrow, biascol);
                         }
                     }
                 }

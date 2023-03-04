@@ -139,9 +139,9 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     double deviation = sqrt(2.0/(kern_row * kern_col));
     for(int i = 0; i < map_count; i++)
     {
-        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count);
+        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, this->output_row, this->output_col);
         fmap[i]->initialize_weights(deviation);
-        fmap[i]->initialize_biases();
+        fmap[i]->initialize_biases(deviation);
     }
     this->build_outputs_and_errors();
 }
@@ -293,7 +293,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         {
             cross_correlation(input[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
         }
-        nabla[i]->biases[0][0].data[0][0] = this->layers_delta[threadindex][i][0].sum_over_elements();
+        nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
     }
     return this->layers_delta[threadindex];
 }
@@ -302,7 +302,13 @@ void Convolutional::update_weights_and_biasses(double learning_rate, double regu
 {
     for(int i = 0; i < this->map_count; i++)
     {
-        this->fmap[i]->biases[0]->data[0][0] -= learning_rate * this->fmap[i]->biases[0]->data[0][0];
+        for(int row = 0; row < this->fmap[i]->biases[0][0].get_row(); row++)
+        {
+            for(int col = 0; col < this->fmap[i]->biases[0][0].get_col(); col++)
+            {
+                this->fmap[i]->biases[0][0].data[row][col] -= learning_rate * this->fmap[i]->biases[0][0].data[row][col];
+            }
+        }
         for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
         {
             for(int row = 0; row < this->kernel_row; row++)
@@ -325,7 +331,7 @@ void Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **i
         convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->vertical_stride, this->horizontal_stride);
         helper += convolved;
     }
-    helper+=this->fmap[map_index]->biases[0][0].data[0][0];
+    helper+=this->fmap[map_index]->biases[0][0];
 }
 
 void Convolutional::layers_output(Matrix **input, int threadindex)
