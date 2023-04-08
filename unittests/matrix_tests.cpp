@@ -829,6 +829,33 @@ TEST(MatrixBasicOperationsTest, test_squared_sum_over_elements_positive)
     ASSERT_DOUBLE_EQ (ExpectedResult, Result);
 }
 
+TEST(MatrixBasicOperationsTest, test_multiply_with_transpose_positive)
+{
+    Matrix A(2,3), B(3,3);
+    double helper1[A.get_row()][A.get_col()] = {{0, 1, 2},
+                                                {3, 4, 7}};
+    for (int row = 0; row < A.get_row(); row++)
+    {
+        for (int col = 0; col < A.get_col(); col++)
+        {
+            A.data[row][col] = helper1[row][col];
+        }
+    }
+    double helper2[B.get_row()][B.get_col()] = {{0, 1, 2},
+                                                {3, 4, 7},
+                                                {9, 5, 16}};
+    for (int row = 0; row < B.get_row(); row++)
+    {
+        for (int col = 0; col < B.get_col(); col++)
+        {
+            B.data[row][col] = helper2[row][col];
+        }
+    }
+    Matrix Result1 = A * B.transpose();
+    Matrix Result2 = A.multiply_with_transpose(B);
+    ASSERT_TRUE(test_matrixes_for_equality(Result1, Result2));
+    
+}
 
 
 int main(int argc, char **argv)

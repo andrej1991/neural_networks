@@ -162,7 +162,8 @@ Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Featur
     ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
     this->layers_delta[threadindex][0][0] = hadamart_product(multiplied, this->output_derivative[threadindex][0][0]);
     nabla[0][0].biases[0][0] = this->layers_delta[threadindex][0][0];
-    nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
+    //nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
+    nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0].multiply_with_transpose(input[0][0]);
     return this->layers_delta[threadindex];
 }
 

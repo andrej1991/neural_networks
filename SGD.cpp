@@ -397,7 +397,7 @@ void StochasticGradientDescent::rmsprop(MNIST_data **training_data, int epochs, 
 Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost, double regularization_rate)
 {
     int learning_accuracy;
-    double learning_cost, squared_sum = 0, avarange_confidence = 0;
+    double learning_cost, squared_sum = 0, avarange_confidence = 0, avarange_false_confidence = 0;
     Matrix helper(this->neunet.layers[this->neunet.layers_num - 1]->get_output_row(), 1);
     Matrix output;
     int mapcount, mapdepth;
@@ -417,7 +417,11 @@ Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int t
         if(getmax(output.data, output.get_row()) == test_data[j]->required_output.data[0][0])
         {
             learning_accuracy++;
-            avarange_confidence += output.data[int(test_data[j]->required_output.data[0][0])][0] * 100.0;
+            avarange_confidence += output.data[int(test_data[j]->required_output.data[0][0])][0];
+        }
+        else
+        {
+            avarange_false_confidence += output.data[getmax(output.data, output.get_row())][0];
         }
         if(monitor_learning_cost)
         {
@@ -450,7 +454,8 @@ Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int t
     end_testing = chrono::system_clock::now();
     test_duration = end_testing - start;
     cout << "set " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << endl;
-    cout << "  The avarange confidence is: " << avarange_confidence/learning_accuracy << "%" << endl;
+    cout << "  The avarange confidence is: " << (avarange_confidence/learning_accuracy) * 100.0 << "%" << endl;
+    cout << "  The avarange confidence over false clasifications is: " << (avarange_false_confidence/(test_data_len - learning_accuracy)) * 100.0 << "%" << endl;
     double execution_time = 0;
     if(this->monitor_training_duration)
     {

@@ -30,6 +30,7 @@ class Matrix
     Matrix operator+ (const Matrix &mtx);
     friend Matrix hadamart_product(Matrix &mtx1, Matrix &mtx2);
     Matrix transpose();
+    Matrix multiply_with_transpose(Matrix &mtx);
     Matrix rot180();
     Matrix sqroot();
     Matrix square_element_by();

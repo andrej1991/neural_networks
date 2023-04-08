@@ -239,6 +239,33 @@ Matrix Matrix::transpose()
     return tr_mtx;
 }
 
+Matrix Matrix::multiply_with_transpose(Matrix &mtx)
+{
+    if(col != mtx.col)
+    {
+        throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
+    }
+    else
+    {
+        Matrix ret(row, mtx.row);
+        double c = 0;
+        for(int k = 0; k < this->row; k++)
+        {
+            for(int l = 0; l < mtx.row; l++)
+            {
+                for(int i = 0; i < this->col; i++)
+                {
+                    c += this->data[k][i] * mtx.data[l][i];
+                    //c += data[k][i] * 1;
+                }
+                ret.data[k][l] = c;
+                c = 0;
+            }
+        }
+        return ret;
+    }
+}
+
 Matrix Matrix::rot180()
 {
     Matrix ret(this->row, this->col);
