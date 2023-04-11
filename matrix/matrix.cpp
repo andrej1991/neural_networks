@@ -353,6 +353,33 @@ void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output,  int verti
     }
 }
 
+void full_depth_cross_correlation(Matrix &input, Matrix &kernel, Matrix &output,  int vertical_stride, int horizontal_stride)
+{
+    double helper;
+    int r, c;
+    r = c = 0;
+    int row_limit = input.row - kernel.row;
+    int colum_limit = input.col - kernel.col;
+    for(int i = 0; i <= row_limit; i += vertical_stride)
+    {
+        for(int j = 0; j <= colum_limit; j += horizontal_stride)
+        {
+            helper = 0;
+            for(int k = 0; k < kernel.row; k++)
+            {
+                for(int l = 0; l < kernel.col; l++)
+                {
+                    helper += kernel.data[k][l] * input.data[i + k][j + l];
+                }
+            }
+            output.data[r][c] += helper;
+            c++;
+        }
+        r++;
+        c = 0;
+    }
+}
+
 void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride)
 {
     double helper;
@@ -371,6 +398,31 @@ void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_str
                 }
             }
             output.data[r][c] = helper;
+            c++;
+        }
+        r++;
+        c = 0;
+    }
+}
+
+void full_depth_convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride)
+{
+    double helper;
+    int r, c;
+    r = c = 0;
+    for(int i = kernel.row-1; i < input.row; i += vertical_stride)
+    {
+        for(int j = kernel.col-1; j < input.col; j += horizontal_stride)
+        {
+            helper = 0;
+            for(int k = kernel.row-1; k >= 0; k--)
+            {
+                for(int l = kernel.col-1; l >= 0; l--)
+                {
+                    helper += kernel.data[k][l] * input.data[i - k][j - l];
+                }
+            }
+            output.data[r][c] += helper;
             c++;
         }
         r++;

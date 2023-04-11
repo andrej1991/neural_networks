@@ -9,7 +9,7 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     this->layer_type = FULLY_CONNECTED;
     this->fmap = new Feature_map* [1];
     this->fmap[0] = new Feature_map(row, prev_row, 1, row);
-    double deviation = sqrt(1.0/prev_row);
+    double deviation = 1.0/sqrt(prev_row);
     this->fmap[0]->initialize_weights(deviation);
     this->fmap[0]->initialize_biases();
     this->dropout_happened = false;
@@ -31,6 +31,7 @@ void FullyConnected::destroy_dinamic_data()
     for(int i = 0; i < this->threadcount; i++)
     {
         delete this->output[i][0];
+        delete this->activation_input[i][0];
         delete this->output_derivative[i][0];
         delete this->output_error[i][0];
         delete this->output_error_helper[i][0];
@@ -42,6 +43,7 @@ void FullyConnected::destroy_dinamic_data()
         delete[] this->layers_delta[i];
     }
     delete[] this->output;
+    delete[] this->activation_input;
     delete[] this->output_derivative;
     delete[] this->output_error;
     delete[] this->output_error_helper;
@@ -51,6 +53,7 @@ void FullyConnected::destroy_dinamic_data()
 void FullyConnected::build_dinamic_data()
 {
     this->output = new Matrix**[this->threadcount];
+    this->activation_input = new Matrix**[this->threadcount];
     this->output_derivative = new Matrix**[this->threadcount];
     this->output_error = new Matrix**[this->threadcount];
     this->output_error_helper = new Matrix**[this->threadcount];
@@ -58,11 +61,13 @@ void FullyConnected::build_dinamic_data()
     for(int i = 0; i < this->threadcount; i++)
     {
         this->output[i] = new Matrix* [1];
+        this->activation_input[i] = new Matrix* [1];
         this->output_derivative[i] = new Matrix*[1];
         this->output_error[i] = new Matrix*[1];
         this->output_error_helper[i] = new Matrix*[1];
         this->layers_delta[i] = new Matrix*[1];
         this->output[i][0] = new Matrix(this->outputlen, 1);
+        this->activation_input[i][0] = new Matrix(this->outputlen, 1);
         this->output_derivative[i][0] = new Matrix(this->outputlen, 1);
         this->output_error[i][0] = new Matrix(this->outputlen, 1);
         this->output_error_helper[i][0] = new Matrix(this->outputlen, 1);
@@ -72,9 +77,11 @@ void FullyConnected::build_dinamic_data()
 
 void FullyConnected::layers_output(Matrix **input, int threadindex)
 {
-    Matrix inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
-    inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    this->neuron.neuron(inputparam, this->output[threadindex][0][0]);
+    //Matrix inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
+    //inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
+    this->activation_input[threadindex][0][0] = weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);
+    this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);
+    //this->neuron.neuron(inputparam, this->output[threadindex][0][0]);
 }
 
 Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
@@ -115,9 +122,12 @@ Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_outpu
 
 Matrix** FullyConnected::derivate_layers_output(Matrix **input, int threadindex)
 {
-    Matrix inputparam;
+    /*Matrix inputparam;
     inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    this->neuron.neuron_derivative(inputparam, this->output_derivative[threadindex][0][0]);
+    inputparam = multiply_and_add(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);*/
+    this->activation_input[threadindex][0][0] = weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);
+    this->neuron.neuron_derivative(this->activation_input[threadindex][0][0], this->output_derivative[threadindex][0][0]);
+    //this->neuron.neuron_derivative(inputparam, this->output_derivative[threadindex][0][0]);
     return this->output_derivative[threadindex];
 }
 
@@ -152,15 +162,15 @@ Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Featur
     Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
     int next_layers_fmapcount = next_layer->get_mapcount();
     if(next_layers_fmapcount != 1)
-        {
-            cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
-            throw exception();
-        }
-    Matrix multiplied;
+    {
+        cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
+        throw exception();
+    }
     this->derivate_layers_output(input, threadindex);
+    /*Matrix multiplied;
     multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
-    ///TODO maybe it would be necessary to reallocate the delta here, currently I do not think it'd be necessary
-    this->layers_delta[threadindex][0][0] = hadamart_product(multiplied, this->output_derivative[threadindex][0][0]);
+    this->layers_delta[threadindex][0][0] = hadamart_product(multiplied, this->output_derivative[threadindex][0][0]);*/
+    this->layers_delta[threadindex][0][0] = get_fcc_delta(next_layers_fmaps[0][0].weights[0][0], delta[0][0], this->output_derivative[threadindex][0][0]);
     nabla[0][0].biases[0][0] = this->layers_delta[threadindex][0][0];
     //nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
     nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0].multiply_with_transpose(input[0][0]);
@@ -343,4 +353,58 @@ void FullyConnected::store(std::ofstream &params)
 void FullyConnected::load(std::ifstream &params)
 {
     this->fmap[0]->load(params);
+}
+
+Matrix get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative)
+{
+    if(nextLW.row != delta.row)
+    {
+        throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
+    }
+    else
+    {
+        Matrix ret(nextLW.col, delta.col);
+        double c = 0;
+        for(int k = 0; k < ret.row; k++)
+        {
+            for(int l = 0; l < delta.col; l++)
+            {
+                for(int i = 0; i < delta.row; i++)
+                {
+                    c += nextLW.data[i][k] * delta.data[i][l];
+                    //c += data[k][i] * 1;
+                }
+                ret.data[k][l] = c * output_derivative.data[k][l];
+                c = 0;
+            }
+        }
+        return ret;
+    }
+}
+
+Matrix weighted_output(Matrix &w, Matrix &input, Matrix &b)
+{
+    if(w.col != input.row)
+    {
+        throw std::invalid_argument("In the matrix multiplication the colums of lvalue must equal with the rows of rvalue!\n");
+    }
+    else
+    {
+        Matrix mtx(w.row, input.col);
+        double c = 0;
+        for(int k = 0; k < w.row; k++)
+        {
+            for(int l = 0; l < input.col; l++)
+            {
+                for(int i = 0; i < w.col; i++)
+                {
+                    c += w.data[k][i] * input.data[i][l];
+                    //c += data[k][i] * 1;
+                }
+                mtx.data[k][l] = c+b.data[k][l];
+                c = 0;
+            }
+        }
+        return mtx;
+    }
 }

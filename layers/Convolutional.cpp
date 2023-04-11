@@ -136,7 +136,7 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->threadcount = 1;
     this->layer_type = CONVOLUTIONAL;
     this->fmap = new Feature_map* [map_count];
-    double deviation = sqrt(2.0/(kern_row * kern_col));
+    double deviation = 2.0/sqrt(kern_row * kern_col);
     for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, this->output_row, this->output_col);
@@ -245,17 +245,23 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
             this->backprop_helper->set_padded_delta_1d(delta, next_layers_neuroncount, (this->output_row-1)/2, (this->output_col-1)/2,
                                                        (this->output_row-1)/2, (this->output_col-1)/2, threadindex);
         }
+        this->backprop_helper->zero(threadindex);
         for(int i = 0; i < this->map_count; i++)
         {
             this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_neuroncount; j++)
             {
                 this->get_2D_weights(j, i, this->backprop_helper->kernel[threadindex][0], next_layers_fmaps);
-                calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], layers_delta_helper[threadindex][i],
-                                       this->backprop_helper->kernel[threadindex][0], this->backprop_helper->helper[threadindex][0]);
+                //calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], layers_delta_helper[threadindex][i],
+                //                       this->backprop_helper->kernel[threadindex][0], this->backprop_helper->helper[threadindex][0]);
+                //cross_correlation(padded_delta[0], kernel, helper, 1, 1);
+                full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
+                                            this->backprop_helper->kernel[threadindex][0],
+                                            this->layers_delta_helper[threadindex][i][0],
+                                            1, 1);
             }
         }
-        this->backprop_helper->zero(threadindex);
+        //this->backprop_helper->zero(threadindex);
     }
     else if (this->next_layers_type == CONVOLUTIONAL)
     {
@@ -267,16 +273,21 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         {
             this->backprop_helper->set_padded_delta_2d(delta, next_layers_fmapcount, next_layer, threadindex);
         }
+        this->backprop_helper->zero(threadindex);
         for(int i = 0; i < this->map_count; i++)
         {
             this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
-                calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], this->layers_delta_helper[threadindex][i],
-                                       next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0]);
+                //calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], this->layers_delta_helper[threadindex][i],
+                  //                     next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0]);
+                full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
+                                            next_layers_fmaps[j]->weights[i][0],
+                                            this->layers_delta_helper[threadindex][i][0],
+                                            1, 1);
             }
         }
-        this->backprop_helper->zero(threadindex);
+        //this->backprop_helper->zero(threadindex);
     }
     for(int i = 0; i < this->map_count; i++)
     {
@@ -328,8 +339,9 @@ void Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **i
 {
     for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
     {
-        convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->vertical_stride, this->horizontal_stride);
-        helper += convolved;
+        //convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->vertical_stride, this->horizontal_stride);
+        //helper += convolved;
+        full_depth_convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], helper, this->vertical_stride, this->horizontal_stride);
     }
     helper+=this->fmap[map_index]->biases[0][0];
 }
