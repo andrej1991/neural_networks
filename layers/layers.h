@@ -101,7 +101,7 @@ class Layer{
 class FullyConnected : public Layer {
     friend class Softmax;
     Matrix ***activation_input, ***output, ***output_derivative, ***output_error, ***output_error_helper, ***layers_delta;
-    Matrix *removed_rows, *backup_weights, *backup_biases, ***backup_output, ***backup_output_derivative, ***backpup_output_error, ***backup_output_error_helper, ***backup_layers_delta;
+    Matrix *removed_rows, *backup_weights, *backup_biases, ***backup_activation_input, ***backup_output, ***backup_output_derivative, ***backpup_output_error, ***backup_output_error_helper, ***backup_layers_delta;
     int neuron_type, outputlen, backup_outputlen;
     bool dropout_happened;
     short int layer_type;

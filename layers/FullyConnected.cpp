@@ -288,6 +288,7 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
         this->backup_output = this->output;
         this->backup_output_derivative = this->output_derivative;
         this->backpup_output_error = this->output_error;
+        this->backup_activation_input = this->activation_input;
         if(probability == 0)
             throw exception();
         this->backup_output_error_helper = this->output_error_helper;
@@ -337,6 +338,7 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
         this->fmap[0]->biases[0] = this->backup_biases;
         this->destroy_dinamic_data();
         this->output = this->backup_output;
+        this->activation_input = this->backup_activation_input;
         this->output_derivative = this->backup_output_derivative;
         this->output_error = this->backpup_output_error;
         this->output_error_helper = this->backup_output_error_helper;
