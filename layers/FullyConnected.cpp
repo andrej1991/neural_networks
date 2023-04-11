@@ -79,7 +79,7 @@ void FullyConnected::layers_output(Matrix **input, int threadindex)
 {
     //Matrix inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     //inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    this->activation_input[threadindex][0][0] = weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);
+    weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);
     //this->neuron.neuron(inputparam, this->output[threadindex][0][0]);
 }
@@ -125,7 +125,8 @@ Matrix** FullyConnected::derivate_layers_output(Matrix **input, int threadindex)
     /*Matrix inputparam;
     inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
     inputparam = multiply_and_add(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);*/
-    this->activation_input[threadindex][0][0] = weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);
+    ///allready calculated, might happen that in RNN case it's going to be needed again to be calculated
+    //weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     this->neuron.neuron_derivative(this->activation_input[threadindex][0][0], this->output_derivative[threadindex][0][0]);
     //this->neuron.neuron_derivative(inputparam, this->output_derivative[threadindex][0][0]);
     return this->output_derivative[threadindex];
@@ -170,7 +171,7 @@ Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Featur
     /*Matrix multiplied;
     multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
     this->layers_delta[threadindex][0][0] = hadamart_product(multiplied, this->output_derivative[threadindex][0][0]);*/
-    this->layers_delta[threadindex][0][0] = get_fcc_delta(next_layers_fmaps[0][0].weights[0][0], delta[0][0], this->output_derivative[threadindex][0][0]);
+    get_fcc_delta(next_layers_fmaps[0][0].weights[0][0], delta[0][0], this->output_derivative[threadindex][0][0], this->layers_delta[threadindex][0][0]);
     nabla[0][0].biases[0][0] = this->layers_delta[threadindex][0][0];
     //nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
     nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0].multiply_with_transpose(input[0][0]);
@@ -357,7 +358,7 @@ void FullyConnected::load(std::ifstream &params)
     this->fmap[0]->load(params);
 }
 
-Matrix get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative)
+void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Matrix &ret)
 {
     if(nextLW.row != delta.row)
     {
@@ -365,7 +366,7 @@ Matrix get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative)
     }
     else
     {
-        Matrix ret(nextLW.col, delta.col);
+        //Matrix ret(nextLW.col, delta.col);
         double c = 0;
         for(int k = 0; k < ret.row; k++)
         {
@@ -380,11 +381,11 @@ Matrix get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative)
                 c = 0;
             }
         }
-        return ret;
+        //return ret;
     }
 }
 
-Matrix weighted_output(Matrix &w, Matrix &input, Matrix &b)
+void weighted_output(Matrix &w, Matrix &input, Matrix &b, Matrix &mtx)
 {
     if(w.col != input.row)
     {
@@ -392,7 +393,7 @@ Matrix weighted_output(Matrix &w, Matrix &input, Matrix &b)
     }
     else
     {
-        Matrix mtx(w.row, input.col);
+        //Matrix mtx(w.row, input.col);
         double c = 0;
         for(int k = 0; k < w.row; k++)
         {
@@ -407,6 +408,6 @@ Matrix weighted_output(Matrix &w, Matrix &input, Matrix &b)
                 c = 0;
             }
         }
-        return mtx;
+        //return mtx;
     }
 }

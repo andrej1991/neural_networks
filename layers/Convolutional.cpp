@@ -367,8 +367,8 @@ Matrix** Convolutional::derivate_layers_output(Matrix **input, int threadindex)
 {
     this->feedforward_helpter->helper[threadindex]->zero();
     for(int map_index = 0; map_index < this->map_count; map_index++)
-    {
-        this->fulldepth_conv(this->feedforward_helpter->helper[threadindex][0], this->feedforward_helpter->convolved[threadindex][0], input, map_index);
+    {   ///allready calculated, might happen that in RNN case it's going to be needed again to be calculated
+        //this->fulldepth_conv(this->feedforward_helpter->helper[threadindex][0], this->feedforward_helpter->convolved[threadindex][0], input, map_index);
         this->neuron.neuron_derivative(this->feedforward_helpter->helper[threadindex][0], output_derivative[threadindex][map_index][0]);
         this->feedforward_helpter->helper[threadindex]->zero();
     }

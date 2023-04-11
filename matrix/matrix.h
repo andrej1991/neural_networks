@@ -31,8 +31,8 @@ class Matrix
     friend Matrix hadamart_product(Matrix &mtx1, Matrix &mtx2);
     Matrix transpose();
     Matrix multiply_with_transpose(Matrix &mtx);
-    friend Matrix weighted_output(Matrix &w, Matrix &input, Matrix &b);
-    friend Matrix get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative);
+    friend void weighted_output(Matrix &w, Matrix &input, Matrix &b, Matrix &ret);
+    friend void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Matrix &ret);
     Matrix rot180();
     Matrix sqroot();
     Matrix square_element_by();
