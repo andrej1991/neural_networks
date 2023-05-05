@@ -15,7 +15,7 @@ class Job
     public:
     Job(int id, Network *n);
     virtual void work(int i);
-    MNIST_data *training_data;
+    Data_Loader *training_data;
     Layers_features **deltanabla, **nabla;
     int costfunction_type;
 };

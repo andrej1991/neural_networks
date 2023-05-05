@@ -2,7 +2,7 @@
 #define NETWORK_H_INCLUDED
 
 #include "neurons/neuron.h"
-#include "data_loader/MNIST_data.h"
+#include "data_loader/data_loader.h"
 #include "matrix/matrix.h"
 #include "layers/layers.h"
 //#include "SGD.h"
@@ -16,7 +16,7 @@ class Network{
     void feedforward(Matrix **input, int threadindex=0);
     public:
     //double dropout_probability;
-    void backpropagate(MNIST_data *training_data, Layers_features **nabla, int costfunction_type, int threadindex=0);
+    void backpropagate(Data_Loader *training_data, Layers_features **nabla, int costfunction_type, int threadindex=0);
     void store(char *filename);
     Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col = 1, int input_channel_count = 1);//,
             //int costfunction_type = CROSS_ENTROPY_CF, double dropout_probability = 0);

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <fstream>
-#include "MNIST_data.h"
+#include "data_loader.h"
 
 using namespace std;
 
 
-MNIST_data::MNIST_data(int input_vector_row, int input_vector_col, int output_vector_size, int feature_depth):
+Data_Loader::Data_Loader(int input_vector_row, int input_vector_col, int output_vector_size, int feature_depth):
     input_vector_row(input_vector_row), input_vector_col(input_vector_col), output_vector_size(output_vector_size), feature_depth(feature_depth), required_output(output_vector_size, 1)
 {
     this->input = new Matrix* [feature_depth];
@@ -15,7 +15,7 @@ MNIST_data::MNIST_data(int input_vector_row, int input_vector_col, int output_ve
     }
 }
 
-MNIST_data::~MNIST_data()
+Data_Loader::~Data_Loader()
 {
     for(int i = 0; i < this->feature_depth; i++)
     {
@@ -24,7 +24,7 @@ MNIST_data::~MNIST_data()
     delete[] this->input;
 }
 
-void MNIST_data::load_data(std::ifstream &input, std::ifstream &required_output)
+void Data_Loader::load_MNIST(std::ifstream &input, std::ifstream &required_output)
 {
     for(int k = 0; k < this->feature_depth; k++)
     {
@@ -33,7 +33,31 @@ void MNIST_data::load_data(std::ifstream &input, std::ifstream &required_output)
     required_output.read((char*)this->required_output.dv, this->output_vector_size  * sizeof(double));
 }
 
-void MNIST_data::load_bmp(const char *path)
+void Data_Loader::load_CIFAR(std::ifstream &input)
+{
+    unsigned char tmp;
+    input.read((char*)&tmp, sizeof(char));
+    if(this->output_vector_size == 1)
+    {
+        this->required_output.data[0][0] = tmp;
+    }
+    else
+    {
+        this->required_output.data[tmp][0] = 1;
+    }
+    int read_len = this->input_vector_row * this->input_vector_col;
+    char temp_data[read_len];
+    for(int k = 0; k < this->feature_depth; k++)
+    {
+        input.read(temp_data, read_len);
+        for(int i = 0; i < read_len; i++)
+        {
+            this->input[k]->dv[i] = (double)temp_data[i];
+        }
+    }
+}
+
+void Data_Loader::load_bmp(const char *path)
 {
     ifstream inp;
     short int signature, bits_per_pixel;
@@ -82,4 +106,3 @@ void MNIST_data::load_bmp(const char *path)
         inp.close();
     }
 }
-

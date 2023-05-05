@@ -179,7 +179,7 @@ Matrix Network::get_output(Matrix **input, int threadindex)
     return ret;
 }
 
-void Network::backpropagate(MNIST_data *trainig_data, Layers_features **nabla, int costfunction_type, int threadindex)
+void Network::backpropagate(Data_Loader *trainig_data, Layers_features **nabla, int costfunction_type, int threadindex)
 {
     ///currently the final layer has to be a clasification layer
     this->feedforward(trainig_data->input, threadindex);

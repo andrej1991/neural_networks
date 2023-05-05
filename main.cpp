@@ -2,7 +2,11 @@
 #include <fstream>
 #include <yaml.h>
 #include <string>
-#include "data_loader/MNIST_data.h"
+#include <sys/types.h>
+#include <unistd.h>
+#include <cstdlib>
+
+#include "data_loader/data_loader.h"
 #include "network.h"
 #include "matrix/matrix.h"
 #include <random>
@@ -64,6 +68,11 @@ int main(int argc, char *argv[])
     string cf = config["cost_function_type"].as<string>();
     int costfunction_type = -1;
     int epochs = config["epochs"].as<int>();
+    int cpulimit = 0;
+    if(config["cpulimit"])
+    {
+        cpulimit = config["cpulimit"].as<int>();
+    }
     int minibatch_len = config["minibatch_len"].as<int>();
     double learning_rate = config["learning_rate"].as<double>();
     double regularization_rate = config["regularization_rate"].as<double>();
@@ -163,17 +172,19 @@ int main(int argc, char *argv[])
     required_output.open(required_training_output, ios::in|ios::binary);
     validation_input_data.open(validation_input, ios::in|ios::binary);
     validation_output_data.open(required_validation_output, ios::in|ios::binary);
-    MNIST_data *m[traninig_data_len];
-    MNIST_data *validation[validation_data_len];
+    Data_Loader *m[traninig_data_len];
+    Data_Loader *validation[validation_data_len];
     for(int i = 0; i < traninig_data_len; i++)
     {
-        m[i] = new MNIST_data(input_row, input_col, output_size, 1);
-        m[i]->load_data(input, required_output);
+        m[i] = new Data_Loader(input_row, input_col, output_size, input_channel_count);
+        //m[i]->load_MNIST(input, required_output);
+        m[i]->load_CIFAR(input);
     }
     for(int i = 0; i < validation_data_len; i++)
     {
-        validation[i] = new MNIST_data(input_row, input_col, 1, 1);
-        validation[i]->load_data(validation_input_data, validation_output_data);
+        validation[i] = new Data_Loader(input_row, input_col, 1, input_channel_count);
+        //validation[i]->load_MNIST(validation_input_data, validation_output_data);
+        validation[i]->load_CIFAR(validation_input_data);
     }
 
     Network n1(layer_count, layers, input_row, input_col, input_channel_count);
@@ -186,17 +197,24 @@ int main(int argc, char *argv[])
     StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
     learning.monitor_training_duration = true;
 
+    if(cpulimit > 0)
+    {
+        pid_t pid = getpid();
+        string command = "cpulimit -p " + to_string(pid) + " -l " + to_string(cpulimit) + " &";
+        cout << command << endl;
+        system(command.c_str());
+    }
     //cout << "stohastic gradient descent\n";
     //learning.check_accuracy(validation, 10, 0, true);
     //n1.dropout_probability = dropout_probability;
-    learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
     //learning.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     //cout << "RMSprop\n";
 
 
-    //learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     input.close();

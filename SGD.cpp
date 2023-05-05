@@ -44,7 +44,7 @@ double StochasticGradientDescent::cost(Matrix &required_output, int req_outp_ind
     }
 }
 
-void StochasticGradientDescent::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescent::stochastic(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                            double learning_rate, double regularization_rate)
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
@@ -62,7 +62,7 @@ void StochasticGradientDescent::stochastic(MNIST_data **minibatches, int minibat
     }
 }
 
-void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescent::momentum_based(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                                Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
@@ -81,7 +81,7 @@ void StochasticGradientDescent::momentum_based(MNIST_data **minibatches, int min
     }
 }
 
-void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescent::nesterov(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                          Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
 {
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
@@ -105,7 +105,7 @@ void StochasticGradientDescent::nesterov(MNIST_data **minibatches, int minibatch
     }
 }
 
-void StochasticGradientDescent::RMSprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescent::RMSprop(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                         Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate,
                                         double regularization_rate, double momentum, double denominator)
 {
@@ -126,8 +126,8 @@ void StochasticGradientDescent::RMSprop(MNIST_data **minibatches, int minibatch_
     }
 }
 
-void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
-                                                         double regularization_rate, double denominator, double momentum, MNIST_data **test_data, int minibatch_count,
+void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
+                                                         double regularization_rate, double denominator, double momentum, Data_Loader **test_data, int minibatch_count,
                                                          int test_data_len,  int trainingdata_len)
 {
 
@@ -136,7 +136,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
         minibatch_count = trainingdata_len / minibatch_len;
     }
     Accuracy execution_accuracy;
-    MNIST_data *minibatches[minibatch_count][minibatch_len];
+    Data_Loader *minibatches[minibatch_count][minibatch_len];
     std::random_device rand;
     std::uniform_int_distribution<int> distribution(0, trainingdata_len-1);
     int learnig_cost_counter = 0;
@@ -310,7 +310,8 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
             execution_accuracy = this->check_accuracy(test_data, test_data_len, i, monitor_learning_cost, regularization_rate);
             if(monitor_learning_cost)
             {
-                cout << "total cost: " << execution_accuracy.total_cost << endl;
+                //"\033[1;31mbold red text\033[0m\n";
+                cout << "\033[4;31mtotal cost: " << execution_accuracy.total_cost << "\033[0m" << endl;
                 if(abs((long long int)execution_accuracy.total_cost) > abs((long long int)previoius_learning_cost))
                     learnig_cost_counter++;
                 if(learnig_cost_counter == 10)
@@ -354,15 +355,15 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, MNIST_data
     delete[] helper_2;
 }
 
-void StochasticGradientDescent::stochastic_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
-                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+void StochasticGradientDescent::stochastic_gradient_descent(Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
+                                            double regularization_rate, Data_Loader **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     this->gradient_descent_variant(STOCHASTIC, training_data, epochs, minibatch_len, learning_rate, monitor_learning_cost, regularization_rate,
                                  0, 0, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
 
-void StochasticGradientDescent::momentum_gradient_descent(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
-                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+void StochasticGradientDescent::momentum_gradient_descent(Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
+                                            double regularization_rate, Data_Loader **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     /*if(this->dropout_probability != 0.0)
     {
@@ -372,8 +373,8 @@ void StochasticGradientDescent::momentum_gradient_descent(MNIST_data **training_
                                  0, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
 
-void StochasticGradientDescent::nesterov_accelerated_gradient(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
-                                            double regularization_rate, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+void StochasticGradientDescent::nesterov_accelerated_gradient(Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
+                                            double regularization_rate, Data_Loader **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     if(this->dropout_probability != 0.0)
     {
@@ -383,8 +384,8 @@ void StochasticGradientDescent::nesterov_accelerated_gradient(MNIST_data **train
                                  0, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
 
-void StochasticGradientDescent::rmsprop(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
-                                            double regularization_rate, double denominator, MNIST_data **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
+void StochasticGradientDescent::rmsprop(Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost,
+                                            double regularization_rate, double denominator, Data_Loader **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
     /*if(this->dropout_probability != 0.0)
     {
@@ -394,7 +395,7 @@ void StochasticGradientDescent::rmsprop(MNIST_data **training_data, int epochs, 
                                  denominator, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
 
-Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int test_data_len, int epoch, bool monitor_learning_cost, double regularization_rate)
+Accuracy StochasticGradientDescent::check_accuracy(Data_Loader **test_data, int test_data_len, int epoch, bool monitor_learning_cost, double regularization_rate)
 {
     int learning_accuracy;
     double learning_cost, squared_sum = 0, avarange_confidence = 0, avarange_false_confidence = 0;
@@ -453,7 +454,8 @@ Accuracy StochasticGradientDescent::check_accuracy(MNIST_data **test_data, int t
     }
     end_testing = chrono::system_clock::now();
     test_duration = end_testing - start;
-    cout << "set " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << endl;
+    //"\033[1;31mbold red text\033[0m\n";
+    cout << "\033[1;31mset " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << "\033[0m" << endl;
     cout << "  The avarange confidence is: " << (avarange_confidence/learning_accuracy) * 100.0 << "%" << endl;
     cout << "  The avarange confidence over false clasifications is: " << (avarange_false_confidence/(test_data_len - learning_accuracy)) * 100.0 << "%" << endl;
     double execution_time = 0;
@@ -474,7 +476,7 @@ StochasticGradientDescentMultiThread::~StochasticGradientDescentMultiThread()
     ;
 }
 
-void StochasticGradientDescentMultiThread::stochastic(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescentMultiThread::stochastic(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                            double learning_rate, double regularization_rate)
 {
     //cout << "stochastic is being called\n";
@@ -494,7 +496,7 @@ void StochasticGradientDescentMultiThread::stochastic(MNIST_data **minibatches, 
     }
 }
 
-void StochasticGradientDescentMultiThread::momentum_based(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescentMultiThread::momentum_based(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                                Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
 {
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
@@ -514,7 +516,7 @@ void StochasticGradientDescentMultiThread::momentum_based(MNIST_data **minibatch
     }
 }
 
-void StochasticGradientDescentMultiThread::nesterov(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescentMultiThread::nesterov(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                          Layers_features **nabla_momentum, double learning_rate, double regularization_rate, double momentum)
 {
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
@@ -539,7 +541,7 @@ void StochasticGradientDescentMultiThread::nesterov(MNIST_data **minibatches, in
     }
 }
 
-void StochasticGradientDescentMultiThread::RMSprop(MNIST_data **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
+void StochasticGradientDescentMultiThread::RMSprop(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                         Layers_features **squared_grad_moving_avarange, Layers_features **layer_helper, double learning_rate,
                                         double regularization_rate, double momentum, double denominator)
 {
@@ -561,8 +563,8 @@ void StochasticGradientDescentMultiThread::RMSprop(MNIST_data **minibatches, int
     }
 }
 
-void StochasticGradientDescentMultiThread::gradient_descent_variant(int variant, MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
-                                                         double regularization_rate, double denominator, double momentum, MNIST_data **test_data, int minibatch_count,
+void StochasticGradientDescentMultiThread::gradient_descent_variant(int variant, Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, bool monitor_learning_cost,
+                                                         double regularization_rate, double denominator, double momentum, Data_Loader **test_data, int minibatch_count,
                                                          int test_data_len,  int trainingdata_len)
 {
     //cout << "multithreaded SGD variant is being called\n";
