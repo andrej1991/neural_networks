@@ -17,6 +17,8 @@
 #include <thread>
 #include <chrono>
 
+#include "additional.h"
+
 using namespace std;
 
 
@@ -68,6 +70,11 @@ int main(int argc, char *argv[])
     string cf = config["cost_function_type"].as<string>();
     int costfunction_type = -1;
     int epochs = config["epochs"].as<int>();
+    int change_learning_cost = 0;
+    if(config["change_learning_cost"])
+    {
+        change_learning_cost = config["change_learning_cost"].as<int>();
+    }
     int cpulimit = 0;
     if(config["cpulimit"])
     {
@@ -207,14 +214,17 @@ int main(int argc, char *argv[])
     //cout << "stohastic gradient descent\n";
     //learning.check_accuracy(validation, 10, 0, true);
     //n1.dropout_probability = dropout_probability;
-    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
-    //learning.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    //learning.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     //cout << "RMSprop\n";
+    //Accuracy A = learning.check_accuracy(validation, 100, 0, 1, regularization_rate);
+    //cout << "cost: " << A.total_cost << " correct answers: " << A.correct_answers << endl;
 
-
-    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, true, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    //A = learning.check_accuracy(m, 50000, 0, 1, regularization_rate);
+    //cout << "cost: " << A.total_cost << " correct answers: " << A.correct_answers << endl;
 
 
     input.close();

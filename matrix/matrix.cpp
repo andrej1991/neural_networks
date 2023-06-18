@@ -28,7 +28,7 @@ Matrix::Matrix(int r,int c) : data(NULL)
                 this->data[i][j] = 0;
             }*/
         }
-        memset((void*) this->dv, 0, sizeof(double)*row*col);
+        memset((void*) this->dv, 0, sizeof(double)*r*c);
     }
     catch(bad_alloc& ba)
     {

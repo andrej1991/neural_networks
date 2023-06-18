@@ -111,7 +111,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
                                                     this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
-                                                    layerdesc[i]->mapcount, SIGMOID, layerdesc[i + 1]->layer_type, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
+                                                    layerdesc[i]->mapcount, layerdesc[i]->neuron_type, layerdesc[i + 1]->layer_type, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
                 break;
             case MAX_POOLING:
                 this->layers[i] = new Pooling(layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, this->layers[i - 1]->get_mapcount(), this->layers[i - 1]->get_output_row(),

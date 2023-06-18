@@ -11,7 +11,7 @@
 				<Option object_output="../obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="../data/convolutional_CIFAR.yaml ../data/convolutional.yaml ../data/fully_connected.yaml " />
+				<Option parameters="../data/convolutional.yaml ../data/convolutional_CIFAR.yaml ../data/fully_connected.yaml " />
 				<Compiler>
 					<Add option="-std=c++11" />
 					<Add option="-g" />
@@ -23,7 +23,7 @@
 				<Option object_output="../obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="../data/convolutional_CIFAR.yaml ../data/convolutional.yaml ../data/fully_connected.yaml " />
+				<Option parameters="../data/convolutional_CIFAR.yaml ../data/fully_connected.yaml ../data/convolutional.yaml " />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-std=c++11" />

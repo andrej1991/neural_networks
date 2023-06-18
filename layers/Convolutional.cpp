@@ -137,6 +137,17 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     this->layer_type = CONVOLUTIONAL;
     this->fmap = new Feature_map* [map_count];
     double deviation = 2.0/sqrt(kern_row * kern_col);
+    double mean = 0.0;
+    if(neuron_type == SIGMOID)
+    {
+        mean = 0.5;
+        cout << "sigmoidCNN\n";
+    }
+    else if(neuron_type == RELU || neuron_type == LEAKY_RELU)
+    {
+        mean = deviation;
+        cout << "relu\n";
+    }
     for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, this->output_row, this->output_col);

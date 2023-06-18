@@ -1,6 +1,6 @@
 #include "additional.h"
 
-int getmax(double **d, int len)
+int argmax(double **d, int len)
 {
     double Max = d[0][0];
     int index = 0;

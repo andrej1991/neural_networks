@@ -27,14 +27,25 @@ void Softmax::layers_output(Matrix **input, int threadindex)
     double nominator = 0;
     double helper;
     weighted_input += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
+    double max = weighted_input.data[0][0];
+    for(int i = 1; i < this->outputlen; i++)
+    {
+        if(weighted_input.data[i][0] > max)
+            max = weighted_input.data[i][0];
+    }
     for(int i = 0; i < this->outputlen; i++)
     {
-        output_helper.data[i][0] = exp(weighted_input.data[i][0]);
+        output_helper.data[i][0] = exp(weighted_input.data[i][0] - max);
         nominator += output_helper.data[i][0];
     }
     for(int i = 0; i < this->outputlen; i++)
     {
         this->output[threadindex][0]->data[i][0] = output_helper.data[i][0] / nominator;
+        /*if(isnan(this->output[threadindex][0]->data[i][0]))
+        {
+            cout << "the output became NaN " << this->output[threadindex][0]->data[i][0] << endl;
+            throw exception();
+        }*/
     }
 }
 

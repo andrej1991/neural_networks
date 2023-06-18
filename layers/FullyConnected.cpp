@@ -10,7 +10,18 @@ FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
     this->fmap = new Feature_map* [1];
     this->fmap[0] = new Feature_map(row, prev_row, 1, row);
     double deviation = 1.0/sqrt(prev_row);
-    this->fmap[0]->initialize_weights(deviation);
+    double mean = 0.0;
+    if(neuron_type == SIGMOID)
+    {
+        mean = 0.5;
+        cout << "sigmoidFCC\n";
+    }
+    else if(neuron_type == RELU || neuron_type == LEAKY_RELU)
+    {
+        mean = deviation;
+        cout << "relu\n";
+    }
+    this->fmap[0]->initialize_weights(deviation, mean);
     this->fmap[0]->initialize_biases();
     this->dropout_happened = false;
     this->removed_rows = NULL;

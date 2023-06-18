@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "../neurons/neuron.h"
-#include "../data_loader/MNIST_data.h"
+#include "../data_loader/data_loader.h"
 #include "../matrix/matrix.h"
 
 #define QUADRATIC_CF 0
