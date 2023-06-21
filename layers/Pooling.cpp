@@ -176,7 +176,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
                 //cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0], 1, 1);
                 //this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
                 full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
-                                            next_layers_fmaps[j]->weights[i][0],
+                                            next_layers_fmaps[j]->weights[0][0],
                                             this->layers_delta_helper[threadindex][i][0],
                                             1, 1);
             }

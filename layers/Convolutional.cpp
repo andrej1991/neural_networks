@@ -119,7 +119,7 @@ int conv_backprop_helper::get_layercount(int threadidx)
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
                     input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
-                    next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
+                    next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type), input_channel_count(input_channel_count)
 {
     this->output_row = (input_row - kern_row + vertical_stride) / vertical_stride;
     this->output_col = (input_col - kern_col + horizontal_stride) / horizontal_stride;
@@ -150,7 +150,7 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     }
     for(int i = 0; i < map_count; i++)
     {
-        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, input_channel_count, this->output_row, this->output_col);
+        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, 1, this->output_row, this->output_col);
         fmap[i]->initialize_weights(deviation);
         fmap[i]->initialize_biases(deviation);
     }
@@ -229,11 +229,11 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
 }
 
-void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
+/*void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
 {
     cross_correlation(padded_delta[0], kernel, helper, 1, 1);
     delta_helper[0] += helper;
-}
+}*/
 
 Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta, int threadindex)
 {
@@ -293,7 +293,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
                 //calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], this->layers_delta_helper[threadindex][i],
                   //                     next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0]);
                 full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
-                                            next_layers_fmaps[j]->weights[i][0],
+                                            next_layers_fmaps[j]->weights[0][0],
                                             this->layers_delta_helper[threadindex][i][0],
                                             1, 1);
             }
@@ -311,9 +311,10 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
             this->layers_delta[threadindex][i][0] = hadamart_product(delta[i][0], this->output_derivative[threadindex][i][0]);
         }
         this->backprop_helper->dilated[threadindex] = this->layers_delta[threadindex][i][0].dilate(this->vertical_stride, this->horizontal_stride);
-        for(int j = 0; j < this->fmap[i]->get_mapdepth(); j++)
+        nabla[i]->weights[0][0].zero();
+        for(int j = 0; j < this->input_channel_count; j++)
         {
-            cross_correlation(input[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[j][0], this->vertical_stride, this->horizontal_stride);
+            full_depth_cross_correlation(input[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[0][0], this->vertical_stride, this->horizontal_stride);
         }
         nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
     }
@@ -348,11 +349,11 @@ void Convolutional::update_weights_and_biasses(double learning_rate, double regu
 
 void Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index)
 {
-    for(int channel_index = 0; channel_index < this->fmap[map_index]->get_mapdepth(); channel_index++)
+    for(int channel_index = 0; channel_index < this->input_channel_count; channel_index++)
     {
         //convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], convolved, this->vertical_stride, this->horizontal_stride);
         //helper += convolved;
-        full_depth_convolution(input[channel_index][0], this->fmap[map_index]->weights[channel_index][0], helper, this->vertical_stride, this->horizontal_stride);
+        full_depth_convolution(input[channel_index][0], this->fmap[map_index]->weights[0][0], helper, this->vertical_stride, this->horizontal_stride);
     }
     helper+=this->fmap[map_index]->biases[0][0];
 }

@@ -31,7 +31,7 @@ class Convolutional : public Layer {
     Padding pad;
     conv_output_helper *feedforward_helpter;
     conv_backprop_helper *backprop_helper;
-    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col, threadcount;
+    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col, threadcount, input_channel_count;
     short int layer_type;
     Neuron neuron;
     void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
