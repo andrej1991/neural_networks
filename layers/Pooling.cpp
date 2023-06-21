@@ -148,8 +148,12 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
             for(int j = 0; j < next_layers_neuroncount; j++)
             {
                 this->get_2D_weights(j, i, this->backprop_helper->kernel[threadindex][0], next_layers_fmaps);
-                cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], this->backprop_helper->kernel[threadindex][0], this->backprop_helper->helper[threadindex][0], 1, 1);
-                this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
+                //cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], this->backprop_helper->kernel[threadindex][0], this->backprop_helper->helper[threadindex][0], 1, 1);
+                //this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
+                full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
+                                            this->backprop_helper->kernel[threadindex][0],
+                                            this->layers_delta_helper[threadindex][i][0],
+                                            1, 1);
             }
         }
         this->backprop_helper->zero(threadindex);
@@ -169,8 +173,12 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
             this->layers_delta_helper[threadindex][i][0].zero();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
-                cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0], 1, 1);
-                this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
+                //cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0], next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0], 1, 1);
+                //this->layers_delta_helper[threadindex][i][0] += this->backprop_helper->helper[threadindex][0];
+                full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
+                                            next_layers_fmaps[j]->weights[i][0],
+                                            this->layers_delta_helper[threadindex][i][0],
+                                            1, 1);
             }
         }
         this->backprop_helper->zero(threadindex);

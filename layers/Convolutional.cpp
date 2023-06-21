@@ -256,7 +256,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
             this->backprop_helper->set_padded_delta_1d(delta, next_layers_neuroncount, (this->output_row-1)/2, (this->output_col-1)/2,
                                                        (this->output_row-1)/2, (this->output_col-1)/2, threadindex);
         }
-        this->backprop_helper->zero(threadindex);
+        //this->backprop_helper->zero(threadindex);
         for(int i = 0; i < this->map_count; i++)
         {
             this->layers_delta_helper[threadindex][i][0].zero();
@@ -284,7 +284,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         {
             this->backprop_helper->set_padded_delta_2d(delta, next_layers_fmapcount, next_layer, threadindex);
         }
-        this->backprop_helper->zero(threadindex);
+        //this->backprop_helper->zero(threadindex);
         for(int i = 0; i < this->map_count; i++)
         {
             this->layers_delta_helper[threadindex][i][0].zero();
