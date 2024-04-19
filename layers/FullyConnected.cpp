@@ -2,27 +2,36 @@
 #include <random>
 #include "layers.h"
 
-FullyConnected::FullyConnected(int row, int prev_row, int neuron_type):
+FullyConnected::FullyConnected(int row, vector<int> prev_outputlens, vector<Matrix***> inputs_, int neuron_type):
     neuron(neuron_type)
 {
+    for(Matrix ***inp : inputs_)
+    {
+        this->inputs.push_back(inp);
+    }
     this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
-    this->fmap = new Feature_map* [1];
-    this->fmap[0] = new Feature_map(row, prev_row, 1, row);
-    double deviation = 1.0/sqrt(prev_row);
+    double deviation = 1.0;
     double mean = 0.0;
-    if(neuron_type == SIGMOID)
+    //cout << "input size:" << inputs.size() << endl;
+    this->fmap = new Feature_map* [inputs.size()];
+    for(int i = 0; i < inputs.size(); i++)
     {
-        mean = 0.5;
-        cout << "sigmoidFCC\n";
+        deviation = 1.0/sqrt(prev_outputlens[i]);
+        this->fmap[i] = new Feature_map(row, prev_outputlens[i], 1, row);
+        if(neuron_type == SIGMOID)
+        {
+            mean = 0.5;
+            //cout << "sigmoidFCC\n";
+        }
+        else if(neuron_type == RELU || neuron_type == LEAKY_RELU)
+        {
+            mean = deviation;
+            //cout << "relu\n";
+        }
+        this->fmap[i]->initialize_weights(deviation, mean);
+        this->fmap[i]->initialize_biases();
     }
-    else if(neuron_type == RELU || neuron_type == LEAKY_RELU)
-    {
-        mean = deviation;
-        cout << "relu\n";
-    }
-    this->fmap[0]->initialize_weights(deviation, mean);
-    this->fmap[0]->initialize_biases();
     this->dropout_happened = false;
     this->removed_rows = NULL;
     this->backup_outputlen = row;
@@ -90,7 +99,17 @@ void FullyConnected::layers_output(Matrix **input, int threadindex)
 {
     //Matrix inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     //inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
+    if(input != NULL)
+    {
+        cerr << "something needs to be figured out for getting the output of standalone layers";
+        throw exception();
+    }
+    this->activation_input[threadindex][0][0].zero();
+    for(int i = 0; i < this->inputs.size(); i++)
+    {
+        //cout << this->inputs[i][threadindex][0][0].get_row() << endl;
+        weighted_output(this->fmap[i]->weights[0][0], this->inputs[i][threadindex][0][0], this->fmap[i]->biases[0][0], this->activation_input[threadindex][0][0]);
+    }
     this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);
     //this->neuron.neuron(inputparam, this->output[threadindex][0][0]);
 }
@@ -267,6 +286,11 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     int remaining, dropped_out = 0;
     if(probability > 0.0)
     {
+        cout << "WARNING: DROPOUT IS INACTIVATED!\n";
+        probability = 0.0;
+    }
+    if(probability > 0.0)
+    {
         for (int i = 0; i < this->outputlen; i++)
         {
             if(distribution(rand) < probability)
@@ -369,6 +393,23 @@ void FullyConnected::load(std::ifstream &params)
     this->fmap[0]->load(params);
 }
 
+void FullyConnected::create_connections(vector<int> input_from, vector<int> output_to)
+{
+    ///TODO some error checking
+    this->gets_input_from_ = input_from;
+    this->sends_output_to_ = output_to;
+}
+
+const vector<int>& FullyConnected::gets_input_from() const
+{
+    return this->gets_input_from_;
+}
+
+const vector<int>& FullyConnected::sends_output_to() const
+{
+    return this->sends_output_to_;
+}
+
 void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Matrix &ret)
 {
     if(nextLW.row != delta.row)
@@ -415,7 +456,7 @@ void weighted_output(Matrix &w, Matrix &input, Matrix &b, Matrix &mtx)
                     c += w.data[k][i] * input.data[i][l];
                     //c += data[k][i] * 1;
                 }
-                mtx.data[k][l] = c+b.data[k][l];
+                mtx.data[k][l] += c+b.data[k][l];
                 c = 0;
             }
         }

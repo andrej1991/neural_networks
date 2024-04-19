@@ -301,6 +301,23 @@ Matrix** Pooling::get_output(int threadindex)
         return this->outputs[threadindex];
 }
 
+void Pooling::create_connections(vector<int> input_from, vector<int> output_to)
+{
+    ///TODO some error checking
+    this->gets_input_from_ = input_from;
+    this->sends_output_to_ = output_to;
+}
+
+const vector<int>& Pooling::gets_input_from() const
+{
+    return this->gets_input_from_;
+}
+
+const vector<int>& Pooling::sends_output_to() const
+{
+    return this->sends_output_to_;
+}
+
 inline Feature_map** Pooling::get_feature_maps()
 {
     cerr << "Pooling layer doesn't have feature maps" << endl;

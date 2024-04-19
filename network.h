@@ -1,6 +1,7 @@
 #ifndef NETWORK_H_INCLUDED
 #define NETWORK_H_INCLUDED
 
+#include <vector>
 #include "neurons/neuron.h"
 #include "data_loader/data_loader.h"
 #include "matrix/matrix.h"
@@ -14,6 +15,7 @@ class Network{
     LayerDescriptor **layerdsc;
     void construct_layers(LayerDescriptor **desc);
     void feedforward(Matrix **input, int threadindex=0);
+    std::vector<Matrix***> collect_inputs(int current_index, std::vector<int> inputs);
     public:
     //double dropout_probability;
     void backpropagate(Data_Loader *training_data, Layers_features **nabla, int costfunction_type, int threadindex=0);

@@ -2,7 +2,7 @@
 #include <math.h>
 
 
-Softmax::Softmax(int row, int col): FullyConnected(row, col, -1)
+Softmax::Softmax(int row, vector<int> prev_outputlens, vector<Matrix***> inputs): FullyConnected(row, prev_outputlens, inputs, -1)
 {
     this->layer_type = SOFTMAX;
     delete this->output_derivative[0][0];
@@ -22,11 +22,19 @@ inline Matrix** Softmax::backpropagate(Matrix **input, Layer *next_layer, Featur
 
 void Softmax::layers_output(Matrix **input, int threadindex)
 {
+    if(input != NULL)
+    {
+        cerr << "something needs to be figured out for getting the output of standalone layers";
+        throw exception();
+    }
     Matrix weighted_input(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     Matrix output_helper(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     double nominator = 0;
     double helper;
-    weighted_input += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
+    for(int i = 0; i < this->inputs.size(); i++)
+    {
+        weighted_input += (this->fmap[i]->weights[0][0] * this->inputs[i][threadindex][0][0] + this->fmap[i]->biases[0][0]);
+    }
     double max = weighted_input.data[0][0];
     for(int i = 1; i < this->outputlen; i++)
     {

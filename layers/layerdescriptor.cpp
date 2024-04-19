@@ -1,9 +1,26 @@
 #include "layers.h"
 
+
+LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, vector<string> output_connections, string name, int col, int mapcount, int vertical_stride, int horizontal_stride):
+            layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
+            row(neuron_count), col(col), mapcount(mapcount), name(name), output_connections(output_connections) {}
+
 LayerDescriptor::LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col, int mapcount, int vertical_stride, int horizontal_stride):
             layer_type(layer_type), neuron_count(neuron_count), neuron_type(neuron_type), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
-            row(neuron_count), col(col), mapcount(mapcount) {}
+            row(neuron_count), col(col), mapcount(mapcount)
+{
+    this->name = "";
+    this->output_connections.clear();
+}
 
+std::string LayerDescriptor::get_name()
+{
+    return this->name;
+}
+std::vector<std::string> LayerDescriptor::get_output_connections()
+{
+    return this->output_connections;
+}
 
 Layers_features::Layers_features(int mapcount, int row, int col, int depth, int biasrow, int biascol):
             fmap_count(mapcount), biasrow(biasrow), biascol(biascol)

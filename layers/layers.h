@@ -2,6 +2,8 @@
 #define LAYERS_H_INCLUDED
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "../neurons/neuron.h"
 #include "../data_loader/data_loader.h"
@@ -25,8 +27,13 @@ class LayerDescriptor{
     int mapcount;
     int horizontal_stride, vertical_stride;
     int neuron_type;
+    string name;
+    std::vector<string> output_connections;
     public:
     LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
+    LayerDescriptor(int layer_type, int neuron_type, int neuron_count, std::vector<string> output_connections, string name = "", int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
+    std::string get_name();
+    std::vector<std::string> get_output_connections();
 };
 
 class Feature_map{
@@ -96,6 +103,9 @@ class Layer{
     virtual void load(std::ifstream &params) = 0;
     virtual void set_threadcount(int threadcount);
     virtual inline int get_threadcount();
+    virtual void create_connections(vector<int> input_from, vector<int> output_to) {throw runtime_error("Unimplemented function: Layer::create_connections\n");}
+    virtual const vector<int>& gets_input_from() const {throw runtime_error("Unimplemented function: Layer::create_connections\n");}
+    virtual const vector<int>& sends_output_to() const {throw runtime_error("Unimplemented function: Layer::create_connections\n");}
 };
 
 class FullyConnected : public Layer {
@@ -110,8 +120,10 @@ class FullyConnected : public Layer {
     int threadcount;
     virtual void destroy_dinamic_data();
     virtual void build_dinamic_data();
+    vector<int> gets_input_from_, sends_output_to_;
+    vector<Matrix***> inputs;
     public:
-    FullyConnected(int row, int prev_row, int neuron_type);
+    FullyConnected(int row, vector<int> prev_outputlens, vector<Matrix***> inputs, int neuron_type);
     ~FullyConnected();
     virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
     virtual void layers_output(Matrix **input, int threadindex);
@@ -133,13 +145,16 @@ class FullyConnected : public Layer {
     virtual void restore_neurons(Matrix *removed_colums = NULL);
     virtual void store(std::ofstream &params);
     virtual void load(std::ifstream &params);
+    virtual void create_connections(vector<int> input_from, vector<int> output_to);
+    virtual const vector<int>& gets_input_from() const;
+    virtual const vector<int>& sends_output_to() const;
     void set_threadcount(int threadcount);
     inline int get_threadcount();
 };
 
 class Softmax : public FullyConnected {
     public:
-    Softmax(int row, int col);
+    Softmax(int row, vector<int> prev_outputlens, vector<Matrix***> inputs);
     ~Softmax();
     Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);

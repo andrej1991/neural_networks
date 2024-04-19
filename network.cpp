@@ -1,6 +1,7 @@
 #include "network.h"
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <stdlib.h>
 #include <math.h>
 #include "layers/layers.h"
@@ -51,6 +52,7 @@ Network::Network(char *data)
                     file.read(reinterpret_cast<char *>(&f_mapcount), sizeof(int));
                     file.read(reinterpret_cast<char *>(&f_vertical_stride), sizeof(int));
                     file.read(reinterpret_cast<char *>(&f_horizontal_stride), sizeof(int));
+                    ///TODO: rewrite the loading and saving accordingly
                     dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride);
                 }
             this->construct_layers(dsc);
@@ -84,11 +86,46 @@ Network::~Network()
     delete[] this->layerdsc;
 }
 
+vector<int> get_inputs(LayerDescriptor **layerdesc, int layers_num, string name, map<string,int> &m)
+{
+    vector<int> inputs;
+    for(int i = 0; i < layers_num; i++)
+    {
+        for(string connection : layerdesc[i]->get_output_connections())
+        {
+            if(connection == name)
+            {
+                inputs.push_back(m[layerdesc[i]->get_name()]);
+            }
+        }
+    }
+    return inputs;
+}
+
+vector<int> get_connections_as_int(LayerDescriptor *layerdesc, map<string,int> &m)
+{
+    vector<int> outputs;
+    for(string connection : layerdesc->get_output_connections())
+    {
+        outputs.push_back(m[connection]);
+    }
+    return outputs;
+}
+
 void Network::construct_layers(LayerDescriptor **layerdesc)
 {
     this->layers = new Layer* [this->total_layers_num];
     this->layerdsc = new LayerDescriptor* [this->layers_num];
     Padding p;
+    map<std::string, int> layer_name_to_index;
+    vector<int> prev_outputlens;
+    vector<int> inputs;
+    for(int i = 0; i < layers_num; i++)
+    {
+        layer_name_to_index[layerdesc[i]->get_name()] = i;
+    }
+    /*for (const auto& n : layer_name_to_index)
+      std::cout << n.first << " = " << n.second << "; ";*/
     if(layerdesc[0]->layer_type == FULLY_CONNECTED)
         this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
     else
@@ -96,16 +133,32 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     this->layers += 1;
     for(int i = 0; i < layers_num; i++)
     {
-        this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count,
+        this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count, layerdesc[i]->output_connections, layerdesc[i]->name,
                                                 layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
+        inputs.clear();
+        prev_outputlens.clear();
+        if(i == 0)
+        {
+            inputs.push_back(-1);
+        } else
+        {
+            inputs = get_inputs(layerdesc, layers_num, layerdesc[i]->get_name(), layer_name_to_index);
+        }
+        //cout << "layer-" << i << endl;
+        for(int input_index : inputs)
+        {
+            //cout << "input index: " << input_index << endl;
+            //cout << this->layers[input_index]->get_output_len() << endl;
+            prev_outputlens.push_back(this->layers[input_index]->get_output_len());
+        }
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
-                this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len(),
+                this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, prev_outputlens, this->collect_inputs(i, inputs),
                                                      layerdesc[i]->neuron_type);
                 break;
             case SOFTMAX:
-                this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers[i - 1]->get_output_len());
+                this->layers[i] = new Softmax(layerdesc[i]->neuron_count, prev_outputlens, this->collect_inputs(i, inputs));
                 break;
             case CONVOLUTIONAL:
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
@@ -121,6 +174,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
         }
+        this->layers[i]->create_connections(inputs, get_connections_as_int(layerdesc[i], layer_name_to_index));
     }
 }
 
@@ -162,12 +216,32 @@ void Network::store(char *filename)
         }
 }
 
+vector<Matrix***> Network::collect_inputs(int current_index, vector<int> inputs)
+{
+    vector<Matrix***> ret;
+    Matrix ***retmatrix = new Matrix** [this->threadcount];
+    //cout << " layer index " << current_index << endl;
+    for(int i : inputs)
+    {
+        //cout << "  " << i << endl;
+        for(int j = 0; j < threadcount; j++)
+        {
+            retmatrix[j] = this->layers[i]->get_output(j);
+        }
+        ret.push_back(retmatrix);
+    }
+    //cout << " . " << retmatrix[0][0]->get_row() << endl;
+    return ret;
+}
+
+
 void Network::feedforward(Matrix **input, int threadindex)
 {
     this->layers[-1]->set_input(input, threadindex);
     for(int i = 0; i < this->layers_num; i++)
     {
-        this->layers[i]->layers_output(this->layers[i - 1]->get_output(threadindex), threadindex);
+        //this->layers[i]->layers_output(this->layers[i - 1]->get_output(threadindex), threadindex);
+        this->layers[i]->layers_output(NULL, threadindex);
     }
 }
 
@@ -202,10 +276,13 @@ int Network::get_threadcount()
 
 void Network::set_threadcount(int threadcnt)
 {
-    for(int i = -1; i < this->layers_num; i++)
+    if(this->threadcount != threadcnt)
     {
-        this->layers[i]->set_threadcount(threadcnt);
+        for(int i = -1; i < this->layers_num; i++)
+        {
+            this->layers[i]->set_threadcount(threadcnt);
+        }
+        this->threadcount = threadcnt;
     }
-    this->threadcount = threadcnt;
 }
 

@@ -13,6 +13,7 @@ class Pooling : public Layer {
     void flatten(int threadindex);
     void destory_outputs_and_erros();
     void build_outputs_and_errors();
+    vector<int> gets_input_from_, sends_output_to_;
     public:
     Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col, int next_layers_type);
     ~Pooling();
@@ -40,6 +41,9 @@ class Pooling : public Layer {
     void load(std::ifstream &params);
     virtual void set_threadcount(int threadcnt);
     virtual int get_threadcount();
+    virtual void create_connections(vector<int> input_from, vector<int> output_to);
+    virtual const vector<int>& gets_input_from() const;
+    virtual const vector<int>& sends_output_to() const;
 };
 
 

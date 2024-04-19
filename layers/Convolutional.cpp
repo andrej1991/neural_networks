@@ -428,6 +428,23 @@ Matrix** Convolutional::get_output(int threadindex)
         return this->outputs[threadindex];
 }
 
+void Convolutional::create_connections(vector<int> input_from, vector<int> output_to)
+{
+    ///TODO some error checking
+    this->gets_input_from_ = input_from;
+    this->sends_output_to_ = output_to;
+}
+
+const vector<int>& Convolutional::gets_input_from() const
+{
+    return this->gets_input_from_;
+}
+
+const vector<int>& Convolutional::sends_output_to() const
+{
+    return this->sends_output_to_;
+}
+
 inline Feature_map** Convolutional::get_feature_maps()
 {
     return this->fmap;
