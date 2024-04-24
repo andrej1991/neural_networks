@@ -148,6 +148,8 @@ void Matrix::operator+=(const Matrix& mtx)
 {
     if((this->col != mtx.col) + (this->row != mtx.row))
     {
+        int r = this->row;
+        int c = this->col;
         throw std::invalid_argument("in the addition matrices must have the same size");
     }
     for(int i = 0; i < this->row; i++)

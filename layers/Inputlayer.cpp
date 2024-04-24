@@ -29,7 +29,7 @@ void InputLayer::layers_output(Matrix **input, int threadindex)
     this->set_input(input, threadindex);
 }
 
-Matrix** InputLayer::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
+Matrix* InputLayer::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     ;
 }
@@ -91,7 +91,7 @@ void InputLayer::set_threadcount(int threadcnt)
     }
 }
 
-Matrix** InputLayer::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex)
+Matrix** InputLayer::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex)
 {
     ;
 }

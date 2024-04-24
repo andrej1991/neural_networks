@@ -235,9 +235,9 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
     delta_helper[0] += helper;
 }*/
 
-Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta, int threadindex)
+Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***delta, int threadindex)
 {
-    Feature_map** next_layers_fmaps;
+    /*Feature_map** next_layers_fmaps;
     if(this->next_layers_type != POOLING)
     {
         next_layers_fmaps = next_layer->get_feature_maps();
@@ -318,7 +318,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         }
         nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
     }
-    return this->layers_delta[threadindex];
+    return this->layers_delta[threadindex]*/;
 }
 
 void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
@@ -369,7 +369,7 @@ void Convolutional::layers_output(Matrix **input, int threadindex)
     }
 }
 
-Matrix** Convolutional::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
+Matrix* Convolutional::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     cerr << "currently the convolutional neural network needs to have atleest one fully connected layer at the output";
     throw exception();

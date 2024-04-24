@@ -122,9 +122,9 @@ void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
 }
 
-inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **delta, int threadindex)
+inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***delta, int threadindex)
 {
-    int in_row = input[0][0].get_row();
+    /*int in_row = input[0][0].get_row();
     int in_col = input[0][0].get_col();
     int delta_r_index, delta_c_index;
     delta_c_index = delta_r_index = 0;
@@ -215,7 +215,7 @@ inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Featur
             delta_r_index += this->map_row;
         }
     }
-    return this->layers_delta[threadindex];
+    return this->layers_delta[threadindex]*/;
 }
 
 void Pooling::layers_output(Matrix **input, int threadindex)
@@ -247,7 +247,7 @@ int Pooling::get_threadcount()
     return this->threadcount;
 }
 
-Matrix** Pooling::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
+Matrix* Pooling::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     cerr << "Pooling layer cannot be the last layer!" << endl;
     throw exception();

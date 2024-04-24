@@ -7,13 +7,14 @@ FullyConnected::FullyConnected(int row, vector<int> prev_outputlens, vector<Matr
 {
     for(Matrix ***inp : inputs_)
     {
+        //cout << inp[0][0][0].get_row() << endl;
         this->inputs.push_back(inp);
     }
+    //for(Matrix ***i : this->inputs) cout << i[0][0][0].get_row() << endl;
     this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     double deviation = 1.0;
     double mean = 0.0;
-    //cout << "input size:" << inputs.size() << endl;
     this->fmap = new Feature_map* [inputs.size()];
     for(int i = 0; i < inputs.size(); i++)
     {
@@ -22,12 +23,10 @@ FullyConnected::FullyConnected(int row, vector<int> prev_outputlens, vector<Matr
         if(neuron_type == SIGMOID)
         {
             mean = 0.5;
-            //cout << "sigmoidFCC\n";
         }
         else if(neuron_type == RELU || neuron_type == LEAKY_RELU)
         {
             mean = deviation;
-            //cout << "relu\n";
         }
         this->fmap[i]->initialize_weights(deviation, mean);
         this->fmap[i]->initialize_biases();
@@ -97,8 +96,6 @@ void FullyConnected::build_dinamic_data()
 
 void FullyConnected::layers_output(Matrix **input, int threadindex)
 {
-    //Matrix inputparam(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
-    //inputparam += (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
     if(input != NULL)
     {
         cerr << "something needs to be figured out for getting the output of standalone layers";
@@ -107,14 +104,12 @@ void FullyConnected::layers_output(Matrix **input, int threadindex)
     this->activation_input[threadindex][0][0].zero();
     for(int i = 0; i < this->inputs.size(); i++)
     {
-        //cout << this->inputs[i][threadindex][0][0].get_row() << endl;
-        weighted_output(this->fmap[i]->weights[0][0], this->inputs[i][threadindex][0][0], this->fmap[i]->biases[0][0], this->activation_input[threadindex][0][0]);
+        weighted_output(this->fmap[i]->weights[0][0], this->inputs[i][threadindex][0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     }
     this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);
-    //this->neuron.neuron(inputparam, this->output[threadindex][0][0]);
 }
 
-Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
+Matrix* FullyConnected::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     switch(costfunction_type)
     {
@@ -125,7 +120,7 @@ Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_outpu
         }
         this->derivate_layers_output(input, threadindex);
         this->output_error[threadindex][0][0] = hadamart_product(this->output_error_helper[threadindex][0][0], this->output_derivative[threadindex][0][0]);
-        return this->output_error[threadindex];
+        return this->output_error[threadindex][0];
     case CROSS_ENTROPY_CF:
         switch(this->neuron_type)
         {
@@ -134,7 +129,7 @@ Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_outpu
             {
                 this->output_error[threadindex][0][0].data[i][0] = this->output[threadindex][0][0].data[i][0] - required_output.data[i][0];
             }
-            return this->output_error[threadindex];
+            return this->output_error[threadindex][0];
         default:
             this->derivate_layers_output(input, threadindex);
             for(int i = 0; i < this->outputlen; i++)
@@ -142,7 +137,7 @@ Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_outpu
                 this->output_error[threadindex][0][0].data[i][0] = (this->output_derivative[threadindex][0]->data[i][0] * (this->output[threadindex][0][0].data[i][0] - required_output.data[i][0])) /
                                                        (this->output[threadindex][0][0].data[i][0] * (1 - this->output[threadindex][0][0].data[i][0]));
             }
-            return this->output_error[threadindex];
+            return this->output_error[threadindex][0];
         }
     default:
         cerr << "Unknown cost function\n";
@@ -152,32 +147,29 @@ Matrix** FullyConnected::get_output_error(Matrix **input, Matrix &required_outpu
 
 Matrix** FullyConnected::derivate_layers_output(Matrix **input, int threadindex)
 {
-    /*Matrix inputparam;
-    inputparam = (this->fmap[0]->weights[0][0] * input[0][0] + this->fmap[0]->biases[0][0]);
-    inputparam = multiply_and_add(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0]);*/
-    ///allready calculated, might happen that in RNN case it's going to be needed again to be calculated
-    //weighted_output(this->fmap[0]->weights[0][0], input[0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     this->neuron.neuron_derivative(this->activation_input[threadindex][0][0], this->output_derivative[threadindex][0][0]);
-    //this->neuron.neuron_derivative(inputparam, this->output_derivative[threadindex][0][0]);
     return this->output_derivative[threadindex];
 }
 
 void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
 {
-    if((gradient->get_fmap_count() != 1) + (gradient->fmap[0]->get_mapdepth() != 1))
+    /*if((gradient->get_fmap_count() != 1) + (gradient->fmap[0]->get_mapdepth() != 1))
     {
         cerr << "the fully connected layer must have only one set of weights!!!\n";
         throw exception();
-    }
-    int prev_outputlen = this->fmap[0]->get_col();
-    for(int j = 0; j < this->outputlen; j++)
+    }*/
+    for(int i = 0; i < this->gets_input_from().size(); i++)
     {
-        this->fmap[0]->biases[0][0].data[j][0] -= learning_rate * gradient->fmap[0]->biases[0]->data[j][0];
-        for(int k = 0; k < prev_outputlen; k++)
+        int prev_outputlen = this->fmap[i]->get_col();
+        for(int j = 0; j < this->outputlen; j++)
         {
-            this->fmap[0]->weights[0][0].data[j][k] = regularization_rate * this->fmap[0]->weights[0][0].data[j][k] - learning_rate * gradient->fmap[0]->weights[0]->data[j][k];
+            for(int k = 0; k < prev_outputlen; k++)
+            {
+                this->fmap[i]->weights[0][0].data[j][k] = regularization_rate * this->fmap[i]->weights[0][0].data[j][k] - learning_rate * gradient->fmap[i]->weights[0]->data[j][k];
+            }
         }
     }
+    this->fmap[0]->biases[0][0] += gradient->fmap[0]->biases[0][0] * (-1 * learning_rate);
 }
 
 void FullyConnected::set_input(Matrix **input, int threadindex)
@@ -187,25 +179,41 @@ void FullyConnected::set_input(Matrix **input, int threadindex)
 }
 
 
-Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **delta, int threadindex)
+Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***deltas, int threadindex)
 {
+    this->derivate_layers_output(NULL, threadindex);
     ///TODO think through this function from mathematical perspective!!!
-    Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
-    int next_layers_fmapcount = next_layer->get_mapcount();
-    if(next_layers_fmapcount != 1)
+    Feature_map** next_layers_fmaps;
+    int next_layers_fmapcount, indexOfMyInput, j, l;
+    vector<int> next_layers_inputs;
+    this->layers_delta[threadindex][0][0].zero();
+    for(int i : this->sends_output_to_)
     {
-        cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
-        throw exception();
+        next_layers_fmaps = this->network_layers[i]->get_feature_maps();
+        next_layers_fmapcount = this->network_layers[i]->get_mapcount();
+        next_layers_inputs = this->network_layers[i]->gets_input_from();
+        /*if(next_layers_fmapcount != 1)
+        {
+            cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
+            throw exception();
+        }*/
+        for(j = 0; j < next_layers_inputs.size(); j++)
+        {
+            if(this->my_index == next_layers_inputs[j]) break;
+        }
+
+        get_fcc_delta(next_layers_fmaps[j][0].weights[0][0], deltas[i][0][0], this->output_derivative[threadindex][0][0], this->layers_delta[threadindex][0][0]);
     }
-    this->derivate_layers_output(input, threadindex);
-    /*Matrix multiplied;
-    multiplied = (next_layers_fmaps[0][0].weights[0]->transpose()) * delta[0][0];
-    this->layers_delta[threadindex][0][0] = hadamart_product(multiplied, this->output_derivative[threadindex][0][0]);*/
-    get_fcc_delta(next_layers_fmaps[0][0].weights[0][0], delta[0][0], this->output_derivative[threadindex][0][0], this->layers_delta[threadindex][0][0]);
     nabla[0][0].biases[0][0] = this->layers_delta[threadindex][0][0];
     //nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
-    nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0].multiply_with_transpose(input[0][0]);
-    return this->layers_delta[threadindex];
+    l = 0;
+    for(int k : this->gets_input_from_)
+    {
+        ///TODO nabla has to be planned
+        nabla[l++][0].weights[0][0] = this->layers_delta[threadindex][0][0].multiply_with_transpose(this->network_layers[k]->get_output(threadindex)[0][0]);
+    }
+    deltas[this->my_index] = this->layers_delta[threadindex];
+    return NULL;
 }
 
 inline int FullyConnected::get_threadcount()
@@ -252,7 +260,7 @@ inline int FullyConnected::get_output_col()
 
 int FullyConnected::get_mapcount()
 {
-    return 1;
+    return this->inputs.size();
 }
 
 int FullyConnected::get_mapdepth()
@@ -398,6 +406,7 @@ void FullyConnected::create_connections(vector<int> input_from, vector<int> outp
     ///TODO some error checking
     this->gets_input_from_ = input_from;
     this->sends_output_to_ = output_to;
+    //for(int i : this->sends_output_to_) cout << i << endl;
 }
 
 const vector<int>& FullyConnected::gets_input_from() const
@@ -408,6 +417,12 @@ const vector<int>& FullyConnected::gets_input_from() const
 const vector<int>& FullyConnected::sends_output_to() const
 {
     return this->sends_output_to_;
+}
+
+void FullyConnected::set_graph_information(Layer **network_layers, int my_index)
+{
+    this->my_index = my_index;
+    this->network_layers = network_layers;
 }
 
 void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Matrix &ret)
@@ -429,7 +444,7 @@ void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Mat
                     c += nextLW.data[i][k] * delta.data[i][l];
                     //c += data[k][i] * 1;
                 }
-                ret.data[k][l] = c * output_derivative.data[k][l];
+                ret.data[k][l] += c * output_derivative.data[k][l];
                 c = 0;
             }
         }

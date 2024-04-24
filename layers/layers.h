@@ -56,6 +56,7 @@ class Layers_features{
     public:
     Feature_map **fmap;
     Layers_features(int mapcount, int row, int col, int depth, int biasrow, int biascol);
+    Layers_features(int mapcount, Feature_map** fmap, int biasrow, int biascol);
     Layers_features(const Layers_features &layer);
     ~Layers_features();
     void operator+=(const Layers_features &layer);
@@ -81,9 +82,9 @@ class Padding{
 class Layer{
     public:
     virtual ~Layer();
-    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex) = 0;
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***next_layers_error, int threadindex) = 0;
     virtual void layers_output(Matrix **input, int threadindex) = 0;
-    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex) = 0;
+    virtual Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex) = 0;
     virtual Matrix** derivate_layers_output(Matrix **input, int threadindex) = 0;
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
     virtual void set_input(Matrix **input, int threadindex) = 0;
@@ -106,13 +107,15 @@ class Layer{
     virtual void create_connections(vector<int> input_from, vector<int> output_to) {throw runtime_error("Unimplemented function: Layer::create_connections\n");}
     virtual const vector<int>& gets_input_from() const {throw runtime_error("Unimplemented function: Layer::create_connections\n");}
     virtual const vector<int>& sends_output_to() const {throw runtime_error("Unimplemented function: Layer::create_connections\n");}
+    virtual void set_graph_information(Layer **network_layers, int my_index) {throw runtime_error("Unimplemented function: Layer::get_graph_information\n");}
 };
 
 class FullyConnected : public Layer {
     friend class Softmax;
     Matrix ***activation_input, ***output, ***output_derivative, ***output_error, ***output_error_helper, ***layers_delta;
     Matrix *removed_rows, *backup_weights, *backup_biases, ***backup_activation_input, ***backup_output, ***backup_output_derivative, ***backpup_output_error, ***backup_output_error_helper, ***backup_layers_delta;
-    int neuron_type, outputlen, backup_outputlen;
+    int neuron_type, outputlen, backup_outputlen, my_index;
+    Layer **network_layers;
     bool dropout_happened;
     short int layer_type;
     Neuron neuron;
@@ -125,9 +128,9 @@ class FullyConnected : public Layer {
     public:
     FullyConnected(int row, vector<int> prev_outputlens, vector<Matrix***> inputs, int neuron_type);
     ~FullyConnected();
-    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     virtual void layers_output(Matrix **input, int threadindex);
-    virtual Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    virtual Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
     virtual Matrix** derivate_layers_output(Matrix **input, int threadindex);
     virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     virtual void set_input(Matrix **input, int threadindex);
@@ -148,6 +151,7 @@ class FullyConnected : public Layer {
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
+    virtual void set_graph_information(Layer **network_layers, int my_index);
     void set_threadcount(int threadcount);
     inline int get_threadcount();
 };
@@ -156,9 +160,9 @@ class Softmax : public FullyConnected {
     public:
     Softmax(int row, vector<int> prev_outputlens, vector<Matrix***> inputs);
     ~Softmax();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
     Matrix** derivate_layers_output(Matrix **input, int threadindex);
 };
 
@@ -172,9 +176,9 @@ class InputLayer : public Layer {
     Padding padd;
     InputLayer(int row, int col, int input_channel_count, int neuron_type, Padding &p, short int next_layers_type);
     ~InputLayer();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
     Matrix** derivate_layers_output(Matrix **input, int threadindex);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     void set_input(Matrix **input, int threadindex);

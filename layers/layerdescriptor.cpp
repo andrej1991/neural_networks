@@ -32,6 +32,16 @@ Layers_features::Layers_features(int mapcount, int row, int col, int depth, int 
     }
 }
 
+Layers_features::Layers_features(int mapcount, Feature_map** fmap_, int biasrow, int biascol):
+            fmap_count(mapcount), biasrow(biasrow), biascol(biascol)
+{
+    this->fmap = new Feature_map* [this->fmap_count];
+    for(int i = 0; i < mapcount; i++)
+    {
+        this->fmap[i] = new Feature_map(fmap_[i]->get_row(), fmap_[i]->get_col(), fmap_[i]->get_mapdepth(), biasrow, biascol);
+    }
+}
+
 Layers_features::Layers_features(const Layers_features &layer)
 {
     int row, col, depth;

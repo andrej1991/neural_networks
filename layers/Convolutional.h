@@ -41,9 +41,9 @@ class Convolutional : public Layer {
     public:
     Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
     Matrix** derivate_layers_output(Matrix **input, int threadindex);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     void set_input(Matrix **input, int threadindex);

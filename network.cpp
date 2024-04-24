@@ -15,6 +15,7 @@ Network::Network(int layers_num, LayerDescriptor **layerdesc, int input_row, int
 {
     this->total_layers_num = layers_num + 1;
     this->threadcount = 1;
+    this->deltas = new Matrix** [this->layers_num];
     try
     {
         this->construct_layers(layerdesc);
@@ -42,6 +43,7 @@ Network::Network(char *data)
             file.read(reinterpret_cast<char *>(&(dummy1)), sizeof(int));
             file.read(reinterpret_cast<char *>(&(dummy2)), sizeof(double));
             this->total_layers_num = this->layers_num + 1;
+            this->deltas = new Matrix** [this->layers_num];
             LayerDescriptor *dsc[this->layers_num];
             for(int i = 0; i < this->layers_num; i++)
                 {
@@ -89,7 +91,8 @@ Network::~Network()
 vector<int> get_inputs(LayerDescriptor **layerdesc, int layers_num, string name, map<string,int> &m)
 {
     vector<int> inputs;
-    for(int i = 0; i < layers_num; i++)
+    for(int i = layers_num - 1; i >= 0; i--)
+    //for(int i = 0; i < layers_num; i++)
     {
         for(string connection : layerdesc[i]->get_output_connections())
         {
@@ -124,8 +127,8 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     {
         layer_name_to_index[layerdesc[i]->get_name()] = i;
     }
-    /*for (const auto& n : layer_name_to_index)
-      std::cout << n.first << " = " << n.second << "; ";*/
+    for (const auto& n : layer_name_to_index)
+      std::cout << n.first << " = " << n.second << "; ";
     if(layerdesc[0]->layer_type == FULLY_CONNECTED)
         this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
     else
@@ -144,11 +147,8 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         {
             inputs = get_inputs(layerdesc, layers_num, layerdesc[i]->get_name(), layer_name_to_index);
         }
-        //cout << "layer-" << i << endl;
         for(int input_index : inputs)
         {
-            //cout << "input index: " << input_index << endl;
-            //cout << this->layers[input_index]->get_output_len() << endl;
             prev_outputlens.push_back(this->layers[input_index]->get_output_len());
         }
         switch(layerdesc[i]->layer_type)
@@ -175,7 +175,9 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 throw std::exception();
         }
         this->layers[i]->create_connections(inputs, get_connections_as_int(layerdesc[i], layer_name_to_index));
+        this->layers[i]->set_graph_information(this->layers, i);
     }
+    this->deltas[this->layers_num - 1] = new Matrix*;
 }
 
 void Network::store(char *filename)
@@ -219,18 +221,18 @@ void Network::store(char *filename)
 vector<Matrix***> Network::collect_inputs(int current_index, vector<int> inputs)
 {
     vector<Matrix***> ret;
-    Matrix ***retmatrix = new Matrix** [this->threadcount];
-    //cout << " layer index " << current_index << endl;
+    Matrix ***retmatrix;// = new Matrix** [this->threadcount];
+    cout << " layer index " << current_index << endl;
     for(int i : inputs)
     {
-        //cout << "  " << i << endl;
+        retmatrix = new Matrix** [this->threadcount];
         for(int j = 0; j < threadcount; j++)
         {
             retmatrix[j] = this->layers[i]->get_output(j);
         }
         ret.push_back(retmatrix);
     }
-    //cout << " . " << retmatrix[0][0]->get_row() << endl;
+    for(Matrix*** x : ret) cout << x[0][0][0].get_row() << endl;
     return ret;
 }
 
@@ -257,15 +259,14 @@ void Network::backpropagate(Data_Loader *trainig_data, Layers_features **nabla, 
 {
     ///currently the final layer has to be a clasification layer
     this->feedforward(trainig_data->input, threadindex);
-    Matrix **delta = new Matrix* [1];
-    delta = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(threadindex),
+    this->deltas[layers_num - 1][0] = this->layers[layers_num - 1]->get_output_error(this->layers[layers_num - 2]->get_output(threadindex),
                                                     trainig_data->required_output, costfunction_type, threadindex);
-    nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = delta[0][0];
-    nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = delta[0][0] * this->layers[this->layers_num - 2]->get_output(threadindex)[0]->transpose();
+    nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = this->deltas[layers_num - 1][0][0];
+    nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = this->deltas[layers_num - 1][0][0] * this->layers[this->layers_num - 2]->get_output(threadindex)[0]->transpose();
     /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
     {
-        delta = this->layers[i]->backpropagate(this->layers[i - 1]->get_output(threadindex), this->layers[i + 1], nabla[i][0].fmap, delta, threadindex);
+        this->layers[i]->backpropagate(this->layers[i - 1]->get_output(threadindex), this->layers[i + 1], nabla[i][0].fmap, this->deltas, threadindex);
     }
 }
 

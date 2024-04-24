@@ -14,7 +14,7 @@ Softmax::~Softmax()
     ;
 }
 
-inline Matrix** Softmax::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix **next_layers_error, int threadindex)
+inline Matrix** Softmax::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex)
 {
     cerr << "Softamx layer can only be an output layer!!!\n";
     throw exception();
@@ -57,7 +57,7 @@ void Softmax::layers_output(Matrix **input, int threadindex)
     }
 }
 
-Matrix** Softmax::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
+Matrix* Softmax::get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex)
 {
     switch(costfunction_type)
     {
@@ -68,13 +68,13 @@ Matrix** Softmax::get_output_error(Matrix **input, Matrix &required_output, int 
         }
         this->derivate_layers_output(input, threadindex);
         this->output_error[threadindex][0][0] = this->output_derivative[threadindex][0][0] * this->output_error_helper[threadindex][0][0];
-        return this->output_error[threadindex];
+        return this->output_error[threadindex][0];
     case LOG_LIKELIHOOD_CF:
         for(int i = 0; i < this->outputlen; i++)
         {
             this->output_error[threadindex][0][0].data[i][0] = this->output[threadindex][0][0].data[i][0] - required_output.data[i][0];
         }
-        return this->output_error[threadindex];
+        return this->output_error[threadindex][0];
     case CROSS_ENTROPY_CF:
         this->derivate_layers_output(input, threadindex);
         for(int i = 0; i < this->outputlen; i++)
@@ -82,7 +82,7 @@ Matrix** Softmax::get_output_error(Matrix **input, Matrix &required_output, int 
             this->output_error[threadindex][0][0].data[i][0] = (this->output_derivative[threadindex][0]->data[i][0] * (this->output[threadindex][0][0].data[i][0] - required_output.data[i][0])) /
                                     (this->output[threadindex][0][0].data[i][0] * (1 - this->output[threadindex][0][0].data[i][0]));
         }
-        return this->output_error[threadindex];
+        return this->output_error[threadindex][0];
     default:
         cerr << "Unknown cost function\n";
         throw exception();

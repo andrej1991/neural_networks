@@ -17,9 +17,9 @@ class Pooling : public Layer {
     public:
     Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col, int next_layers_type);
     ~Pooling();
-    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix **next_layers_error, int threadindex);
+    Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
-    Matrix** get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
     Matrix** derivate_layers_output(Matrix **input, int threadindex);
     void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
     inline void remove_some_neurons(Matrix ***w_bckup, Matrix ***b_bckup, int **layers_bckup, int ***indexes);

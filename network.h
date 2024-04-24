@@ -13,6 +13,8 @@ class Network{
     int total_layers_num, layers_num, input_row, input_col, input_channel_count, threadcount;
     Layer **layers;
     LayerDescriptor **layerdsc;
+    ///TODO make it threadsafe
+    Matrix*** deltas;
     void construct_layers(LayerDescriptor **desc);
     void feedforward(Matrix **input, int threadindex=0);
     std::vector<Matrix***> collect_inputs(int current_index, std::vector<int> inputs);
