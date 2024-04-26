@@ -5,12 +5,7 @@
 FullyConnected::FullyConnected(int row, vector<int> prev_outputlens, vector<Matrix***> inputs_, int neuron_type):
     neuron(neuron_type)
 {
-    for(Matrix ***inp : inputs_)
-    {
-        //cout << inp[0][0][0].get_row() << endl;
-        this->inputs.push_back(inp);
-    }
-    //for(Matrix ***i : this->inputs) cout << i[0][0][0].get_row() << endl;
+    this->set_layers_inputs(inputs_);
     this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     double deviation = 1.0;
@@ -91,6 +86,14 @@ void FullyConnected::build_dinamic_data()
         this->output_error[i][0] = new Matrix(this->outputlen, 1);
         this->output_error_helper[i][0] = new Matrix(this->outputlen, 1);
         this->layers_delta[i][0] = new Matrix(this->outputlen, 1);
+    }
+}
+
+void FullyConnected::set_layers_inputs(vector<Matrix***> inputs_)
+{
+    for(Matrix ***inp : inputs_)
+    {
+        this->inputs.push_back(inp);
     }
 }
 
@@ -221,11 +224,13 @@ inline int FullyConnected::get_threadcount()
     return this->threadcount;
 }
 
-void FullyConnected::set_threadcount(int threadcnt)
+void FullyConnected::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
     this->destroy_dinamic_data();
+    this->inputs.clear();
     this->threadcount = threadcnt;
     this->build_dinamic_data();
+    this->set_layers_inputs(inputs_);
 }
 
 inline Matrix** FullyConnected::get_output(int threadindex)
@@ -393,12 +398,14 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
 
 void FullyConnected::store(std::ofstream &params)
 {
-    this->fmap[0]->store(params);
+    for(int i = 0; i < this->inputs.size(); i++)
+        this->fmap[i]->store(params);
 }
 
 void FullyConnected::load(std::ifstream &params)
 {
-    this->fmap[0]->load(params);
+    for(int i = 0; i < this->inputs.size(); i++)
+        this->fmap[i]->load(params);
 }
 
 void FullyConnected::create_connections(vector<int> input_from, vector<int> output_to)
@@ -406,7 +413,6 @@ void FullyConnected::create_connections(vector<int> input_from, vector<int> outp
     ///TODO some error checking
     this->gets_input_from_ = input_from;
     this->sends_output_to_ = output_to;
-    //for(int i : this->sends_output_to_) cout << i << endl;
 }
 
 const vector<int>& FullyConnected::gets_input_from() const

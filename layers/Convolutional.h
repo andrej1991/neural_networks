@@ -31,15 +31,16 @@ class Convolutional : public Layer {
     Padding pad;
     conv_output_helper *feedforward_helpter;
     conv_backprop_helper *backprop_helper;
-    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col, threadcount, input_channel_count;
+    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col, threadcount, input_channel_count, my_index;
     short int layer_type;
     Neuron neuron;
     void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
     void destory_outputs_and_erros();
     void build_outputs_and_errors();
     vector<int> gets_input_from_, sends_output_to_;
+    Layer **network_layers;
     public:
-    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
+    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, int my_index_, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
     Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
@@ -65,11 +66,12 @@ class Convolutional : public Layer {
     void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-    virtual void set_threadcount(int threadcnt);
+    virtual void set_threadcount(int threadcnt, vector<Matrix***> inputs_);
     virtual int get_threadcount();
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
+    virtual void set_graph_information(Layer **network_layers, int my_index);
 };
 
 #endif // CONVOLUTIONAL_H_INCLUDED

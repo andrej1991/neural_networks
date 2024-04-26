@@ -117,8 +117,8 @@ int conv_backprop_helper::get_layercount(int threadidx)
     return this->layer_count[threadidx];
 }
 
-Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int vertical_stride, int horizontal_stride):
-                    input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride),
+Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, int my_index_, Padding &p, int vertical_stride, int horizontal_stride):
+                    input_row(input_row), input_col(input_col), kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride), my_index(my_index_),
                     next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type), input_channel_count(input_channel_count)
 {
     this->output_row = (input_row - kern_row + vertical_stride) / vertical_stride;
@@ -141,12 +141,10 @@ Convolutional::Convolutional(int input_row, int input_col, int input_channel_cou
     if(neuron_type == SIGMOID)
     {
         mean = 0.5;
-        cout << "sigmoidCNN\n";
     }
     else if(neuron_type == RELU || neuron_type == LEAKY_RELU)
     {
         mean = deviation;
-        cout << "relu\n";
     }
     for(int i = 0; i < map_count; i++)
     {
@@ -237,14 +235,14 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 
 Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***delta, int threadindex)
 {
-    /*Feature_map** next_layers_fmaps;
+    Feature_map** next_layers_fmaps;
     if(this->next_layers_type != POOLING)
     {
         next_layers_fmaps = next_layer->get_feature_maps();
     }
     int next_layers_fmapcount = next_layer->get_mapcount();
     this->derivate_layers_output(input, threadindex);
-    if(this->next_layers_type == FULLY_CONNECTED or this->next_layers_type == SOFTMAX)
+    /*if(this->next_layers_type == FULLY_CONNECTED or this->next_layers_type == SOFTMAX)
     {
         int next_layers_neuroncount = delta[0]->get_row();
         if(this->backprop_helper->get_layercount(threadindex) != next_layers_neuroncount)
@@ -275,7 +273,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         //this->backprop_helper->zero(threadindex);
     }
     else if (this->next_layers_type == CONVOLUTIONAL)
-    {
+    {*/
         if(this->backprop_helper->get_layercount(threadindex) != next_layers_fmapcount)
         {
             this->backprop_helper->delete_padded_delta(threadindex);
@@ -299,7 +297,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
             }
         }
         //this->backprop_helper->zero(threadindex);
-    }
+    //}
     for(int i = 0; i < this->map_count; i++)
     {
         if(this->next_layers_type != POOLING)
@@ -318,7 +316,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         }
         nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
     }
-    return this->layers_delta[threadindex]*/;
+    return this->layers_delta[threadindex];
 }
 
 void Convolutional::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
@@ -397,7 +395,7 @@ void Convolutional::flatten(int threadindex)
     }
 }
 
-void Convolutional::set_threadcount(int threadcnt)
+void Convolutional::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
     this->destory_outputs_and_erros();
 
@@ -513,4 +511,10 @@ void Convolutional::load(std::ifstream &params)
     {
         this->fmap[i]->load(params);
     }
+}
+
+void Convolutional::set_graph_information(Layer **network_layers, int my_index)
+{
+    this->my_index = my_index;
+    this->network_layers = network_layers;
 }

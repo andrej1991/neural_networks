@@ -127,8 +127,6 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     {
         layer_name_to_index[layerdesc[i]->get_name()] = i;
     }
-    for (const auto& n : layer_name_to_index)
-      std::cout << n.first << " = " << n.second << "; ";
     if(layerdesc[0]->layer_type == FULLY_CONNECTED)
         this->layers[0] = new InputLayer(input_row, 1, 1, SIGMOID, p, FULLY_CONNECTED);
     else
@@ -164,7 +162,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
                                                     this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
-                                                    layerdesc[i]->mapcount, layerdesc[i]->neuron_type, layerdesc[i + 1]->layer_type, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
+                                                    layerdesc[i]->mapcount, layerdesc[i]->neuron_type, layerdesc[i + 1]->layer_type, i, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
                 break;
             case MAX_POOLING:
                 this->layers[i] = new Pooling(layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, this->layers[i - 1]->get_mapcount(), this->layers[i - 1]->get_output_row(),
@@ -222,7 +220,6 @@ vector<Matrix***> Network::collect_inputs(int current_index, vector<int> inputs)
 {
     vector<Matrix***> ret;
     Matrix ***retmatrix;// = new Matrix** [this->threadcount];
-    cout << " layer index " << current_index << endl;
     for(int i : inputs)
     {
         retmatrix = new Matrix** [this->threadcount];
@@ -232,7 +229,6 @@ vector<Matrix***> Network::collect_inputs(int current_index, vector<int> inputs)
         }
         ret.push_back(retmatrix);
     }
-    for(Matrix*** x : ret) cout << x[0][0][0].get_row() << endl;
     return ret;
 }
 
@@ -279,9 +275,14 @@ void Network::set_threadcount(int threadcnt)
 {
     if(this->threadcount != threadcnt)
     {
+        map<std::string, int> layer_name_to_index;
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            layer_name_to_index[this->layerdsc[i]->get_name()] = i;
+        }
         for(int i = -1; i < this->layers_num; i++)
         {
-            this->layers[i]->set_threadcount(threadcnt);
+            this->layers[i]->set_threadcount(threadcnt, this->collect_inputs(i, get_inputs(this->layerdsc, layers_num, this->layerdsc[i]->get_name(), layer_name_to_index)));
         }
         this->threadcount = threadcnt;
     }

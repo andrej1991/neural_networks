@@ -120,6 +120,28 @@ int get_layercount(YAML::Node &config)
     return config["layers"].size();
 }
 
+bool check_if_present(vector<string> &conn, string name)
+{
+    string actual_name, actual_conn;
+    if(name[0] == '!') {
+        actual_name = name.substr(1, name.length());
+    } else
+        actual_name = name;
+
+    for(string c : conn)
+    {
+        if(c[0] == '!') {
+            actual_conn = c.substr(1, name.length());
+        } else
+            {
+                actual_conn = c;
+            }
+        if( actual_conn == actual_name)
+            return true;
+    }
+    return false;
+}
+
 ///TODO check if all the connections are unique
 vector<string> get_connections(YAML::const_iterator config)
 {
@@ -128,20 +150,10 @@ vector<string> get_connections(YAML::const_iterator config)
     {
         for(int i=0; i < config->second["connects_to"].size(); i++)
         {
-            connections.push_back(config->second["connects_to"][i].as<string>());
+            if(!check_if_present(connections, config->second["connects_to"][i].as<string>()))
+                connections.push_back(config->second["connects_to"][i].as<string>());
         }
     }
-    /*try
-    {
-        for(int i=0; i < config->second["connects_to"].size(); i++)
-        {
-            connections.push_back(config->second["connects_to"][i].as<string>());
-        }
-    }
-    catch(YAML::InvalidNode)
-    {
-        connections.clear();
-    }*/
     return connections;
 }
 
@@ -161,6 +173,19 @@ bool check_if_recurrent(LayerDescriptor **layers, vector<string> &connections, i
     return false;
 }
 
+void remove_unwanted(vector<string> &connections)
+{
+    string c;
+    for (vector<string>::iterator it = connections.begin(); it != connections.end();)
+    {
+        c = *it;
+        if (c[0] == '!')
+            it = connections.erase(it);
+        else
+            it++;
+    }
+}
+
 int get_layers(LayerDescriptor **layers, YAML::Node &config)
 {
     int vertical_stride, horizontal_stride;
@@ -178,8 +203,11 @@ int get_layers(LayerDescriptor **layers, YAML::Node &config)
             if(i < layer_count-1)
             {
                 ///TODO: check if that connection is already present
-                connections.insert(connections.begin(), config["layers"][i+1].begin()->first.as<string>());
+                if(!check_if_present(connections, config["layers"][i+1].begin()->first.as<string>()))
+                    connections.insert(connections.begin(), config["layers"][i+1].begin()->first.as<string>());
             }
+            ///it is needed here because the previous if automatically ads the next element from the list as a connection, so it would not be mandatory to mention it everywhere in the config yaml
+            remove_unwanted(connections);
             if(lt.compare("convolutional") == 0)
             {
                 neuron_type = get_neuron_type(it);
@@ -307,13 +335,14 @@ int main(int argc, char *argv[])
     double denominator = config["denominator"].as<double>();
     LayerDescriptor **layers = new LayerDescriptor* [get_layercount(config)];
     int layer_count = get_layers(layers, config);
-    /*for(int i = 0; i < layer_count; i++)
+    for(int i = 0; i < layer_count; i++)
     {
         cout << layers[i]->name << endl;
         for(string s : layers[i]->output_connections) {
             cout << "  " << s << endl;
         }
-    }*/
+    }
+    //return 0;
     int output_size = layers[layer_count - 1]->row;
     Data_Loader **m, **validation;
     m = new Data_Loader* [traninig_data_len];

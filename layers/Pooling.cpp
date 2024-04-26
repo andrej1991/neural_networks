@@ -231,7 +231,7 @@ void Pooling::layers_output(Matrix **input, int threadindex)
     }
 }
 
-void Pooling::set_threadcount(int threadcnt)
+void Pooling::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
 
     this->destory_outputs_and_erros();

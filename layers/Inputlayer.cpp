@@ -68,7 +68,7 @@ inline int InputLayer::get_threadcount()
     return this->threadcount;
 }
 
-void InputLayer::set_threadcount(int threadcnt)
+void InputLayer::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
     for(int i = 0; i < this->threadcount; i++)
     {
