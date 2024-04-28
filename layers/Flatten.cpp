@@ -55,6 +55,10 @@ Matrix** Flatten::backpropagate(Matrix **input, Layer *next_layer, Feature_map *
 {
     for(int i = 0; i < this->map_count; i++)
     {
+        /*int r = next_layers_error[this->sends_output_to_[0]][0][0].get_row();
+        int c = next_layers_error[this->sends_output_to_[0]][0][0].get_col();
+        cout << "r: " << r << endl;
+        cout << "c: " << c << endl;*/
         this->layers_delta[threadindex][i]->data[0][0] = next_layers_error[this->sends_output_to_[0]][0][0].data[i][0];
     }
     next_layers_error[this->my_index] = this->layers_delta[threadindex];
@@ -116,9 +120,9 @@ inline Feature_map** Flatten::get_feature_maps()
     {
         if(k == this->my_index)
         {
-            input_from_me = k;
             break;
         }
+        input_from_me++;
     }
     Feature_map *next_layers_fmap = this->network_layers[this->sends_output_to_[0]]->get_feature_maps()[input_from_me];
     int kernelsize = this->get_weights_row() * this->get_weights_col();
