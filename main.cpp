@@ -225,6 +225,10 @@ int get_layers(LayerDescriptor **layers, YAML::Node &config)
             {
                 layers[i] = new LayerDescriptor(SOFTMAX, SIGMOID, it->second["weights_row"].as<int>(), connections, it->first.as<string>());
             }
+            else if(lt.compare("flatten") == 0)
+            {
+                layers[i] = new LayerDescriptor(FLATTEN, -1, -1, connections, it->first.as<string>());
+            }
             else if(lt.compare("maxpooling") == 0)
             {
                 layers[i] = new LayerDescriptor(MAX_POOLING, -1, it->second["filter_row"].as<int>(), connections, it->first.as<string>(), it->second["filter_col"].as<int>());
@@ -366,6 +370,7 @@ int main(int argc, char *argv[])
         system(command.c_str());
     }
     n1.get_output(m[0]->input);
+    //return 0;
     //cout << "stohastic gradient descent\n";
     //learning.check_accuracy(validation, 10, 0, true);
     //n1.dropout_probability = dropout_probability;

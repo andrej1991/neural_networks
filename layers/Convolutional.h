@@ -2,6 +2,7 @@
 #define CONVOLUTIONAL_H_INCLUDED
 
 #include "layers.h"
+#include <vector>
 
 class conv_output_helper{
     int threadcount;
@@ -12,14 +13,14 @@ class conv_output_helper{
 };
 
 class conv_backprop_helper{
-    int threadcount;
-    int *layer_count;
+    int threadcount, outputcount;
+    int **layer_count;
     public:
-    Matrix ***padded_delta, **helper, *dilated, **kernel;
+    Matrix ****padded_delta, **helper, *dilated, **kernel;
     conv_backprop_helper(int threadcnt, int row, int col);
     ~conv_backprop_helper();
     void set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt);
-    void set_padded_delta_2d(Matrix **delta, int next_layers_fmapcount, Layer *next_layer, int threadcnt);
+    void set_padded_delta_2d(Matrix ***delta, std::vector<int> sends_output, Layer **network_layers, int threadcnt);
     void delete_padded_delta(int threadindx);
     void zero(int threadid);
     int get_layercount(int threadidx);

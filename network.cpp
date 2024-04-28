@@ -152,21 +152,34 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
+                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, prev_outputlens, this->collect_inputs(i, inputs),
                                                      layerdesc[i]->neuron_type);
+                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case SOFTMAX:
+                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new Softmax(layerdesc[i]->neuron_count, prev_outputlens, this->collect_inputs(i, inputs));
+                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
+                break;
+            case FLATTEN:
+                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
+                this->layers[i] = new Flatten(this->collect_inputs(i, inputs), this->layers, i, inputs, layerdesc[i+1]->row);
+                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case CONVOLUTIONAL:
+                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
                                                     this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
                                                     layerdesc[i]->mapcount, layerdesc[i]->neuron_type, layerdesc[i + 1]->layer_type, i, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
+                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case MAX_POOLING:
+                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new Pooling(layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, this->layers[i - 1]->get_mapcount(), this->layers[i - 1]->get_output_row(),
                                               this->layers[i - 1]->get_output_col(), layerdesc[i + 1]->layer_type);
+                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             default:
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";

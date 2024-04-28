@@ -1,19 +1,19 @@
 #include <string.h>
 #include "layers.h"
 
-Flatten::Flatten(vector<Matrix***> inputs, Layer **layers, int index, vector<int> input_from) : my_index(index)
+Flatten::Flatten(vector<Matrix***> inputs, Layer **layers, int index, vector<int> input_from, int mapcount_) : my_index(index), map_count(mapcount_)
 {
     this->set_layers_inputs(inputs);
     this->gets_input_from_ = input_from;
     this->network_layers = layers;
     this->threadcount = 1;
-    this->build_dinamic_data();
     this->outputlen = 0;
     this->fmap = NULL;
     for(int i : input_from)
     {
         this->outputlen += this->network_layers[i]->get_output_len();
     }
+    this->build_dinamic_data();
 }
 
 Flatten::~Flatten()
@@ -44,9 +44,10 @@ void Flatten::build_dinamic_data()
     for(int i = 0; i < this->threadcount; i++)
     {
         this->output[i] = new Matrix* [1];
-        //this->layers_delta[i] = new Matrix* [1];
+        this->layers_delta[i] = new Matrix* [this->map_count];
         this->output[i][0] = new Matrix(this->outputlen, 1);
-        //this->layers_delta[i][0] = new Matrix(1, 1);
+        for(int j = 0; j < this->map_count; j++)
+            this->layers_delta[i][j] = new Matrix(1, 1);
     }
 }
 
@@ -206,12 +207,12 @@ void Flatten::create_connections(vector<int> input_from, vector<int> output_to)
 {
     this->gets_input_from_ = input_from;
     this->sends_output_to_ = output_to;
-    this->map_count = this->network_layers[this->sends_output_to_[0]]->get_mapcount();
+    /*this->map_count = this->network_layers[this->sends_output_to_[0]]->get_mapcount();
     for(int i = 0; i < this->threadcount; i++)
     {
         this->layers_delta[i] = new Matrix* [this->map_count];
         this->layers_delta[i][0] = new Matrix(1, 1);
-    }
+    }*/
 }
 
 const vector<int>& Flatten::gets_input_from() const
@@ -228,4 +229,14 @@ void Flatten::set_graph_information(Layer **network_layers, int my_index)
 {
     this->my_index = my_index;
     this->network_layers = network_layers;
+}
+
+int Flatten::get_vertical_stride()
+{
+    return 1;
+}
+
+int Flatten::get_horizontal_stride()
+{
+    return 1;
 }

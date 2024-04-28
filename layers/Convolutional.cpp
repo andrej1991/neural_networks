@@ -27,12 +27,13 @@ conv_output_helper::~conv_output_helper()
 
 conv_backprop_helper::conv_backprop_helper(int threadcnt, int row, int col)
 {
-    this->padded_delta = new Matrix** [threadcnt];
+    this->padded_delta = new Matrix*** [threadcnt];
     this->dilated = new Matrix [threadcnt];
     this->helper = new Matrix* [threadcnt];
     this->kernel = new Matrix* [threadcnt];
     this->threadcount = threadcnt;
-    this->layer_count = new int[threadcnt];
+    this->layer_count = new int *[threadcnt];
+    this->layer_count[0] = NULL;
     for(int i = 0; i < threadcnt; i++)
     {
         this->helper[i] = new Matrix(row, col);
@@ -62,59 +63,72 @@ void conv_backprop_helper::delete_padded_delta(int threadindx)
     {
         return;
     }
-    //for(int i = 0; i < this->threadcount; i++)
-    //{
-        for(int j = 0; j < this->layer_count[threadindx]; j++)
+    for(int i = 0; i < this->outputcount; i++)
+    {
+        for(int j = 0; j < this->layer_count[threadindx][i]; j++)
         {
-            delete this->padded_delta[threadindx][j];
+            delete this->padded_delta[threadindx][i][j];
         }
-        delete[] this->padded_delta[threadindx];
-        this->padded_delta[threadindx] = NULL;
-        this->layer_count[threadindx] = 0;
-    //}
+        delete[] this->padded_delta[threadindx][i];
+        this->padded_delta[threadindx][i] = NULL;
+        this->layer_count[threadindx][i] = 0;
+    }
     //delete[] this->padded_delta;
     //this->padded_delta = NULL;
 }
 
 void conv_backprop_helper::set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt)
 {
-    this->layer_count[threadcnt] = next_layers_neuroncount;
+    /*this->layer_count[threadcnt] = next_layers_neuroncount;
     padded_delta[threadcnt] = new Matrix* [next_layers_neuroncount];
     for(int j = 0; j < next_layers_neuroncount; j++)
     {
         padded_delta[threadcnt][j] = new Matrix;
         padded_delta[threadcnt][j][0].data[0][0] = delta[0][0].data[j][0];
         padded_delta[threadcnt][j][0] = padded_delta[threadcnt][j][0].zero_padd(top, right, bottom, left);
-    }
+    }*/
 }
 
-void conv_backprop_helper::set_padded_delta_2d(Matrix **delta, int next_layers_fmapcount, Layer *next_layer, int threadcnt)
+void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int> sends_output, Layer **network_layers, int threadcnt)
 {
-    this->layer_count[threadcnt] = next_layers_fmapcount;
-    padded_delta[threadcnt] = new Matrix* [next_layers_fmapcount];
-    Feature_map** next_layers_fmaps = next_layer->get_feature_maps();
-    for(int j = 0; j < next_layers_fmapcount; j++)
+    if(this->layer_count[0] == NULL)
     {
-        padded_delta[threadcnt][j] = new Matrix;
-        dilated[threadcnt] = delta[j][0].dilate(static_cast<Convolutional*>(next_layer)->get_vertical_stride(), static_cast<Convolutional*>(next_layer)->get_horizontal_stride());
-        padded_delta[threadcnt][j][0] = dilated[threadcnt].zero_padd((next_layers_fmaps[j]->weights[0]->get_row()-1)/2,
-                                                 (next_layers_fmaps[j]->weights[0]->get_col()-1)/2,
-                                                 (next_layers_fmaps[j]->weights[0]->get_row()-1)/2,
-                                                 (next_layers_fmaps[j]->weights[0]->get_col()-1)/2);
+        for(int i = 0; i < this->threadcount; i++)
+        {
+            this->layer_count[i] = new int[sends_output.size()];
+        }
+        this->outputcount = sends_output.size();
+    }
+    for(int i : sends_output)
+    {
+        int next_layers_fmapcount = network_layers[i]->get_mapcount();
+        this->layer_count[threadcnt][i] = next_layers_fmapcount;
+        padded_delta[threadcnt][i] = new Matrix* [next_layers_fmapcount];
+        Feature_map** next_layers_fmaps = network_layers[i]->get_feature_maps();
+        for(int j = 0; j < next_layers_fmapcount; j++)
+        {
+            padded_delta[threadcnt][i][j] = new Matrix;
+            dilated[threadcnt] = delta[i][j][0].dilate(static_cast<Convolutional*>(network_layers[i])->get_vertical_stride(), static_cast<Convolutional*>(network_layers[i])->get_horizontal_stride());
+            padded_delta[threadcnt][i][j][0] = dilated[threadcnt].zero_padd((next_layers_fmaps[j]->weights[0]->get_row()-1)/2,
+                                                     (next_layers_fmaps[j]->weights[0]->get_col()-1)/2,
+                                                     (next_layers_fmaps[j]->weights[0]->get_row()-1)/2,
+                                                     (next_layers_fmaps[j]->weights[0]->get_col()-1)/2);
+        }
     }
 }
 
 void conv_backprop_helper::zero(int threadid)
 {
-    for(int i = 0; i < this->layer_count[threadid]; i++)
+    for(int j = 0; j < this->outputcount; j++)
     {
-        this->padded_delta[threadid][i]->zero();
+        for(int i = 0; i < this->layer_count[threadid][j]; i++)
+            this->padded_delta[threadid][j][i]->zero();
     }
 }
 
 int conv_backprop_helper::get_layercount(int threadidx)
 {
-    return this->layer_count[threadidx];
+    return this->layer_count[threadidx][0];
 }
 
 Convolutional::Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, int my_index_, Padding &p, int vertical_stride, int horizontal_stride):
@@ -236,11 +250,11 @@ void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, F
 Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***delta, int threadindex)
 {
     Feature_map** next_layers_fmaps;
-    if(this->next_layers_type != POOLING)
+    /*if(this->next_layers_type != POOLING)
     {
         next_layers_fmaps = next_layer->get_feature_maps();
-    }
-    int next_layers_fmapcount = next_layer->get_mapcount();
+    }*/
+    int next_layers_fmapcount;// = next_layer->get_mapcount();
     this->derivate_layers_output(input, threadindex);
     /*if(this->next_layers_type == FULLY_CONNECTED or this->next_layers_type == SOFTMAX)
     {
@@ -273,29 +287,36 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         //this->backprop_helper->zero(threadindex);
     }
     else if (this->next_layers_type == CONVOLUTIONAL)
-    {*/
-        if(this->backprop_helper->get_layercount(threadindex) != next_layers_fmapcount)
+    {
+    if(this->backprop_helper->get_layercount(threadindex) != next_layers_fmapcount)
+    {
+        this->backprop_helper->delete_padded_delta(threadindex);
+    }
+    if(this->backprop_helper->padded_delta[threadindex] == NULL)
+    {
+        this->backprop_helper->set_padded_delta_2d(delta, this->sends_output_to_, this->network_layers, threadindex);
+    }*/
+    this->backprop_helper->delete_padded_delta(threadindex);
+    this->backprop_helper->set_padded_delta_2d(delta, this->sends_output_to_, this->network_layers, threadindex);
+    //this->backprop_helper->zero(threadindex);
+    for(int i = 0; i < this->map_count; i++)
+    {
+        this->layers_delta_helper[threadindex][i][0].zero();
+        for(int next_layer_index : this->sends_output_to_)
         {
-            this->backprop_helper->delete_padded_delta(threadindex);
-        }
-        if(this->backprop_helper->padded_delta[threadindex] == NULL)
-        {
-            this->backprop_helper->set_padded_delta_2d(delta, next_layers_fmapcount, next_layer, threadindex);
-        }
-        //this->backprop_helper->zero(threadindex);
-        for(int i = 0; i < this->map_count; i++)
-        {
-            this->layers_delta_helper[threadindex][i][0].zero();
+            next_layers_fmaps = this->network_layers[next_layer_index]->get_feature_maps();
+            next_layers_fmapcount = this->network_layers[next_layer_index]->get_mapcount();
             for(int j = 0; j < next_layers_fmapcount; j++)
             {
                 //calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], this->layers_delta_helper[threadindex][i],
                   //                     next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0]);
-                full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][j][0],
+                full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][next_layer_index][j][0],
                                             next_layers_fmaps[j]->weights[0][0],
                                             this->layers_delta_helper[threadindex][i][0],
                                             1, 1);
             }
         }
+    }
         //this->backprop_helper->zero(threadindex);
     //}
     for(int i = 0; i < this->map_count; i++)
@@ -306,7 +327,11 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         }
         else
         {
-            this->layers_delta[threadindex][i][0] = hadamart_product(delta[i][0], this->output_derivative[threadindex][i][0]);
+            this->layers_delta[threadindex][i][0].zero();
+            for(int delta_index : this->sends_output_to_)
+            {
+                this->layers_delta[threadindex][i][0] += hadamart_product(delta[delta_index][i][0], this->output_derivative[threadindex][i][0]);
+            }
         }
         this->backprop_helper->dilated[threadindex] = this->layers_delta[threadindex][i][0].dilate(this->vertical_stride, this->horizontal_stride);
         nabla[i]->weights[0][0].zero();
@@ -356,14 +381,17 @@ void Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **i
     helper+=this->fmap[map_index]->biases[0][0];
 }
 
-void Convolutional::layers_output(Matrix **input, int threadindex)
+void Convolutional::layers_output(Matrix **inpput, int threadindex)
 {
     this->feedforward_helpter->helper[threadindex]->zero();
-    for(int map_index = 0; map_index < this->map_count; map_index++)
+    for(int i : this->gets_input_from_)
     {
-        this->fulldepth_conv(this->feedforward_helpter->helper[threadindex][0], this->feedforward_helpter->convolved[threadindex][0], input, map_index);
-        this->neuron.neuron(this->feedforward_helpter->helper[threadindex][0], this->outputs[threadindex][map_index][0]);
-        this->feedforward_helpter->helper[threadindex]->zero();
+        for(int map_index = 0; map_index < this->map_count; map_index++)
+        {
+            this->fulldepth_conv(this->feedforward_helpter->helper[threadindex][0], this->feedforward_helpter->convolved[threadindex][0], this->network_layers[i]->get_output(threadindex), map_index);
+            this->neuron.neuron(this->feedforward_helpter->helper[threadindex][0], this->outputs[threadindex][map_index][0]);
+            this->feedforward_helpter->helper[threadindex]->zero();
+        }
     }
 }
 
@@ -417,12 +445,12 @@ void Convolutional::set_input(Matrix **input, int threadindex)
 
 Matrix** Convolutional::get_output(int threadindex)
 {
-    if(this->next_layers_type == FULLY_CONNECTED)
+    /*if(this->next_layers_type == FULLY_CONNECTED)
     {
         this->flatten(threadindex);
         return this->flattened_output[threadindex];
     }
-    else
+    else*/
         return this->outputs[threadindex];
 }
 

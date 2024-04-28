@@ -109,6 +109,8 @@ class Layer{
     virtual const vector<int>& gets_input_from() const {throw runtime_error("Unimplemented function: Layer::gets_input_from\n");}
     virtual const vector<int>& sends_output_to() const {throw runtime_error("Unimplemented function: Layer::sends_output_to\n");}
     virtual void set_graph_information(Layer **network_layers, int my_index) {throw runtime_error("Unimplemented function: Layer::get_graph_information\n");}
+    virtual int get_vertical_stride(){throw runtime_error("Unimplemented function: Layer::get_vertical_stride\n");}
+    virtual int get_horizontal_stride(){throw runtime_error("Unimplemented function: Layer::get_horizontal_stride\n");}
 };
 
 class FullyConnected : public Layer {
@@ -202,7 +204,7 @@ class InputLayer : public Layer {
     inline int get_threadcount();
 };
 
-class Flatten{
+class Flatten : public Layer{
     Matrix ***output, ***layers_delta;
     vector<Matrix***> inputs;
     vector<int> gets_input_from_, sends_output_to_;
@@ -214,33 +216,35 @@ class Flatten{
     virtual void destroy_dinamic_data();
     virtual void build_dinamic_data();
     public:
-    Flatten(vector<Matrix***> inputs, Layer **network_layers, int index, vector<int> input_from);
+    Flatten(vector<Matrix***> inputs, Layer **network_layers, int index, vector<int> input_from, int mapcout_);
     virtual ~Flatten();
-    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***next_layers_error, int threadindex) = 0;
-    virtual void layers_output(Matrix **input, int threadindex) = 0;
-    virtual Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex) = 0;
-    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex) = 0;
-    virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer) = 0;
-    virtual void set_input(Matrix **input, int threadindex) = 0;
-    virtual inline Matrix** get_output(int threadindex = 0) = 0;
-    virtual inline Feature_map** get_feature_maps() = 0;
-    virtual inline short get_layer_type() = 0;
-    virtual inline int get_output_len() = 0;
-    virtual inline int get_output_row() = 0;
-    virtual inline int get_output_col() = 0;
-    virtual int get_mapcount() = 0;
-    virtual int get_mapdepth() = 0;
-    virtual int get_weights_row() = 0;
-    virtual int get_weights_col() = 0;
-    virtual Matrix drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL) = 0;
-    virtual void restore_neurons(Matrix *removed_colums = NULL) = 0;
-    virtual void store(std::ofstream &params) = 0;
-    virtual void load(std::ifstream &params) = 0;
+    virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***next_layers_error, int threadindex);
+    virtual void layers_output(Matrix **input, int threadindex);
+    virtual Matrix* get_output_error(Matrix **input, Matrix &required_output, int costfunction_type, int threadindex);
+    virtual Matrix** derivate_layers_output(Matrix **input, int threadindex);
+    virtual void update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *layer);
+    virtual void set_input(Matrix **input, int threadindex);
+    virtual inline Matrix** get_output(int threadindex = 0);
+    virtual inline Feature_map** get_feature_maps();
+    virtual inline short get_layer_type();
+    virtual inline int get_output_len();
+    virtual inline int get_output_row();
+    virtual inline int get_output_col();
+    virtual int get_mapcount();
+    virtual int get_mapdepth();
+    virtual int get_weights_row();
+    virtual int get_weights_col();
+    virtual Matrix drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL);
+    virtual void restore_neurons(Matrix *removed_colums = NULL);
+    virtual void store(std::ofstream &params);
+    virtual void load(std::ifstream &params);
     virtual void set_threadcount(int threadcount, vector<Matrix***> inputs_);
     virtual inline int get_threadcount();
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
     virtual void set_graph_information(Layer **network_layers, int my_index);
+    virtual int get_vertical_stride();
+    virtual int get_horizontal_stride();
 };
 #endif // LAYERS_H_INCLUDED
