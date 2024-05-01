@@ -69,7 +69,7 @@ void Flatten::layers_output(Matrix **input, int threadindex)
 {
     for(int i : this->gets_input_from_)
     {
-        int map_count_ = this->network_layers[this->gets_input_from_[i]]->get_mapcount();
+        int map_count_ = this->network_layers[i]->get_mapcount();
         int output_size = this->network_layers[i]->get_output_row() * this->network_layers[i]->get_output_col();
         int output_size_in_bytes = output_size * sizeof(double);
         for(int map_index = 0; map_index < map_count_; map_index++)

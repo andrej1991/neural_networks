@@ -38,6 +38,7 @@ class Matrix
     Matrix square_element_by();
     Matrix dilate(int vertical_stride, int horizontal_stride);
     Matrix zero_padd(int top, int right, int bottom, int left);
+    void zero_padd(int top, int right, int bottom, int left, Matrix &result);
     friend void convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride);
     friend void full_depth_convolution(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride);
     friend void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output, int vertical_stride, int horizontal_stride);

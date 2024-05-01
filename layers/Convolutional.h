@@ -36,13 +36,13 @@ class Convolutional : public Layer {
     int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col, threadcount, input_channel_count, my_index;
     short int layer_type;
     Neuron neuron;
-    void fulldepth_conv(Matrix &helper, Matrix &convolved, Matrix **input, int map_index);
+    int fulldepth_conv(Matrix &helper, Matrix &convolved, int input_index, int map_index, int threadindex, int chanel_index);
     void destory_outputs_and_erros();
     void build_outputs_and_errors();
     vector<int> gets_input_from_, sends_output_to_;
     Layer **network_layers;
     public:
-    Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, int my_index_, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
+    Convolutional(Layer **network_layers, vector<int> input_from, int kern_row, int kern_col, int map_count, int neuron_type, int my_index_, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
     ~Convolutional();
     Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
@@ -63,7 +63,7 @@ class Convolutional : public Layer {
     int get_weights_col();
     int get_vertical_stride();
     int get_horizontal_stride();
-    void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
+    //void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
     Matrix drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL){};
     void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);

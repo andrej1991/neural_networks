@@ -328,6 +328,21 @@ Matrix Matrix::zero_padd(int top, int right, int bottom, int left)
     return ret;
 }
 
+void Matrix::zero_padd(int top, int right, int bottom, int left, Matrix &result)
+{
+    if((result.row == this->row + top + bottom) && (result.col == this->col + right + left))
+    {
+        for(int i = 0; i < this->row; i++)
+        {
+            memcpy(&(result.data[top + i][left]), this->data[i], this->col * sizeof(double));
+        }
+    }
+    else
+    {
+        throw std::invalid_argument("In Matrix::zero_padd the result must fullfill the following criteria: (result.row == this->row + top + bottom) && (result.col == this->col + right + left)!\n");
+    }
+}
+
 void cross_correlation(Matrix &input, Matrix &kernel, Matrix &output,  int vertical_stride, int horizontal_stride)
 {
     double helper;

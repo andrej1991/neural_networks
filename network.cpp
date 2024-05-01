@@ -170,9 +170,8 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
             case CONVOLUTIONAL:
                 cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
-                this->layers[i] = new Convolutional(this->layers[i - 1]->get_output_row(), this->layers[i - 1]->get_output_col(),
-                                                    this->layers[i - 1]->get_mapcount(), layerdesc[i]->row, layerdesc[i]->col,
-                                                    layerdesc[i]->mapcount, layerdesc[i]->neuron_type, layerdesc[i + 1]->layer_type, i, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
+                this->layers[i] = new Convolutional(this->layers, inputs, layerdesc[i]->row, layerdesc[i]->col,
+                                                    layerdesc[i]->mapcount, layerdesc[i]->neuron_type, i, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
                 cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case MAX_POOLING:
@@ -261,6 +260,16 @@ Matrix Network::get_output(Matrix **input, int threadindex)
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input, threadindex);
     Matrix ret = *(this->layers[this->layers_num - 1]->get_output(threadindex)[0]);
+    print_mtx(input[0][0]);
+    print_mtx(layers[-1]->get_output(threadindex)[0][0]);
+    int layerindex = 3;
+    for(int i = 0; i < layers[layerindex]->get_mapcount(); i++)
+    {
+        //print_mtx(layers[layerindex]->get_feature_maps()[i]->weights[0][0]);
+        print_mtx(layers[layerindex]->get_output(threadindex)[i][0]);
+        cout << i << endl;
+    }
+    print_mtx(ret);
     return ret;
 }
 
