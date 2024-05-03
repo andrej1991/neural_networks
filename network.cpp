@@ -137,7 +137,6 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count, layerdesc[i]->output_connections, layerdesc[i]->name,
                                                 layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
         inputs.clear();
-        prev_outputlens.clear();
         if(i == 0)
         {
             inputs.push_back(-1);
@@ -145,47 +144,43 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         {
             inputs = get_inputs(layerdesc, layers_num, layerdesc[i]->get_name(), layer_name_to_index);
         }
-        for(int input_index : inputs)
-        {
-            prev_outputlens.push_back(this->layers[input_index]->get_output_len());
-        }
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
-                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
-                this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, prev_outputlens, this->collect_inputs(i, inputs),
-                                                     layerdesc[i]->neuron_type);
-                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
+                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
+                this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers, inputs,
+                                                     layerdesc[i]->neuron_type, i);
+                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case SOFTMAX:
-                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
-                this->layers[i] = new Softmax(layerdesc[i]->neuron_count, prev_outputlens, this->collect_inputs(i, inputs));
-                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
+                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
+                this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers, inputs, i);
+                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case FLATTEN:
-                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
+                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new Flatten(this->collect_inputs(i, inputs), this->layers, i, inputs, layerdesc[i+1]->row);
-                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
+                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case CONVOLUTIONAL:
-                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
+                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers, inputs, layerdesc[i]->row, layerdesc[i]->col,
                                                     layerdesc[i]->mapcount, layerdesc[i]->neuron_type, i, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
-                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
+                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case MAX_POOLING:
-                cout << "creating layer: " << layerdesc[i]->get_name() << endl;
+                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new Pooling(layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, this->layers[i - 1]->get_mapcount(), this->layers[i - 1]->get_output_row(),
                                               this->layers[i - 1]->get_output_col(), layerdesc[i + 1]->layer_type);
-                cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
+                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             default:
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
         }
         this->layers[i]->create_connections(inputs, get_connections_as_int(layerdesc[i], layer_name_to_index));
-        this->layers[i]->set_graph_information(this->layers, i);
+        this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
     }
     this->deltas[this->layers_num - 1] = new Matrix*;
 }
@@ -260,16 +255,16 @@ Matrix Network::get_output(Matrix **input, int threadindex)
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input, threadindex);
     Matrix ret = *(this->layers[this->layers_num - 1]->get_output(threadindex)[0]);
-    print_mtx(input[0][0]);
+    /*print_mtx(input[0][0]);
     print_mtx(layers[-1]->get_output(threadindex)[0][0]);
-    int layerindex = 3;
+    int layerindex = 4;
     for(int i = 0; i < layers[layerindex]->get_mapcount(); i++)
     {
         //print_mtx(layers[layerindex]->get_feature_maps()[i]->weights[0][0]);
         print_mtx(layers[layerindex]->get_output(threadindex)[i][0]);
         cout << i << endl;
     }
-    print_mtx(ret);
+    print_mtx(ret);*/
     return ret;
 }
 

@@ -229,12 +229,6 @@ const vector<int>& Flatten::sends_output_to() const
     return this->sends_output_to_;
 }
 
-void Flatten::set_graph_information(Layer **network_layers, int my_index)
-{
-    this->my_index = my_index;
-    this->network_layers = network_layers;
-}
-
 int Flatten::get_vertical_stride()
 {
     return 1;

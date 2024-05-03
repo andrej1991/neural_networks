@@ -181,6 +181,7 @@ Convolutional::Convolutional(Layer **network_layers, vector<int> input_from, int
     this->threadcount = 1;
     this->layer_type = CONVOLUTIONAL;
     this->fmap = new Feature_map* [map_count];
+    //double deviation = 2.0/sqrt(kern_row * kern_col);
     double deviation = 1.0/sqrt(kern_row * kern_col * input_channel_count);
     double mean = 0.0;
     if(neuron_type == SIGMOID)
@@ -191,9 +192,10 @@ Convolutional::Convolutional(Layer **network_layers, vector<int> input_from, int
     {
         mean = deviation;
     }
+    int _mapdepth = (this->get_chanel_index(this->input_channel_count) == 0) ? 1 : this->input_channel_count;
     for(int i = 0; i < map_count; i++)
     {
-        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, 1, this->output_row, this->output_col);
+        fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, _mapdepth, this->output_row, this->output_col);
         fmap[i]->initialize_weights(deviation);
         fmap[i]->initialize_biases(deviation);
     }
@@ -264,6 +266,10 @@ void Convolutional::build_outputs_and_errors()
         }
     }
 }
+inline int Convolutional::get_chanel_index(int i)
+{
+    return i;
+}
 
 /*void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap)
 {
@@ -283,6 +289,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
     Feature_map** next_layers_fmaps;
     int next_layers_fmapcount;// = next_layer->get_mapcount();
     this->derivate_layers_output(input, threadindex);
+    //if(this->backprop_helper->padded_delta[threadindex] == NULL)
     this->backprop_helper->set_padded_delta_2d(delta, this->sends_output_to_, this->network_layers, threadindex);
     //this->backprop_helper->zero(threadindex);
     int delta_index;
@@ -299,7 +306,7 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
                 //calculate_delta_helper(this->backprop_helper->padded_delta[threadindex][j], this->layers_delta_helper[threadindex][i],
                   //                     next_layers_fmaps[j]->weights[i][0], this->backprop_helper->helper[threadindex][0]);
                 full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][delta_index][j][0],
-                                            next_layers_fmaps[j]->weights[0][0],
+                                            next_layers_fmaps[j]->weights[this->get_chanel_index(i)][0],
                                             this->layers_delta_helper[threadindex][i][0],
                                             1, 1);
             }
@@ -308,10 +315,11 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
     }
     for(int i = 0; i < this->map_count; i++)
     {
+        /*cout << this->next_layers_type << endl;
         if(this->next_layers_type != POOLING)
-        {
+        {*/
             this->layers_delta[threadindex][i][0] = hadamart_product(this->layers_delta_helper[threadindex][i][0], this->output_derivative[threadindex][i][0]);
-        }
+        /*}
         else
         {
             this->layers_delta[threadindex][i][0].zero();
@@ -319,14 +327,15 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
             {
                 this->layers_delta[threadindex][i][0] += hadamart_product(delta[delta_index][i][0], this->output_derivative[threadindex][i][0]);
             }
-        }
+        }*/
         this->backprop_helper->dilated[threadindex] = this->layers_delta[threadindex][i][0].dilate(this->vertical_stride, this->horizontal_stride);
-        nabla[i]->weights[0][0].zero();
+        //nabla[i]->weights[0][0].zero();
         for(int k : this->gets_input_from_)
         {
             for(int j = 0; j < this->network_layers[k]->get_mapcount(); j++)
             {
-                full_depth_cross_correlation(this->network_layers[k]->get_output(threadindex)[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[0][0], this->vertical_stride, this->horizontal_stride);
+                nabla[i]->weights[this->get_chanel_index(j)][0].zero();
+                full_depth_cross_correlation(this->network_layers[k]->get_output(threadindex)[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[this->get_chanel_index(j)][0], this->vertical_stride, this->horizontal_stride);
             }
         }
         nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
@@ -368,7 +377,7 @@ int Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, int input_i
     for(int tmp = 0; tmp < target; tmp++)
     {
         //full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[chanel_index][0], helper, this->vertical_stride, this->horizontal_stride);
-        full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[0][0], helper, this->vertical_stride, this->horizontal_stride);
+        full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[this->get_chanel_index(chanel_index)][0], helper, this->vertical_stride, this->horizontal_stride);
         chanel_index++;
     }
     helper+=this->fmap[map_index]->biases[0][0];
@@ -422,10 +431,9 @@ void Convolutional::flatten(int threadindex)
 void Convolutional::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
     this->destory_outputs_and_erros();
-
     this->threadcount = threadcnt;
-
     this->build_outputs_and_errors();
+    this->set_layers_inputs(inputs_);
 }
 
 int Convolutional::get_threadcount()
@@ -531,8 +539,11 @@ void Convolutional::load(std::ifstream &params)
     }
 }
 
-void Convolutional::set_graph_information(Layer **network_layers, int my_index)
+void Convolutional::set_layers_inputs(vector<Matrix***> inputs_)
 {
-    this->my_index = my_index;
-    this->network_layers = network_layers;
+    for(Matrix ***inp : inputs_)
+    {
+        this->inputs.push_back(inp);
+    }
 }
+

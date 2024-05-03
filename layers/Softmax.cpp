@@ -2,7 +2,7 @@
 #include <math.h>
 
 
-Softmax::Softmax(int row, vector<int> prev_outputlens, vector<Matrix***> inputs): FullyConnected(row, prev_outputlens, inputs, -1)
+Softmax::Softmax(int row, Layer **layers, vector<int> input_from, int my_index): FullyConnected(row, layers, input_from, -1, my_index)
 {
     this->layer_type = SOFTMAX;
     delete this->output_derivative[0][0];

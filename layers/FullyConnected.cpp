@@ -2,19 +2,20 @@
 #include <random>
 #include "layers.h"
 
-FullyConnected::FullyConnected(int row, vector<int> prev_outputlens, vector<Matrix***> inputs_, int neuron_type):
-    neuron(neuron_type)
+FullyConnected::FullyConnected(int row, Layer **layers, vector<int> input_from, int neuron_type, int _my_index):
+    neuron(neuron_type), my_index(_my_index)
 {
-    this->set_layers_inputs(inputs_);
+    this->network_layers = layers;
+    this->gets_input_from_ = input_from;
     this->outputlen = row;
     this->layer_type = FULLY_CONNECTED;
     double deviation = 1.0;
     double mean = 0.0;
     this->fmap = new Feature_map* [inputs.size()];
-    for(int i = 0; i < inputs.size(); i++)
+    for(int i = 0; i < input_from.size(); i++)
     {
-        deviation = 1.0/sqrt(prev_outputlens[i]);
-        this->fmap[i] = new Feature_map(row, prev_outputlens[i], 1, row);
+        deviation = 1.0/sqrt(this->network_layers[input_from[i]]->get_output_len());
+        this->fmap[i] = new Feature_map(row, this->network_layers[input_from[i]]->get_output_len(), 1, row);
         if(neuron_type == SIGMOID)
         {
             mean = 0.5;

@@ -108,7 +108,7 @@ class Layer{
     virtual void create_connections(vector<int> input_from, vector<int> output_to) {throw runtime_error("Unimplemented function: Layer::input_from\n");}
     virtual const vector<int>& gets_input_from() const {throw runtime_error("Unimplemented function: Layer::gets_input_from\n");}
     virtual const vector<int>& sends_output_to() const {throw runtime_error("Unimplemented function: Layer::sends_output_to\n");}
-    virtual void set_graph_information(Layer **network_layers, int my_index) {throw runtime_error("Unimplemented function: Layer::get_graph_information\n");}
+    virtual void set_layers_inputs(vector<Matrix***> inputs_) {throw runtime_error("Unimplemented function: Layer::get_graph_information\n");}
     virtual int get_vertical_stride(){throw runtime_error("Unimplemented function: Layer::get_vertical_stride\n");}
     virtual int get_horizontal_stride(){throw runtime_error("Unimplemented function: Layer::get_horizontal_stride\n");}
 };
@@ -130,7 +130,7 @@ class FullyConnected : public Layer {
     vector<Matrix***> inputs;
     virtual void set_layers_inputs(vector<Matrix***> inputs_);
     public:
-    FullyConnected(int row, vector<int> prev_outputlens, vector<Matrix***> inputs_, int neuron_type);
+    FullyConnected(int row, Layer **layers, vector<int> input_from, int neuron_type, int my_index);
     ~FullyConnected();
     virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     virtual void layers_output(Matrix **input, int threadindex);
@@ -162,7 +162,7 @@ class FullyConnected : public Layer {
 
 class Softmax : public FullyConnected {
     public:
-    Softmax(int row, vector<int> prev_outputlens, vector<Matrix***> inputs);
+    Softmax(int row, Layer **layers, vector<int> input_from, int my_index);
     ~Softmax();
     Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);
@@ -208,7 +208,6 @@ class Flatten : public Layer{
     Matrix ***output, ***layers_delta;
     vector<Matrix***> inputs;
     vector<int> gets_input_from_, sends_output_to_;
-    virtual void set_layers_inputs(vector<Matrix***> inputs_);
     Layer **network_layers;
     Feature_map **fmap;
     short int layer_type;
@@ -243,7 +242,7 @@ class Flatten : public Layer{
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
-    virtual void set_graph_information(Layer **network_layers, int my_index);
+    virtual void set_layers_inputs(vector<Matrix***> inputs_);
     virtual int get_vertical_stride();
     virtual int get_horizontal_stride();
 };

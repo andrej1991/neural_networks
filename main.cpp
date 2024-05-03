@@ -358,11 +358,11 @@ int main(int argc, char *argv[])
     Network n4(layer_count, layers, input_row, input_col, input_channel_count);*/
 
 
-    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
-    //StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
+    //StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
+    StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
     learning.monitor_training_duration = true;
     n1.get_output(m[0]->input);
-    return 0;
+    //return 0;
     if(cpulimit > 0)
     {
         pid_t pid = getpid();
@@ -374,7 +374,7 @@ int main(int argc, char *argv[])
     //cout << "stohastic gradient descent\n";
     //learning.check_accuracy(validation, 10, 0, true);
     //n1.dropout_probability = dropout_probability;
-    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
     //learning.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
