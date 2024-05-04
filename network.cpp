@@ -30,49 +30,72 @@ Network::Network(char *data)
 {
     ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
     ///int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1
-    int dummy1=0;
-    double dummy2 = 0.0;
+    int _size, vec_size;
+    char *name, *conn;
+    vector<string> output_connections;
     ifstream file (data, ios::in|ios::binary);
     if(file.is_open())
+    {
+        int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride;
+        file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
+        file.read(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
+        file.read(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
+        file.read(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
+        this->total_layers_num = this->layers_num + 1;
+        this->deltas = new Matrix** [this->layers_num];
+        LayerDescriptor *dsc[this->layers_num];
+        for(int i = 0; i < this->layers_num; i++)
         {
-            int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride;
-            file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(dummy1)), sizeof(int));
-            file.read(reinterpret_cast<char *>(&(dummy2)), sizeof(double));
-            this->total_layers_num = this->layers_num + 1;
-            this->deltas = new Matrix** [this->layers_num];
-            LayerDescriptor *dsc[this->layers_num];
-            for(int i = 0; i < this->layers_num; i++)
-                {
-                    file.read(reinterpret_cast<char *>(&f_layer_type), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_neuron_type), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_neuron_count), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_col), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_mapcount), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_vertical_stride), sizeof(int));
-                    file.read(reinterpret_cast<char *>(&f_horizontal_stride), sizeof(int));
-                    ///TODO: rewrite the loading and saving accordingly
-                    dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride);
-                }
-            this->construct_layers(dsc);
-            for(int i = 0; i < this->layers_num; i++)
-                {
-                    this->layers[i]->load(file);
-                }
-            file.close();
-            for(int i = 0; i < this->layers_num; i++)
-                {
-                    delete dsc[i];
-                }
+            file.read(reinterpret_cast<char *>(&f_layer_type), sizeof(int));
+            file.read(reinterpret_cast<char *>(&f_neuron_type), sizeof(int));
+            file.read(reinterpret_cast<char *>(&f_neuron_count), sizeof(int));
+            file.read(reinterpret_cast<char *>(&f_col), sizeof(int));
+            file.read(reinterpret_cast<char *>(&f_mapcount), sizeof(int));
+            file.read(reinterpret_cast<char *>(&f_vertical_stride), sizeof(int));
+            file.read(reinterpret_cast<char *>(&f_horizontal_stride), sizeof(int));
+            file.read(reinterpret_cast<char *>(&_size), sizeof(int));
+            name = new char [_size];
+            file.read(name, _size);
+            file.read(reinterpret_cast<char *>(&vec_size), sizeof(int));
+            for(int j = 0; j < vec_size; j++)
+            {
+                file.read(reinterpret_cast<char *>(&_size), sizeof(int));
+                conn = new char [_size];
+                file.read(conn, _size);
+                output_connections.push_back(string(conn));
+                delete conn;
+            }
+            /*cout << i  << endl;
+            cout << f_layer_type << endl;
+            cout << f_neuron_type << endl;
+            cout << f_neuron_count << endl;
+            //cout << output_connections << endl;
+            cout << string(name) << endl;
+            cout << f_col << endl;
+            cout <<  f_mapcount << endl;
+            cout << f_vertical_stride << endl;
+            cout << f_horizontal_stride << endl;*/
+            ///TODO: rewrite the loading and saving accordingly
+            dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, output_connections, string(name), f_col, f_mapcount, f_vertical_stride, f_horizontal_stride);
+            delete name;
+            output_connections.clear();
         }
+        this->construct_layers(dsc);
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            this->layers[i]->load(file);
+        }
+        file.close();
+        for(int i = 0; i < this->layers_num; i++)
+        {
+            delete dsc[i];
+        }
+    }
     else
-        {
-            cerr << "Unable to open the file:" << '"' << data << '"' << endl;
-            throw exception();
-        }
+    {
+        cerr << "Unable to open the file:" << '"' << data << '"' << endl;
+        throw exception();
+    }
 }
 
 Network::~Network()
@@ -171,8 +194,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 break;
             case MAX_POOLING:
                 //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
-                this->layers[i] = new Pooling(layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, this->layers[i - 1]->get_mapcount(), this->layers[i - 1]->get_output_row(),
-                                              this->layers[i - 1]->get_output_col(), layerdesc[i + 1]->layer_type);
+                this->layers[i] = new Pooling(this->layers, inputs, layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, i);
                 //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             default:
@@ -189,38 +211,53 @@ void Network::store(char *filename)
 {
     ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
     ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
-    int dummy1;
-    double dummy2;
+    //int dummy1;
+    //double dummy2;
+    int _size, vec_size;
+    const char *str;
     ofstream network_params (filename, ios::out | ios::binary);
     if(network_params.is_open())
+    {
+        network_params.write(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
+        network_params.write(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
+        network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
+        network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
+        //network_params.write(reinterpret_cast<char *>(&(dummy1)), sizeof(int));
+        //network_params.write(reinterpret_cast<char *>(&(dummy2)), sizeof(double));
+        for(int i=0; i<this->layers_num; i++)
         {
-            network_params.write(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(dummy1)), sizeof(int));
-            network_params.write(reinterpret_cast<char *>(&(dummy2)), sizeof(double));
-            for(int i=0; i<this->layers_num; i++)
-                {
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_type)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->col)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->mapcount)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->vertical_stride)), sizeof(int));
-                    network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->horizontal_stride)), sizeof(int));
-                }
-            for(int i = -1; i < this->layers_num; i++)
-                {
-                    this->layers[i]->store(network_params);
-                }
-            network_params.close();
+            _size = this->layerdsc[i]->name.size();
+            str = this->layerdsc[i]->name.c_str();
+            vec_size = this->layerdsc[i]->output_connections.size();
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_type)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->col)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->mapcount)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->vertical_stride)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->horizontal_stride)), sizeof(int));
+            network_params.write(reinterpret_cast<char *>(&(_size)), sizeof(int));
+            network_params.write(str, this->layerdsc[i]->name.size());
+            network_params.write(reinterpret_cast<char *>(&(vec_size)), sizeof(int));
+            for(int j = 0; j < this->layerdsc[i]->output_connections.size(); j++)
+            {
+                _size = this->layerdsc[i]->output_connections[j].size();
+                str = this->layerdsc[i]->output_connections[j].c_str();
+                network_params.write(reinterpret_cast<char *>(&(_size)), sizeof(int));
+                network_params.write(str, this->layerdsc[i]->output_connections[j].size());
+            }
         }
+        for(int i = -1; i < this->layers_num; i++)
+        {
+            this->layers[i]->store(network_params);
+        }
+        network_params.close();
+    }
     else
-        {
-            cerr << "Unable to open the file:" << '"' << filename << '"' << endl;
-            throw exception();
-        }
+    {
+        cerr << "Unable to open the file:" << '"' << filename << '"' << endl;
+        throw exception();
+    }
 }
 
 vector<Matrix***> Network::collect_inputs(int current_index, vector<int> inputs)
@@ -293,15 +330,26 @@ void Network::set_threadcount(int threadcnt)
     if(this->threadcount != threadcnt)
     {
         map<std::string, int> layer_name_to_index;
+        vector<int> inputs;
         for(int i = 0; i < this->layers_num; i++)
         {
             layer_name_to_index[this->layerdsc[i]->get_name()] = i;
         }
-        for(int i = -1; i < this->layers_num; i++)
+        this->layers[-1]->set_threadcount(threadcnt);
+        for(int i = 0; i < this->layers_num; i++)
         {
-            this->layers[i]->set_threadcount(threadcnt, this->collect_inputs(i, get_inputs(this->layerdsc, layers_num, this->layerdsc[i]->get_name(), layer_name_to_index)));
+            inputs.clear();
+            if(i == 0)
+            {
+                inputs.push_back(-1);
+            } else
+            {
+                inputs = get_inputs(this->layerdsc, layers_num, this->layerdsc[i]->get_name(), layer_name_to_index);
+            }
+            this->layers[i]->set_threadcount(threadcnt, this->collect_inputs(i, inputs));
         }
         this->threadcount = threadcnt;
     }
+    cout << "threadcounts set\n";
 }
 

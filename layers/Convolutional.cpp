@@ -155,7 +155,7 @@ int conv_backprop_helper::get_layercount(int threadidx)
 
 Convolutional::Convolutional(Layer **network_layers, vector<int> input_from, int kern_row, int kern_col, int map_count, int neuron_type, int my_index_, Padding &p, int vertical_stride, int horizontal_stride):
                     kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride), my_index(my_index_),
-                    next_layers_type(next_layers_type), pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
+                    pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
 {
     this->input_row = network_layers[input_from[0]]->get_output_row();
     this->input_col = network_layers[input_from[0]]->get_output_col();
@@ -224,13 +224,13 @@ void Convolutional::destory_outputs_and_erros()
             delete this->layers_delta_helper[i][j];
         }
         delete[] this->outputs[i];
-        delete[] this->flattened_output[i];
+        //delete[] this->flattened_output[i];
         delete[] this->output_derivative[i];
         delete[] this->layers_delta[i];
         delete[] this->layers_delta_helper[i];
     }
     delete[] this->outputs;
-    delete[] this->flattened_output;
+    //delete[] this->flattened_output;
     delete[] this->output_derivative;
     delete[] this->layers_delta;
     delete[] this->layers_delta_helper;
@@ -245,18 +245,18 @@ void Convolutional::build_outputs_and_errors()
     this->backprop_helper = new conv_backprop_helper(this->threadcount, this->output_row, this->output_col);
 
     this->outputs = new Matrix** [this->threadcount];
-    this->flattened_output = new Matrix** [this->threadcount];
+    //this->flattened_output = new Matrix** [this->threadcount];
     this->output_derivative = new Matrix** [this->threadcount];
     this->layers_delta = new Matrix** [this->threadcount];
     this->layers_delta_helper = new Matrix** [this->threadcount];
     for(int i = 0; i < this->threadcount; i++)
     {
         this->outputs[i] = new Matrix* [this->map_count];
-        this->flattened_output[i] = new Matrix* [1];
+        //this->flattened_output[i] = new Matrix* [1];
         this->output_derivative[i] = new Matrix* [this->map_count];
         this->layers_delta[i] = new Matrix* [this->map_count];
         this->layers_delta_helper[i] = new Matrix* [this->map_count];
-        this->flattened_output[i][0] = new Matrix(this->map_count * this->output_row * this->output_col, 1);
+        //this->flattened_output[i][0] = new Matrix(this->map_count * this->output_row * this->output_col, 1);
         for(int j = 0; j < this->map_count; j++)
         {
             this->outputs[i][j] = new Matrix(this->output_row, this->output_col);
@@ -271,25 +271,11 @@ inline int Convolutional::get_chanel_index(int i)
     return i;
 }
 
-/*void Convolutional::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap)
-{
-    int kernelsize = kernel.get_row() * kernel.get_col();
-    int starting_pos = kernelsize * fmap_id;
-    memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
-}
-
-/*void calculate_delta_helper(Matrix *padded_delta, Matrix *delta_helper, Matrix &kernel, Matrix &helper)
-{
-    cross_correlation(padded_delta[0], kernel, helper, 1, 1);
-    delta_helper[0] += helper;
-}*/
-
 Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***delta, int threadindex)
 {
     Feature_map** next_layers_fmaps;
     int next_layers_fmapcount;// = next_layer->get_mapcount();
     this->derivate_layers_output(input, threadindex);
-    //if(this->backprop_helper->padded_delta[threadindex] == NULL)
     this->backprop_helper->set_padded_delta_2d(delta, this->sends_output_to_, this->network_layers, threadindex);
     //this->backprop_helper->zero(threadindex);
     int delta_index;
@@ -341,7 +327,6 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
     }
     delta[this->my_index] = layers_delta[threadindex];
-    //return this->layers_delta[threadindex];
     return NULL;
 }
 
@@ -386,7 +371,6 @@ int Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, int input_i
 
 void Convolutional::layers_output(Matrix **inpput, int threadindex)
 {
-    //this->feedforward_helpter->helper[threadindex]->zero();
     int chanel_index;
     for(int map_index = 0; map_index < this->map_count; map_index++)
     {
@@ -418,7 +402,7 @@ Matrix** Convolutional::derivate_layers_output(Matrix **input, int threadindex)
     return output_derivative[threadindex];
 }
 
-void Convolutional::flatten(int threadindex)
+/*void Convolutional::flatten(int threadindex)
 {
     int output_size = this->output_row * this->output_col;
     int output_size_in_bytes = output_size * sizeof(double);
@@ -426,7 +410,7 @@ void Convolutional::flatten(int threadindex)
     {
         memcpy(&(this->flattened_output[threadindex][0]->dv[map_index*output_size]), this->outputs[threadindex][map_index]->dv, output_size_in_bytes);
     }
-}
+}*/
 
 void Convolutional::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
@@ -541,6 +525,7 @@ void Convolutional::load(std::ifstream &params)
 
 void Convolutional::set_layers_inputs(vector<Matrix***> inputs_)
 {
+    this->inputs.clear();
     for(Matrix ***inp : inputs_)
     {
         this->inputs.push_back(inp);

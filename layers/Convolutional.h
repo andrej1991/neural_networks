@@ -33,7 +33,7 @@ class Convolutional : public Layer {
     Padding pad;
     conv_output_helper *feedforward_helpter;
     conv_backprop_helper *backprop_helper;
-    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, next_layers_type, output_row, output_col, threadcount, input_channel_count, my_index;
+    int neuron_type, outputlen, input_row, input_col, kernel_row, kernel_col, map_count, vertical_stride, horizontal_stride, output_row, output_col, threadcount, input_channel_count, my_index;
     short int layer_type;
     Neuron neuron;
     int fulldepth_conv(Matrix &helper, Matrix &convolved, int input_index, int map_index, int threadindex, int chanel_index);
@@ -58,7 +58,7 @@ class Convolutional : public Layer {
     inline int get_output_len();
     inline int get_output_row();
     inline int get_output_col();
-    void flatten(int threadindex);
+    //void flatten(int threadindex);
     int get_mapcount();
     int get_mapdepth();
     int get_weights_row();

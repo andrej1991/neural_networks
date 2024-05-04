@@ -5,17 +5,18 @@
 
 class Pooling : public Layer {
     Matrix ***outputs, ***pooling_memory, ***layers_delta, ***layers_delta_helper, ***flattened_output;
-    int fmap_count, output_row, output_col, map_row, map_col, pooling_type, next_layers_type, threadcount;
-    int input_row, input_col;
+    int fmap_count, output_row, output_col, map_row, map_col, pooling_type, threadcount;
+    int input_row, input_col, my_index;
     conv_backprop_helper *backprop_helper;
     inline void max_pooling(Matrix **input, int threadindex);
-    void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
-    void flatten(int threadindex);
+    //void get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap);
+    //void flatten(int threadindex);
     void destory_outputs_and_erros();
     void build_outputs_and_errors();
     vector<int> gets_input_from_, sends_output_to_;
+    Layer **network_layers;
     public:
-    Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row , int input_col, int next_layers_type);
+    Pooling(Layer **network_layers, vector<int> input_from, int row, int col, int pooling_type, int my_index);
     ~Pooling();
     Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***next_layers_error, int threadindex);
     void layers_output(Matrix **input, int threadindex);

@@ -23,6 +23,7 @@ Flatten::~Flatten()
 
 void Flatten::set_layers_inputs(vector<Matrix***> inputs_)
 {
+    this->inputs.clear();
     for(Matrix ***inp : inputs_)
     {
         this->inputs.push_back(inp);
@@ -55,10 +56,6 @@ Matrix** Flatten::backpropagate(Matrix **input, Layer *next_layer, Feature_map *
 {
     for(int i = 0; i < this->map_count; i++)
     {
-        /*int r = next_layers_error[this->sends_output_to_[0]][0][0].get_row();
-        int c = next_layers_error[this->sends_output_to_[0]][0][0].get_col();
-        cout << "r: " << r << endl;
-        cout << "c: " << c << endl;*/
         this->layers_delta[threadindex][i]->data[0][0] = next_layers_error[this->sends_output_to_[0]][0][0].data[i][0];
     }
     next_layers_error[this->my_index] = this->layers_delta[threadindex];
@@ -189,17 +186,20 @@ void Flatten::restore_neurons(Matrix *removed_colums)
 
 void Flatten::store(std::ofstream &params)
 {
-    throw runtime_error("Unimplemented function: Layer::get_graph_information\n");
+    ;
 }
 
 void Flatten::load(std::ifstream &params)
 {
-    throw runtime_error("Unimplemented function: Layer::get_graph_information\n");
+    ;
 }
 
-void Flatten::set_threadcount(int threadcount, vector<Matrix***> inputs_)
+void Flatten::set_threadcount(int threadcount_, vector<Matrix***> inputs_)
 {
-    throw runtime_error("Unimplemented function: Layer::get_graph_information\n");
+    this->destroy_dinamic_data();
+    this->threadcount = threadcount_;
+    this->build_dinamic_data();
+    this->set_layers_inputs(inputs_);
 }
 
 inline int Flatten::get_threadcount()
@@ -211,12 +211,6 @@ void Flatten::create_connections(vector<int> input_from, vector<int> output_to)
 {
     this->gets_input_from_ = input_from;
     this->sends_output_to_ = output_to;
-    /*this->map_count = this->network_layers[this->sends_output_to_[0]]->get_mapcount();
-    for(int i = 0; i < this->threadcount; i++)
-    {
-        this->layers_delta[i] = new Matrix* [this->map_count];
-        this->layers_delta[i][0] = new Matrix(1, 1);
-    }*/
 }
 
 const vector<int>& Flatten::gets_input_from() const

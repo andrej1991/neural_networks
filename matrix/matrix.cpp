@@ -23,10 +23,6 @@ Matrix::Matrix(int r,int c) : data(NULL)
         for(int i = 0; i < r; i++)
         {
             this->data[i] = &(this->dv[i*c]);
-            /*for(int j = 0; j < c; j++)
-            {
-                this->data[i][j] = 0;
-            }*/
         }
         memset((void*) this->dv, 0, sizeof(double)*r*c);
     }

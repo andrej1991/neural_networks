@@ -92,6 +92,7 @@ void FullyConnected::build_dinamic_data()
 
 void FullyConnected::set_layers_inputs(vector<Matrix***> inputs_)
 {
+    this->inputs.clear();
     for(Matrix ***inp : inputs_)
     {
         this->inputs.push_back(inp);
@@ -108,6 +109,11 @@ void FullyConnected::layers_output(Matrix **input, int threadindex)
     this->activation_input[threadindex][0][0].zero();
     for(int i = 0; i < this->inputs.size(); i++)
     {
+        cout << my_index << "  " << i << endl;
+        //print_mtx(this->fmap[i]->weights[0][0]);
+        print_mtx(this->inputs[i][threadindex][0][0]);
+        print_mtx(this->fmap[0]->biases[0][0]);
+        print_mtx(this->activation_input[threadindex][0][0]);
         weighted_output(this->fmap[i]->weights[0][0], this->inputs[i][threadindex][0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     }
     this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);
@@ -228,7 +234,6 @@ inline int FullyConnected::get_threadcount()
 void FullyConnected::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
 {
     this->destroy_dinamic_data();
-    this->inputs.clear();
     this->threadcount = threadcnt;
     this->build_dinamic_data();
     this->set_layers_inputs(inputs_);

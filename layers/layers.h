@@ -30,7 +30,6 @@ class LayerDescriptor{
     int neuron_type;
     string name;
     std::vector<string> output_connections;
-    public:
     LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
     LayerDescriptor(int layer_type, int neuron_type, int neuron_count, std::vector<string> output_connections, string name = "", int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
     std::string get_name();
@@ -104,13 +103,14 @@ class Layer{
     virtual void store(std::ofstream &params) = 0;
     virtual void load(std::ifstream &params) = 0;
     virtual void set_threadcount(int threadcount, vector<Matrix***> inputs_);
+    virtual void set_threadcount(int threadcount);
     virtual inline int get_threadcount();
-    virtual void create_connections(vector<int> input_from, vector<int> output_to) {throw runtime_error("Unimplemented function: Layer::input_from\n");}
-    virtual const vector<int>& gets_input_from() const {throw runtime_error("Unimplemented function: Layer::gets_input_from\n");}
-    virtual const vector<int>& sends_output_to() const {throw runtime_error("Unimplemented function: Layer::sends_output_to\n");}
-    virtual void set_layers_inputs(vector<Matrix***> inputs_) {throw runtime_error("Unimplemented function: Layer::get_graph_information\n");}
-    virtual int get_vertical_stride(){throw runtime_error("Unimplemented function: Layer::get_vertical_stride\n");}
-    virtual int get_horizontal_stride(){throw runtime_error("Unimplemented function: Layer::get_horizontal_stride\n");}
+    virtual void create_connections(vector<int> input_from, vector<int> output_to);
+    virtual const vector<int>& gets_input_from() const;
+    virtual const vector<int>& sends_output_to() const;
+    virtual void set_layers_inputs(vector<Matrix***> inputs_);
+    virtual int get_vertical_stride();
+    virtual int get_horizontal_stride();
 };
 
 class FullyConnected : public Layer {
@@ -200,7 +200,7 @@ class InputLayer : public Layer {
     void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-    void set_threadcount(int threadcount, vector<Matrix***> inputs_);
+    void set_threadcount(int threadcount);
     inline int get_threadcount();
 };
 

@@ -3,10 +3,17 @@
 #include "Pooling.h"
 #include <string.h>
 
-Pooling::Pooling(int row, int col, int pooling_type, int prev_layers_fmapcount, int input_row, int input_col, int next_layers_type):
-                fmap_count(prev_layers_fmapcount), map_row(row), map_col(col), pooling_type(pooling_type), next_layers_type(next_layers_type),
-                input_row(input_row), input_col(input_col)
+Pooling::Pooling(Layer **network_layers, vector<int> input_from, int row, int col, int pooling_type, int my_index):
+                map_row(row), map_col(col), pooling_type(pooling_type), my_index(my_index)
 {
+    if(input_from.size() > 1)
+    {
+        throw runtime_error("Pooling layer must have only 1 input\n");
+    }
+    this->gets_input_from_ = input_from;
+    this->network_layers = network_layers;
+    this->input_row = this->network_layers[input_from[0]]->get_output_row();
+    this->input_col = this->network_layers[input_from[0]]->get_output_col();
     this->output_row = input_row / row;
     if(input_row % row)
         output_row++;
@@ -115,12 +122,12 @@ inline void Pooling::max_pooling(Matrix **input, int threadindex)
     }
 }
 
-void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap)
+/*void Pooling::get_2D_weights(int neuron_id, int fmap_id, Matrix &kernel, Feature_map **next_layers_fmap)
 {
     int kernelsize = kernel.get_row() * kernel.get_col();
     int starting_pos = kernelsize * fmap_id;
     memcpy(kernel.dv, &(next_layers_fmap[0]->weights[0]->data[neuron_id][starting_pos]), kernelsize*sizeof(double));
-}
+}*/
 
 inline Matrix** Pooling::backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***delta, int threadindex)
 {
@@ -280,7 +287,7 @@ void Pooling::set_input(Matrix **input, int threadindex)
     throw exception();
 }
 
-void Pooling::flatten(int threadindex)
+/*void Pooling::flatten(int threadindex)
 {
     int output_size = this->output_row * this->output_col;
     int output_size_in_bytes = output_size * sizeof(double);
@@ -288,17 +295,11 @@ void Pooling::flatten(int threadindex)
     {
         memcpy(&(this->flattened_output[threadindex][0]->dv[map_index*output_size]), this->outputs[threadindex][map_index]->dv, output_size_in_bytes);
     }
-}
+}*/
 
 Matrix** Pooling::get_output(int threadindex)
 {
-    if(this->next_layers_type == FULLY_CONNECTED)
-    {
-        this->flatten(threadindex);
-        return this->flattened_output[threadindex];
-    }
-    else
-        return this->outputs[threadindex];
+    return this->outputs[threadindex];
 }
 
 void Pooling::create_connections(vector<int> input_from, vector<int> output_to)
