@@ -20,7 +20,7 @@ class conv_backprop_helper{
     Matrix ****padded_delta, **helper, *dilated, **kernel;
     conv_backprop_helper(int threadcnt, int row, int col);
     ~conv_backprop_helper();
-    void set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt);
+    //void set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt);
     void set_padded_delta_2d(Matrix ***delta, std::vector<int> sends_output, Layer **network_layers, int threadcnt);
     void delete_padded_delta(int threadindx);
     void zero(int threadid);
@@ -39,7 +39,7 @@ class Convolutional : public Layer {
     int fulldepth_conv(Matrix &helper, Matrix &convolved, int input_index, int map_index, int threadindex, int chanel_index);
     void destory_outputs_and_erros();
     void build_outputs_and_errors();
-    virtual inline int get_chanel_index(int i);
+    //virtual inline int get_chanel_index(int i);
     vector<int> gets_input_from_, sends_output_to_;
     vector<Matrix***> inputs;
     Layer **network_layers;

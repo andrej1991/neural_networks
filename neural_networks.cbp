@@ -25,23 +25,24 @@
 				<Option compiler="gcc" />
 				<Option parameters="../data/multiple_connection.yaml ../data/convolutional_CIFAR.yaml  ../data/fully_connected.yaml ../data/convolutional.yaml " />
 				<Compiler>
+					<Add option="-O3" />
+					<Add option="-m64" />
 					<Add option="-std=c++11" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-m64" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-march=corei7" />
 			<Add option="-Wall" />
+			<Add option="-march=corei7" />
 			<Add option="-std=c++11" />
-			<Add option="-m64" />
 			<Add option="-fexceptions" />
 			<Add directory="/usr/include/yaml-cpp" />
 		</Compiler>
 		<Linker>
-			<Add option="-m64" />
 			<Add option="-lyaml-cpp" />
 			<Add library="pthread" />
 		</Linker>

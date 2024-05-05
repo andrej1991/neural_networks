@@ -22,7 +22,7 @@ const vector<int>& Layer::sends_output_to() const
     {throw runtime_error("Unimplemented function: Layer::sends_output_to\n");}
 
 void Layer::set_layers_inputs(vector<Matrix***> inputs_)
-    {throw runtime_error("Unimplemented function: Layer::get_graph_information\n");}
+    {throw runtime_error("Unimplemented function: Layer::set_layers_inputs\n");}
 
 int Layer::get_vertical_stride()
     {throw runtime_error("Unimplemented function: Layer::get_vertical_stride\n");}

@@ -109,11 +109,6 @@ void FullyConnected::layers_output(Matrix **input, int threadindex)
     this->activation_input[threadindex][0][0].zero();
     for(int i = 0; i < this->inputs.size(); i++)
     {
-        cout << my_index << "  " << i << endl;
-        //print_mtx(this->fmap[i]->weights[0][0]);
-        print_mtx(this->inputs[i][threadindex][0][0]);
-        print_mtx(this->fmap[0]->biases[0][0]);
-        print_mtx(this->activation_input[threadindex][0][0]);
         weighted_output(this->fmap[i]->weights[0][0], this->inputs[i][threadindex][0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     }
     this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);

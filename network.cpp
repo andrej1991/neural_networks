@@ -30,12 +30,13 @@ Network::Network(char *data)
 {
     ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
     ///int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1
-    int _size, vec_size;
-    char *name, *conn;
-    vector<string> output_connections;
     ifstream file (data, ios::in|ios::binary);
     if(file.is_open())
     {
+        this->threadcount = 1;
+        int _size, vec_size;
+        char *name, *conn;
+        vector<string> output_connections;
         int f_layer_type, f_neuron_type, f_neuron_count, f_col, f_mapcount, f_vertical_stride, f_horizontal_stride;
         file.read(reinterpret_cast<char *>(&(this->layers_num)), sizeof(int));
         file.read(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
