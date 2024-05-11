@@ -202,7 +202,8 @@ Convolutional::Convolutional(Layer **network_layers, vector<int> input_from, int
     {
         mean = deviation;
     }
-    int _mapdepth = 1;//(this->get_chanel_index(this->input_channel_count) == 0) ? 1 : this->input_channel_count;
+    //int _mapdepth = 1t;
+    int _mapdepth = (this->get_chanel_index(this->input_channel_count) == 0) ? 1 : this->input_channel_count;
     for(int i = 0; i < map_count; i++)
     {
         fmap[i] = new Feature_map(this->kernel_row, this->kernel_col, _mapdepth, this->output_row, this->output_col);
@@ -277,10 +278,10 @@ void Convolutional::build_outputs_and_errors()
     }
 }
 
-/*inline int Convolutional::get_chanel_index(int i)
+inline int Convolutional::get_chanel_index(int i)
 {
     return 0;
-}*/
+}
 
 Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***delta, int threadindex)
 {
@@ -298,7 +299,11 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         {
             if(this->network_layers[next_layer_index]->get_layer_type() == POOLING)
             {
-                this->layers_delta_helper[threadindex][i][0] += delta[delta_index][i][0];
+                /*cout << layers_delta_helper[threadindex][i][0].get_row() << endl;
+                cout << layers_delta_helper[threadindex][i][0].get_col() << endl;
+                cout << delta[next_layer_index][i][0].get_row() << endl;
+                cout << delta[next_layer_index][i][0].get_col() << endl;*/
+                this->layers_delta_helper[threadindex][i][0] += delta[next_layer_index][i][0];
             } else
             {
                 next_layers_fmaps = this->network_layers[next_layer_index]->get_feature_maps();
@@ -306,8 +311,8 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
                 for(int j = 0; j < next_layers_fmapcount; j++)
                 {
                     full_depth_cross_correlation(this->backprop_helper->padded_delta[threadindex][delta_index][j][0],
-//                                                next_layers_fmaps[j]->weights[this->get_chanel_index(i)][0],
-                                                next_layers_fmaps[j]->weights[0][0],
+                                                next_layers_fmaps[j]->weights[this->get_chanel_index(i)][0],
+//                                                next_layers_fmaps[j]->weights[0][0],
                                                 this->layers_delta_helper[threadindex][i][0],
                                                 1, 1);
                 }
@@ -324,10 +329,10 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         {
             for(int j = 0; j < this->network_layers[k]->get_mapcount(); j++)
             {
-//                nabla[i]->weights[this->get_chanel_index(j)][0].zero();
-                nabla[i]->weights[0][0].zero();
-//                full_depth_cross_correlation(this->network_layers[k]->get_output(threadindex)[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[this->get_chanel_index(j)][0], this->vertical_stride, this->horizontal_stride);
-                full_depth_cross_correlation(this->network_layers[k]->get_output(threadindex)[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[0][0], this->vertical_stride, this->horizontal_stride);
+                nabla[i]->weights[this->get_chanel_index(j)][0].zero();
+//                nabla[i]->weights[0][0].zero();
+                full_depth_cross_correlation(this->network_layers[k]->get_output(threadindex)[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[this->get_chanel_index(j)][0], this->vertical_stride, this->horizontal_stride);
+//                full_depth_cross_correlation(this->network_layers[k]->get_output(threadindex)[j][0], this->backprop_helper->dilated[threadindex], nabla[i]->weights[0][0], this->vertical_stride, this->horizontal_stride);
             }
         }
         nabla[i]->biases[0][0] = this->layers_delta[threadindex][i][0];
@@ -367,8 +372,8 @@ int Convolutional::fulldepth_conv(Matrix &helper, Matrix &convolved, int input_i
     int target = this->network_layers[input_index]->get_mapcount();
     for(int tmp = 0; tmp < target; tmp++)
     {
-//        full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[this->get_chanel_index(chanel_index)][0], helper, this->vertical_stride, this->horizontal_stride);
-        full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[0][0], helper, this->vertical_stride, this->horizontal_stride);
+        full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[this->get_chanel_index(chanel_index)][0], helper, this->vertical_stride, this->horizontal_stride);
+//        full_depth_convolution(this->network_layers[input_index]->get_output(threadindex)[tmp][0], this->fmap[map_index]->weights[0][0], helper, this->vertical_stride, this->horizontal_stride);
         chanel_index++;
     }
     helper+=this->fmap[map_index]->biases[0][0];

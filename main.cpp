@@ -355,23 +355,12 @@ int main(int argc, char *argv[])
 
 
     Network n1(layer_count, layers, input_row, input_col, input_channel_count);
-    /*Network n2(layer_count, layers, input_row, input_col, input_channel_count);
-    Network n3(layer_count, layers, input_row, input_col, input_channel_count);
-    Network n4(layer_count, layers, input_row, input_col, input_channel_count);*/
 
 
     StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
-
-    //n1.store("../data/testnet");
-
-    //Network n2("../data/testnet");
-    //StochasticGradientDescent learning2(n2, costfunction_type, dropout_probability);
     //StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
-    //learning.monitor_training_duration = true;
-    //learning2.monitor_training_duration = true;
-    //n1.set_threadcount(2);
-    //n1.get_output(m[0]->input);
-    //return 0;
+
+    learning.monitor_training_duration = true;
     if(cpulimit > 0)
     {
         pid_t pid = getpid();
@@ -379,11 +368,9 @@ int main(int argc, char *argv[])
         cout << command << endl;
         system(command.c_str());
     }
-    //return 0;
-    //cout << "stohastic gradient descent\n";
-    //learning.check_accuracy(validation, 10, 0, true);
-    //n1.dropout_probability = dropout_probability;
     learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+
+
     //learning2.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
     //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
