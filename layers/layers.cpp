@@ -3,9 +3,6 @@
 Layer::~Layer(){}
 
 
-void Layer::set_threadcount(int threadcount, vector<Matrix***> inputs_)
-    {throw runtime_error("Unimplemented function: Layer::set_threadcount(int threadcount, vector<Matrix***> inputs_)\n");}
-
 void Layer::set_threadcount(int threadcount)
     {throw runtime_error("Unimplemented function: Layer::set_threadcount(int threadcount)\n");}
 

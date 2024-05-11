@@ -91,11 +91,11 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
         padded_delta[threadcnt] = new Matrix** [this->outputcount];
         for(int i = 0; i < this->outputcount; i++)
         {
-            //if(network_layers[sends_output[i]]->get_layer_type() != POOLING)
-            //{
                 int next_layers_fmapcount = network_layers[sends_output[i]]->get_mapcount();
                 padded_delta[threadcnt][i] = new Matrix* [next_layers_fmapcount];
                 this->layer_count[threadcnt][i] = next_layers_fmapcount;
+            if(network_layers[sends_output[i]]->get_layer_type() != POOLING)
+            {
                 Feature_map** next_layers_fmaps = network_layers[sends_output[i]]->get_feature_maps();
                 for(int j = 0; j < next_layers_fmapcount; j++)
                 {
@@ -106,7 +106,15 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
                                                          (next_layers_fmaps[j]->weights[0]->get_row()-1)/2,
                                                          (next_layers_fmaps[j]->weights[0]->get_col()-1)/2);
                 }
-            //}
+            }
+            else
+            {
+                for(int j = 0; j < next_layers_fmapcount; j++)
+                {
+                    padded_delta[threadcnt][i][j] = new Matrix;
+                    padded_delta[threadcnt][i][j][0] = delta[sends_output[i]][j][0];
+                }
+            }
         }
         this->padded_delta_set = true;
     }
@@ -114,10 +122,10 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
     {
         for(int i = 0; i < this->outputcount; i++)
         {
-            //if(network_layers[sends_output[i]]->get_layer_type() != POOLING)
-            //{
                 int next_layers_fmapcount = network_layers[sends_output[i]]->get_mapcount();
                 this->layer_count[threadcnt][i] = next_layers_fmapcount;
+            if(network_layers[sends_output[i]]->get_layer_type() != POOLING)
+            {
                 Feature_map** next_layers_fmaps = network_layers[sends_output[i]]->get_feature_maps();
                 for(int j = 0; j < next_layers_fmapcount; j++)
                 {
@@ -128,7 +136,15 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
                                                              (next_layers_fmaps[j]->weights[0]->get_col()-1)/2,
                                                              padded_delta[threadcnt][i][j][0]);
                 }
-            //}
+            }
+            else
+            {
+                for(int j = 0; j < next_layers_fmapcount; j++)
+                {
+                    padded_delta[threadcnt][i][j] = new Matrix;
+                    padded_delta[threadcnt][i][j][0] = delta[sends_output[i]][j][0];
+                }
+            }
         }
     }
 }
@@ -392,12 +408,11 @@ Matrix** Convolutional::derivate_layers_output(Matrix **input, int threadindex)
     return output_derivative[threadindex];
 }
 
-void Convolutional::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
+void Convolutional::set_threadcount(int threadcnt)
 {
     this->destory_outputs_and_erros();
     this->threadcount = threadcnt;
     this->build_outputs_and_errors();
-    this->set_layers_inputs(inputs_);
 }
 
 int Convolutional::get_threadcount()

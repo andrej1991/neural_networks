@@ -102,7 +102,7 @@ class Layer{
     virtual void restore_neurons(Matrix *removed_colums = NULL) = 0;
     virtual void store(std::ofstream &params) = 0;
     virtual void load(std::ifstream &params) = 0;
-    virtual void set_threadcount(int threadcount, vector<Matrix***> inputs_);
+    //virtual void set_threadcount(int threadcount, vector<Matrix***> inputs_);
     virtual void set_threadcount(int threadcount);
     virtual inline int get_threadcount();
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
@@ -156,7 +156,7 @@ class FullyConnected : public Layer {
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
     virtual void set_graph_information(Layer **network_layers, int my_index);
-    void set_threadcount(int threadcount, vector<Matrix***> inputs_);
+    void set_threadcount(int threadcount);
     inline int get_threadcount();
 };
 
@@ -237,7 +237,7 @@ class Flatten : public Layer{
     virtual void restore_neurons(Matrix *removed_colums = NULL);
     virtual void store(std::ofstream &params);
     virtual void load(std::ifstream &params);
-    virtual void set_threadcount(int threadcount, vector<Matrix***> inputs_);
+    virtual void set_threadcount(int threadcount);
     virtual inline int get_threadcount();
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;

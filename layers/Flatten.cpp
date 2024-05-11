@@ -194,12 +194,11 @@ void Flatten::load(std::ifstream &params)
     ;
 }
 
-void Flatten::set_threadcount(int threadcount_, vector<Matrix***> inputs_)
+void Flatten::set_threadcount(int threadcount_)
 {
     this->destroy_dinamic_data();
     this->threadcount = threadcount_;
     this->build_dinamic_data();
-    this->set_layers_inputs(inputs_);
 }
 
 inline int Flatten::get_threadcount()

@@ -107,9 +107,9 @@ void FullyConnected::layers_output(Matrix **input, int threadindex)
         throw exception();
     }
     this->activation_input[threadindex][0][0].zero();
-    for(int i = 0; i < this->inputs.size(); i++)
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
     {
-        weighted_output(this->fmap[i]->weights[0][0], this->inputs[i][threadindex][0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
+        weighted_output(this->fmap[i]->weights[0][0], this->network_layers[this->gets_input_from_[i]]->get_output(threadindex)[0][0], this->fmap[0]->biases[0][0], this->activation_input[threadindex][0][0]);
     }
     this->neuron.neuron(this->activation_input[threadindex][0][0], this->output[threadindex][0][0]);
 }
@@ -158,11 +158,6 @@ Matrix** FullyConnected::derivate_layers_output(Matrix **input, int threadindex)
 
 void FullyConnected::update_weights_and_biasses(double learning_rate, double regularization_rate, Layers_features *gradient)
 {
-    /*if((gradient->get_fmap_count() != 1) + (gradient->fmap[0]->get_mapdepth() != 1))
-    {
-        cerr << "the fully connected layer must have only one set of weights!!!\n";
-        throw exception();
-    }*/
     for(int i = 0; i < this->gets_input_from().size(); i++)
     {
         int prev_outputlen = this->fmap[i]->get_col();
@@ -197,11 +192,6 @@ Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Featur
         next_layers_fmaps = this->network_layers[i]->get_feature_maps();
         next_layers_fmapcount = this->network_layers[i]->get_mapcount();
         next_layers_inputs = this->network_layers[i]->gets_input_from();
-        /*if(next_layers_fmapcount != 1)
-        {
-            cerr << "Currently the fully connected layer can be followed only by fully connected layers!\n";
-            throw exception();
-        }*/
         for(j = 0; j < next_layers_inputs.size(); j++)
         {
             if(this->my_index == next_layers_inputs[j]) break;
@@ -226,12 +216,11 @@ inline int FullyConnected::get_threadcount()
     return this->threadcount;
 }
 
-void FullyConnected::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
+void FullyConnected::set_threadcount(int threadcnt)
 {
     this->destroy_dinamic_data();
     this->threadcount = threadcnt;
     this->build_dinamic_data();
-    this->set_layers_inputs(inputs_);
 }
 
 inline Matrix** FullyConnected::get_output(int threadindex)

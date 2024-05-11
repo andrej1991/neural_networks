@@ -23,7 +23,7 @@ Pooling::Pooling(Layer **network_layers, vector<int> input_from, int row, int co
         output_col++;
     this->threadcount = 1;
     this->build_outputs_and_errors();
-    throw runtime_error("Backpropagation is not working yet\n");
+    //throw runtime_error("Backpropagation is not working yet\n");
 }
 
 Pooling::~Pooling()
@@ -197,7 +197,7 @@ void Pooling::layers_output(Matrix **input, int threadindex)
     }
 }
 
-void Pooling::set_threadcount(int threadcnt, vector<Matrix***> inputs_)
+void Pooling::set_threadcount(int threadcnt)
 {
 
     this->destory_outputs_and_erros();

@@ -41,7 +41,7 @@ class Pooling : public Layer {
     void restore_neurons(Matrix *removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
-    virtual void set_threadcount(int threadcnt, vector<Matrix***> inputs_);
+    virtual void set_threadcount(int threadcnt);
     virtual int get_threadcount();
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;

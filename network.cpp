@@ -339,6 +339,10 @@ void Network::set_threadcount(int threadcnt)
         this->layers[-1]->set_threadcount(threadcnt);
         for(int i = 0; i < this->layers_num; i++)
         {
+            this->layers[i]->set_threadcount(threadcnt);
+        }
+        for(int i = 0; i < this->layers_num; i++)
+        {
             inputs.clear();
             if(i == 0)
             {
@@ -347,7 +351,7 @@ void Network::set_threadcount(int threadcnt)
             {
                 inputs = get_inputs(this->layerdsc, layers_num, this->layerdsc[i]->get_name(), layer_name_to_index);
             }
-            this->layers[i]->set_threadcount(threadcnt, this->collect_inputs(i, inputs));
+            this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
         }
         this->threadcount = threadcnt;
     }

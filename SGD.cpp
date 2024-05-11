@@ -163,23 +163,45 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
             ///Layers_features(int mapcount, int row, int col, int depth, int biascnt);
             biasrow = this->neunet.layers[i]->get_output_row();
             biascol = this->neunet.layers[i]->get_output_col();
-            nabla[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
-                                           this->neunet.layers[i]->get_feature_maps(),
-                                           biasrow, biascol);
-            nabla[i]->zero();
-            for(int j = 0; j < minibatch_len; j++)
+            if(this->neunet.layers[i]->get_layer_type() == POOLING)
             {
-                deltanabla[j][i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
+                nabla[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(), this->neunet.layers[i]->get_weights_row(),
+                                               this->neunet.layers[i]->get_weights_col(), this->neunet.layers[i]->get_mapdepth(),
+                                               biasrow, biascol);
+                nabla[i]->zero();
+                for(int j = 0; j < minibatch_len; j++)
+                {
+                    deltanabla[j][i] = new Layers_features(this->neunet.layers[i]->get_mapcount(), this->neunet.layers[i]->get_weights_row(),
+                                                        this->neunet.layers[i]->get_weights_col(), this->neunet.layers[i]->get_mapdepth(),
+                                                        biasrow, biascol);
+                }
+                helper_1[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(), this->neunet.layers[i]->get_weights_row(),
+                                                    this->neunet.layers[i]->get_weights_col(), this->neunet.layers[i]->get_mapdepth(),
+                                                    biasrow, biascol);
+                helper_1[i]->zero();
+                helper_2[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(), this->neunet.layers[i]->get_weights_row(),
+                                                    this->neunet.layers[i]->get_weights_col(), this->neunet.layers[i]->get_mapdepth(),
+                                                    biasrow, biascol);
+            } else
+            {
+                nabla[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
+                                               this->neunet.layers[i]->get_feature_maps(),
+                                               biasrow, biascol);
+                nabla[i]->zero();
+                for(int j = 0; j < minibatch_len; j++)
+                {
+                    deltanabla[j][i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
+                                                        this->neunet.layers[i]->get_feature_maps(),
+                                                        biasrow, biascol);
+                }
+                helper_1[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
+                                                    this->neunet.layers[i]->get_feature_maps(),
+                                                    biasrow, biascol);
+                helper_1[i]->zero();
+                helper_2[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
                                                     this->neunet.layers[i]->get_feature_maps(),
                                                     biasrow, biascol);
             }
-            helper_1[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
-                                                this->neunet.layers[i]->get_feature_maps(),
-                                                biasrow, biascol);
-            helper_1[i]->zero();
-            helper_2[i] = new Layers_features(this->neunet.layers[i]->get_mapcount(),
-                                                this->neunet.layers[i]->get_feature_maps(),
-                                                biasrow, biascol);
         }
     }
     catch(bad_alloc& ba)
