@@ -41,7 +41,7 @@ class Convolutional : public Layer {
     void build_outputs_and_errors();
     virtual inline int get_chanel_index(int i);
     vector<int> gets_input_from_, sends_output_to_;
-    vector<Matrix***> inputs;
+    //vector<Matrix***> inputs;
     Layer **network_layers;
     public:
     Convolutional(Layer **network_layers, vector<int> input_from, int kern_row, int kern_col, int map_count, int neuron_type, int my_index_, Padding &p, int vertical_stride = 1, int horizontal_stride = 1);
@@ -75,7 +75,7 @@ class Convolutional : public Layer {
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
-    virtual void set_layers_inputs(vector<Matrix***> inputs_);
+    //virtual void set_layers_inputs(vector<Matrix***> inputs_);
 };
 
 #endif // CONVOLUTIONAL_H_INCLUDED

@@ -14,7 +14,7 @@ class Pooling : public Layer {
     void destory_outputs_and_erros();
     void build_outputs_and_errors();
     vector<int> gets_input_from_, sends_output_to_;
-    vector<Matrix***> inputs;
+    //vector<Matrix***> inputs;
     Layer **network_layers;
     public:
     Pooling(Layer **network_layers, vector<int> input_from, int row, int col, int pooling_type, int my_index);
@@ -46,7 +46,7 @@ class Pooling : public Layer {
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
-    void set_layers_inputs(vector<Matrix***> inputs_);
+    //void set_layers_inputs(vector<Matrix***> inputs_);
 };
 
 

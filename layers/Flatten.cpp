@@ -1,9 +1,10 @@
 #include <string.h>
 #include "layers.h"
 
-Flatten::Flatten(vector<Matrix***> inputs, Layer **layers, int index, vector<int> input_from, int mapcount_) : my_index(index), map_count(mapcount_)
+//Flatten::Flatten(vector<Matrix***> inputs, Layer **layers, int index, vector<int> input_from, int mapcount_) : my_index(index), map_count(mapcount_)
+Flatten::Flatten(Layer **layers, int index, vector<int> input_from, int mapcount_) : my_index(index), map_count(mapcount_)
 {
-    this->set_layers_inputs(inputs);
+    //this->set_layers_inputs(inputs);
     this->gets_input_from_ = input_from;
     this->network_layers = layers;
     this->threadcount = 1;
@@ -21,14 +22,15 @@ Flatten::~Flatten()
     this->destroy_dinamic_data();
 }
 
-void Flatten::set_layers_inputs(vector<Matrix***> inputs_)
+/*void Flatten::set_layers_inputs(vector<Matrix***> inputs_)
 {
     this->inputs.clear();
     for(Matrix ***inp : inputs_)
     {
         this->inputs.push_back(inp);
     }
-}
+}*/
+
 void Flatten::destroy_dinamic_data()
 {
     for(int i = 0; i < this->threadcount; i++)

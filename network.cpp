@@ -112,29 +112,28 @@ Network::~Network()
     delete[] this->layerdsc;
 }
 
-vector<int> get_inputs(LayerDescriptor **layerdesc, int layers_num, string name, map<string,int> &m)
+vector<int> get_inputs(LayerDescriptor *layerdesc, map<string,int> &m)
 {
     vector<int> inputs;
-    for(int i = layers_num - 1; i >= 0; i--)
-    //for(int i = 0; i < layers_num; i++)
+    for(string connection : layerdesc->get_input_connections())
     {
-        for(string connection : layerdesc[i]->get_output_connections())
-        {
-            if(connection == name)
-            {
-                inputs.push_back(m[layerdesc[i]->get_name()]);
-            }
-        }
+        inputs.push_back(m[connection]);
     }
     return inputs;
 }
 
-vector<int> get_connections_as_int(LayerDescriptor *layerdesc, map<string,int> &m)
+vector<int> get_output_connections(LayerDescriptor **layerdesc, map<string,int> &m, int layersnum, int indx)
 {
     vector<int> outputs;
-    for(string connection : layerdesc->get_output_connections())
+    for(int i = 0; i < layersnum; i++)
     {
-        outputs.push_back(m[connection]);
+        for(string connection : layerdesc[i]->get_input_connections())
+        {
+            if(m[connection] == indx)
+            {
+                outputs.push_back(i);
+            }
+        }
     }
     return outputs;
 }
@@ -147,6 +146,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     map<std::string, int> layer_name_to_index;
     vector<int> prev_outputlens;
     vector<int> inputs;
+    layer_name_to_index[string("InputLayer")] = -1;
     for(int i = 0; i < layers_num; i++)
     {
         layer_name_to_index[layerdesc[i]->get_name()] = i;
@@ -158,16 +158,10 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     this->layers += 1;
     for(int i = 0; i < layers_num; i++)
     {
-        this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count, layerdesc[i]->output_connections, layerdesc[i]->name,
+        this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count, layerdesc[i]->input_connections, layerdesc[i]->name,
                                                 layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
         inputs.clear();
-        if(i == 0)
-        {
-            inputs.push_back(-1);
-        } else
-        {
-            inputs = get_inputs(layerdesc, layers_num, layerdesc[i]->get_name(), layer_name_to_index);
-        }
+        inputs = get_inputs(layerdesc[i], layer_name_to_index);
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
@@ -183,7 +177,8 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 break;
             case FLATTEN:
                 //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
-                this->layers[i] = new Flatten(this->collect_inputs(i, inputs), this->layers, i, inputs, layerdesc[i+1]->row);
+                //this->layers[i] = new Flatten(this->collect_inputs(i, inputs), this->layers, i, inputs, layerdesc[i+1]->row);
+                this->layers[i] = new Flatten(this->layers, i, inputs, layerdesc[i+1]->row);
                 //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case CONVOLUTIONAL:
@@ -202,10 +197,18 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
         }
-        this->layers[i]->create_connections(inputs, get_connections_as_int(layerdesc[i], layer_name_to_index));
-        this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
+        this->layers[i]->create_connections(inputs, get_output_connections(layerdesc, layer_name_to_index, this->layers_num, i));
+        //this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
     }
     this->deltas[this->layers_num - 1] = new Matrix*;
+    for(int i = 0; i < layers_num; i++)
+    {
+        cout << this->layerdsc[i]->get_name() << endl;
+        for(int j : this->layers[i]->sends_output_to())
+        {
+            cout << "  " << j << endl;
+        }
+    }
 }
 
 void Network::store(char *filename)
@@ -229,7 +232,7 @@ void Network::store(char *filename)
         {
             _size = this->layerdsc[i]->name.size();
             str = this->layerdsc[i]->name.c_str();
-            vec_size = this->layerdsc[i]->output_connections.size();
+            vec_size = this->layerdsc[i]->input_connections.size();
             network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->layer_type)), sizeof(int));
             network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_type)), sizeof(int));
             network_params.write(reinterpret_cast<char *>(&(this->layerdsc[i]->neuron_count)), sizeof(int));
@@ -240,12 +243,12 @@ void Network::store(char *filename)
             network_params.write(reinterpret_cast<char *>(&(_size)), sizeof(int));
             network_params.write(str, this->layerdsc[i]->name.size());
             network_params.write(reinterpret_cast<char *>(&(vec_size)), sizeof(int));
-            for(int j = 0; j < this->layerdsc[i]->output_connections.size(); j++)
+            for(int j = 0; j < this->layerdsc[i]->input_connections.size(); j++)
             {
-                _size = this->layerdsc[i]->output_connections[j].size();
-                str = this->layerdsc[i]->output_connections[j].c_str();
+                _size = this->layerdsc[i]->input_connections[j].size();
+                str = this->layerdsc[i]->input_connections[j].c_str();
                 network_params.write(reinterpret_cast<char *>(&(_size)), sizeof(int));
-                network_params.write(str, this->layerdsc[i]->output_connections[j].size());
+                network_params.write(str, this->layerdsc[i]->input_connections[j].size());
             }
         }
         for(int i = -1; i < this->layers_num; i++)
@@ -329,18 +332,18 @@ void Network::set_threadcount(int threadcnt)
 {
     if(this->threadcount != threadcnt)
     {
-        map<std::string, int> layer_name_to_index;
+        /*map<std::string, int> layer_name_to_index;
         vector<int> inputs;
         for(int i = 0; i < this->layers_num; i++)
         {
             layer_name_to_index[this->layerdsc[i]->get_name()] = i;
-        }
+        }*/
         this->layers[-1]->set_threadcount(threadcnt);
         for(int i = 0; i < this->layers_num; i++)
         {
             this->layers[i]->set_threadcount(threadcnt);
         }
-        for(int i = 0; i < this->layers_num; i++)
+        /*for(int i = 0; i < this->layers_num; i++)
         {
             inputs.clear();
             if(i == 0)
@@ -351,7 +354,7 @@ void Network::set_threadcount(int threadcnt)
                 inputs = get_inputs(this->layerdsc, layers_num, this->layerdsc[i]->get_name(), layer_name_to_index);
             }
             this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
-        }
+        }*/
         this->threadcount = threadcnt;
     }
     cout << "threadcounts set\n";

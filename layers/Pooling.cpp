@@ -329,11 +329,11 @@ void Pooling::load(std::ifstream &params)
     ;
 }
 
-void Pooling::set_layers_inputs(vector<Matrix***> inputs_)
+/*void Pooling::set_layers_inputs(vector<Matrix***> inputs_)
 {
     this->inputs.clear();
     for(Matrix ***inp : inputs_)
     {
         this->inputs.push_back(inp);
     }
-}
+}*/

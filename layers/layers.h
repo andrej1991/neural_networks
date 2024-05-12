@@ -29,11 +29,11 @@ class LayerDescriptor{
     int horizontal_stride, vertical_stride;
     int neuron_type;
     string name;
-    std::vector<string> output_connections;
+    std::vector<string> input_connections;
     LayerDescriptor(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
     LayerDescriptor(int layer_type, int neuron_type, int neuron_count, std::vector<string> output_connections, string name = "", int col = 1, int mapcount = 1, int vertical_stride = 1, int horizontal_stride = 1);
     std::string get_name();
-    std::vector<std::string> get_output_connections();
+    std::vector<std::string> get_input_connections();
 };
 
 class Feature_map{
@@ -127,8 +127,8 @@ class FullyConnected : public Layer {
     virtual void destroy_dinamic_data();
     virtual void build_dinamic_data();
     vector<int> gets_input_from_, sends_output_to_;
-    vector<Matrix***> inputs;
-    virtual void set_layers_inputs(vector<Matrix***> inputs_);
+    //vector<Matrix***> inputs;
+    //virtual void set_layers_inputs(vector<Matrix***> inputs_);
     public:
     FullyConnected(int row, Layer **layers, vector<int> input_from, int neuron_type, int my_index);
     ~FullyConnected();
@@ -206,7 +206,7 @@ class InputLayer : public Layer {
 
 class Flatten : public Layer{
     Matrix ***output, ***layers_delta;
-    vector<Matrix***> inputs;
+    //vector<Matrix***> inputs;
     vector<int> gets_input_from_, sends_output_to_;
     Layer **network_layers;
     Feature_map **fmap;
@@ -215,7 +215,8 @@ class Flatten : public Layer{
     virtual void destroy_dinamic_data();
     virtual void build_dinamic_data();
     public:
-    Flatten(vector<Matrix***> inputs, Layer **network_layers, int index, vector<int> input_from, int mapcout_);
+    //Flatten(vector<Matrix***> inputs, Layer **network_layers, int index, vector<int> input_from, int mapcout_);
+    Flatten(Layer **network_layers, int index, vector<int> input_from, int mapcout_);
     virtual ~Flatten();
     virtual Matrix** backpropagate(Matrix **input, Layer *next_layer, Feature_map **nabla, Matrix ***next_layers_error, int threadindex);
     virtual void layers_output(Matrix **input, int threadindex);
@@ -242,7 +243,7 @@ class Flatten : public Layer{
     virtual void create_connections(vector<int> input_from, vector<int> output_to);
     virtual const vector<int>& gets_input_from() const;
     virtual const vector<int>& sends_output_to() const;
-    virtual void set_layers_inputs(vector<Matrix***> inputs_);
+    //virtual void set_layers_inputs(vector<Matrix***> inputs_);
     virtual int get_vertical_stride();
     virtual int get_horizontal_stride();
 };

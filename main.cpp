@@ -146,12 +146,12 @@ bool check_if_present(vector<string> &conn, string name)
 vector<string> get_connections(YAML::const_iterator config)
 {
     vector<string> connections;
-    if(config->second["connects_to"])
+    if(config->second["input_from"])
     {
-        for(int i=0; i < config->second["connects_to"].size(); i++)
+        for(int i=0; i < config->second["input_from"].size(); i++)
         {
-            if(!check_if_present(connections, config->second["connects_to"][i].as<string>()))
-                connections.push_back(config->second["connects_to"][i].as<string>());
+            if(!check_if_present(connections, config->second["input_from"][i].as<string>()))
+                connections.push_back(config->second["input_from"][i].as<string>());
         }
     }
     return connections;
@@ -200,11 +200,16 @@ int get_layers(LayerDescriptor **layers, YAML::Node &config)
         {
             lt = it->second["layer_type"].as<string>();
             connections = get_connections(it);
-            if(i < layer_count-1)
+            if(i > 0)
             {
                 ///TODO: check if that connection is already present
-                if(!check_if_present(connections, config["layers"][i+1].begin()->first.as<string>()))
-                    connections.insert(connections.begin(), config["layers"][i+1].begin()->first.as<string>());
+                if(!check_if_present(connections, config["layers"][i-1].begin()->first.as<string>()))
+                    connections.insert(connections.begin(), config["layers"][i-1].begin()->first.as<string>());
+            }
+            else
+            {
+                if(!check_if_present(connections, string("InputLayer")))
+                    connections.insert(connections.begin(), string("InputLayer"));
             }
             ///it is needed here because the previous if automatically ads the next element from the list as a connection, so it would not be mandatory to mention it everywhere in the config yaml
             remove_unwanted(connections);
@@ -238,11 +243,11 @@ int get_layers(LayerDescriptor **layers, YAML::Node &config)
                 cerr << "Unknown layer type found in your configfile!\n";
                 throw exception();
             }
-            if(check_if_recurrent(layers, connections, i))
+            /*if(check_if_recurrent(layers, connections, i))
             {
                 cerr << "Recurrent units are currently not supported!\n";
                 throw exception();
-            }
+            }*/
         }
     }
     return layer_count;
@@ -342,7 +347,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i < layer_count; i++)
     {
         cout << layers[i]->name << endl;
-        for(string s : layers[i]->output_connections) {
+        for(string s : layers[i]->input_connections) {
             cout << "  " << s << endl;
         }
     }

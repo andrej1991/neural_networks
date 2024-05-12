@@ -11,7 +11,7 @@ FullyConnected::FullyConnected(int row, Layer **layers, vector<int> input_from, 
     this->layer_type = FULLY_CONNECTED;
     double deviation = 1.0;
     double mean = 0.0;
-    this->fmap = new Feature_map* [inputs.size()];
+    this->fmap = new Feature_map* [input_from.size()];
     for(int i = 0; i < input_from.size(); i++)
     {
         deviation = 1.0/sqrt(this->network_layers[input_from[i]]->get_output_len());
@@ -90,14 +90,14 @@ void FullyConnected::build_dinamic_data()
     }
 }
 
-void FullyConnected::set_layers_inputs(vector<Matrix***> inputs_)
+/*void FullyConnected::set_layers_inputs(vector<Matrix***> inputs_)
 {
     this->inputs.clear();
     for(Matrix ***inp : inputs_)
     {
         this->inputs.push_back(inp);
     }
-}
+}*/
 
 void FullyConnected::layers_output(Matrix **input, int threadindex)
 {
@@ -255,7 +255,7 @@ inline int FullyConnected::get_output_col()
 
 int FullyConnected::get_mapcount()
 {
-    return this->inputs.size();
+    return this->gets_input_from_.size();
 }
 
 int FullyConnected::get_mapdepth()
@@ -388,13 +388,13 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
 
 void FullyConnected::store(std::ofstream &params)
 {
-    for(int i = 0; i < this->inputs.size(); i++)
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
         this->fmap[i]->store(params);
 }
 
 void FullyConnected::load(std::ifstream &params)
 {
-    for(int i = 0; i < this->inputs.size(); i++)
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
         this->fmap[i]->load(params);
 }
 
