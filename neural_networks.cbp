@@ -25,13 +25,11 @@
 				<Option compiler="gcc" />
 				<Option parameters="../data/multiple_connection.yaml ../data/convolutional_CIFAR.yaml  ../data/fully_connected.yaml ../data/convolutional.yaml " />
 				<Compiler>
-					<Add option="-m64" />
+					<Add option="-O3" />
 					<Add option="-std=c++11" />
 				</Compiler>
 				<Linker>
-					<Add option="-O3" />
 					<Add option="-s" />
-					<Add option="-m64" />
 				</Linker>
 			</Target>
 		</Build>

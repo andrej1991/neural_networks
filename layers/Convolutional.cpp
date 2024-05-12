@@ -202,7 +202,7 @@ Convolutional::Convolutional(Layer **network_layers, vector<int> input_from, int
     {
         mean = deviation;
     }
-    //int _mapdepth = 1t;
+    //int _mapdepth = 1;
     int _mapdepth = (this->get_chanel_index(this->input_channel_count) == 0) ? 1 : this->input_channel_count;
     for(int i = 0; i < map_count; i++)
     {
@@ -235,13 +235,11 @@ void Convolutional::destory_outputs_and_erros()
             delete this->layers_delta_helper[i][j];
         }
         delete[] this->outputs[i];
-        //delete[] this->flattened_output[i];
         delete[] this->output_derivative[i];
         delete[] this->layers_delta[i];
         delete[] this->layers_delta_helper[i];
     }
     delete[] this->outputs;
-    //delete[] this->flattened_output;
     delete[] this->output_derivative;
     delete[] this->layers_delta;
     delete[] this->layers_delta_helper;
@@ -256,18 +254,15 @@ void Convolutional::build_outputs_and_errors()
     this->backprop_helper = new conv_backprop_helper(this->threadcount, this->output_row, this->output_col);
 
     this->outputs = new Matrix** [this->threadcount];
-    //this->flattened_output = new Matrix** [this->threadcount];
     this->output_derivative = new Matrix** [this->threadcount];
     this->layers_delta = new Matrix** [this->threadcount];
     this->layers_delta_helper = new Matrix** [this->threadcount];
     for(int i = 0; i < this->threadcount; i++)
     {
         this->outputs[i] = new Matrix* [this->map_count];
-        //this->flattened_output[i] = new Matrix* [1];
         this->output_derivative[i] = new Matrix* [this->map_count];
         this->layers_delta[i] = new Matrix* [this->map_count];
         this->layers_delta_helper[i] = new Matrix* [this->map_count];
-        //this->flattened_output[i][0] = new Matrix(this->map_count * this->output_row * this->output_col, 1);
         for(int j = 0; j < this->map_count; j++)
         {
             this->outputs[i][j] = new Matrix(this->output_row, this->output_col);
@@ -299,10 +294,6 @@ Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature
         {
             if(this->network_layers[next_layer_index]->get_layer_type() == POOLING)
             {
-                /*cout << layers_delta_helper[threadindex][i][0].get_row() << endl;
-                cout << layers_delta_helper[threadindex][i][0].get_col() << endl;
-                cout << delta[next_layer_index][i][0].get_row() << endl;
-                cout << delta[next_layer_index][i][0].get_col() << endl;*/
                 this->layers_delta_helper[threadindex][i][0] += delta[next_layer_index][i][0];
             } else
             {

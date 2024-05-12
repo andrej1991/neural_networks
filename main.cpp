@@ -131,7 +131,7 @@ bool check_if_present(vector<string> &conn, string name)
     for(string c : conn)
     {
         if(c[0] == '!') {
-            actual_conn = c.substr(1, name.length());
+            actual_conn = c.substr(1, c.length());
         } else
             {
                 actual_conn = c;

@@ -28,7 +28,7 @@ class conv_backprop_helper{
 };
 
 class Convolutional : public Layer {
-    Matrix ***outputs, ***flattened_output, ***layers_delta, ***output_derivative, ***layers_delta_helper;
+    Matrix ***outputs, ***layers_delta, ***output_derivative, ***layers_delta_helper;
     Feature_map **fmap;
     Padding pad;
     conv_output_helper *feedforward_helpter;
