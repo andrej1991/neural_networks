@@ -357,8 +357,8 @@ int main(int argc, char *argv[])
     Network n1(layer_count, layers, input_row, input_col, input_channel_count);
 
 
-    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
-    //StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
+    //StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
+    StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
 
     learning.monitor_training_duration = true;
     if(cpulimit > 0)

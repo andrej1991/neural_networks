@@ -14,7 +14,7 @@ class conv_output_helper{
 
 class conv_backprop_helper{
     int threadcount, outputcount;
-    bool padded_delta_set;
+    bool *padded_delta_set;
     int **layer_count;
     public:
     Matrix ****padded_delta, **helper, *dilated, **kernel;

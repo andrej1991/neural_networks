@@ -31,9 +31,10 @@ void Softmax::layers_output(Matrix **input, int threadindex)
     Matrix output_helper(this->fmap[0]->biases[0][0].get_row(), this->fmap[0]->biases[0][0].get_col());
     double nominator = 0;
     double helper;
-    for(int i = 0; i < this->inputs.size(); i++)
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
     {
-        weighted_input += (this->fmap[i]->weights[0][0] * this->inputs[i][threadindex][0][0] + this->fmap[i]->biases[0][0]);
+        //weighted_input += (this->fmap[i]->weights[0][0] * this->inputs[i][threadindex][0][0] + this->fmap[i]->biases[0][0]);
+        weighted_input += (this->fmap[i]->weights[0][0] * this->network_layers[this->gets_input_from_[i]]->get_output(threadindex)[0][0] + this->fmap[i]->biases[0][0]);
     }
     double max = weighted_input.data[0][0];
     for(int i = 1; i < this->outputlen; i++)

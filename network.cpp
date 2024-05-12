@@ -314,7 +314,6 @@ void Network::backpropagate(Data_Loader *trainig_data, Layers_features **nabla, 
                                                     trainig_data->required_output, costfunction_type, threadindex);
     nabla[this->layers_num - 1]->fmap[0]->biases[0][0] = this->deltas[layers_num - 1][0][0];
     nabla[this->layers_num - 1]->fmap[0]->weights[0][0] = this->deltas[layers_num - 1][0][0] * this->layers[this->layers_num - 2]->get_output(threadindex)[0]->transpose();
-    /*passing backwards the error*/
     for(int i = this->layers_num - 2; i >= 0; i--)
     {
         this->layers[i]->backpropagate(this->layers[i - 1]->get_output(threadindex), this->layers[i + 1], nabla[i][0].fmap, this->deltas, threadindex);

@@ -34,13 +34,15 @@ conv_backprop_helper::conv_backprop_helper(int threadcnt, int row, int col)
     this->threadcount = threadcnt;
     this->layer_count = new int *[threadcnt];
     this->layer_count[0] = NULL;
-    this->padded_delta_set = false;
+    //this->padded_delta_set = false;
+    this->padded_delta_set = new bool [threadcnt];
     for(int i = 0; i < threadcnt; i++)
     {
         this->helper[i] = new Matrix(row, col);
         this->kernel[i] = new Matrix(row, col);
         this->padded_delta[i] = NULL;
         this->layer_count[i] = 0;
+        this->padded_delta_set[i] = false;
     }
 }
 
@@ -56,6 +58,7 @@ conv_backprop_helper::~conv_backprop_helper()
     delete[] dilated;
     delete helper;
     delete kernel;
+    delete this->padded_delta_set;
 }
 
 void conv_backprop_helper::delete_padded_delta(int threadindx)
@@ -76,12 +79,12 @@ void conv_backprop_helper::delete_padded_delta(int threadindx)
     }
     //delete[] this->padded_delta;
     //this->padded_delta = NULL;
-    this->padded_delta_set = false;
+    this->padded_delta_set[threadindx] = false;
 }
 
 void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int> sends_output, Layer **network_layers, int threadcnt)
 {
-    if(!this->padded_delta_set)
+    if(!this->padded_delta_set[threadcnt])
     {
         //for(int i = 0; i < this->threadcount; i++)
         //{
@@ -116,7 +119,7 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
                 }
             }
         }
-        this->padded_delta_set = true;
+        this->padded_delta_set[threadcnt] = true;
     }
     else
     {
