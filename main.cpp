@@ -352,6 +352,11 @@ int main(int argc, char *argv[])
         }
     }
     //return 0;
+    if(dropout_probability > 0.0)
+    {
+        cout << "WARNING: DROPOUT IS INACTIVATED!\n";
+        dropout_probability = 0.0;
+    }
     int output_size = layers[layer_count - 1]->row;
     Data_Loader **m, **validation;
     m = new Data_Loader* [traninig_data_len];

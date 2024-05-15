@@ -201,14 +201,14 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         //this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
     }
     this->deltas[this->layers_num - 1] = new Matrix*;
-    for(int i = 0; i < layers_num; i++)
+    /*for(int i = 0; i < layers_num; i++)
     {
         cout << this->layerdsc[i]->get_name() << endl;
         for(int j : this->layers[i]->sends_output_to())
         {
             cout << "  " << j << endl;
         }
-    }
+    }*/
 }
 
 void Network::store(char *filename)

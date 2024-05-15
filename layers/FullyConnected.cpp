@@ -289,11 +289,6 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     int remaining, dropped_out = 0;
     if(probability > 0.0)
     {
-        cout << "WARNING: DROPOUT IS INACTIVATED!\n";
-        probability = 0.0;
-    }
-    if(probability > 0.0)
-    {
         for (int i = 0; i < this->outputlen; i++)
         {
             if(distribution(rand) < probability)

@@ -86,10 +86,7 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
 {
     if(!this->padded_delta_set[threadcnt])
     {
-        //for(int i = 0; i < this->threadcount; i++)
-        //{
-            this->layer_count[threadcnt] = new int[sends_output.size()];
-        //}
+        this->layer_count[threadcnt] = new int[sends_output.size()];
         this->outputcount = sends_output.size();
         padded_delta[threadcnt] = new Matrix** [this->outputcount];
         for(int i = 0; i < this->outputcount; i++)
@@ -144,7 +141,7 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
             {
                 for(int j = 0; j < next_layers_fmapcount; j++)
                 {
-                    padded_delta[threadcnt][i][j] = new Matrix;
+                    //padded_delta[threadcnt][i][j] = new Matrix;
                     padded_delta[threadcnt][i][j][0] = delta[sends_output[i]][j][0];
                 }
             }
@@ -170,15 +167,26 @@ Convolutional::Convolutional(Layer **network_layers, vector<int> input_from, int
                     kernel_row(kern_row), kernel_col(kern_col), map_count(map_count), vertical_stride(vertical_stride), horizontal_stride(horizontal_stride), my_index(my_index_),
                     pad(p.left_padding, p.top_padding, p.right_padding, p.bottom_padding), neuron(neuron_type), neuron_type(neuron_type)
 {
+    this->gets_input_from_ = input_from;
     this->input_row = network_layers[input_from[0]]->get_output_row();
     this->input_col = network_layers[input_from[0]]->get_output_col();
+    for(int i : input_from)
+    {
+        //cout << my_index_ << "  " << i << endl;
+        //cout << "   " << network_layers[i]->get_output_row() << "  " << network_layers[i]->get_output_col() << endl;
+        if((network_layers[i]->get_output_row() != this->input_row) && (network_layers[i]->get_output_col()))
+        {
+            cerr << "The layer index is: " << my_index_ << endl;
+            cerr << "The problem is in the dimensions in the input from layer with index: " << i << endl;
+            throw runtime_error("The input dimensions in convloutional layer are not the same\n");
+        }
+    }
     this->input_channel_count = 0;
     for(int i: input_from)
     {
         this->input_channel_count += network_layers[i]->get_mapcount();
     }
     this->network_layers = network_layers;
-    this->gets_input_from_ = input_from;
     this->output_row = (input_row - kern_row + vertical_stride) / vertical_stride;
     this->output_col = (input_col - kern_col + horizontal_stride) / horizontal_stride;
     if((this->output_row <= 0) || (this->output_col <= 0))
