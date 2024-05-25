@@ -178,12 +178,30 @@ int Flatten::get_weights_col()
 
 Matrix Flatten::drop_out_some_neurons(double probability, Matrix *colums_to_remove)
 {
-    ;
+    this->backup_map_count = this->map_count;
+    this->map_count = this->network_layers[this->sends_output_to_[0]]->get_mapcount();
+    this->backup_layers_delta = this->layers_delta;
+    this->layers_delta = new Matrix**[this->threadcount];
+    for(int i = 0; i < this->threadcount; i++)
+    {
+        this->layers_delta[i] = new Matrix* [this->map_count];
+        for(int j = 0; j < this->map_count; j++)
+            this->layers_delta[i][j] = new Matrix(1, 1);
+    }
+    return Matrix(1,1);
 }
 
 void Flatten::restore_neurons(Matrix *removed_colums)
 {
-    ;
+    for(int i = 0; i < this->threadcount; i++)
+    {
+        for(int j = 0; j < this->map_count; j++)
+            delete this->layers_delta[i][j];
+        delete[] this->layers_delta[i];
+    }
+    delete[] this->layers_delta;
+    this->map_count = this->backup_map_count;
+    this->layers_delta = this->backup_layers_delta;
 }
 
 void Flatten::store(std::ofstream &params)

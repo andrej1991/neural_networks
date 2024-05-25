@@ -12,6 +12,7 @@ FullyConnected::FullyConnected(int row, Layer **layers, vector<int> input_from, 
     double deviation = 1.0;
     double mean = 0.0;
     this->fmap = new Feature_map* [input_from.size()];
+    this->backup_weights = NULL;
     for(int i = 0; i < input_from.size(); i++)
     {
         deviation = 1.0/sqrt(this->network_layers[input_from[i]]->get_output_len());
@@ -279,6 +280,10 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     {
         this->removed_rows = new Matrix(this->outputlen, 1);
     }
+    if(this->backup_weights == NULL)
+    {
+        this->backup_weights = new Matrix* [this->gets_input_from_.size()];
+    }
     this->removed_rows->zero();
     if(probability == 0 and colums_to_remove == NULL)
     {
@@ -313,11 +318,13 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
             return this->removed_rows[0];
     }
     remaining = this->outputlen - dropped_out;
-    this->backup_weights = this->fmap[0]->weights[0];
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
+        this->backup_weights[i] = this->fmap[i]->weights[0];
     if(dropout_happened)
     {
         this->backup_biases = this->fmap[0]->biases[0];
-        this->fmap[0]->weights[0] = this->backup_weights->remove_rows(this->removed_rows[0]);
+        for(int i = 0; i < this->gets_input_from_.size(); i++)
+            this->fmap[i]->weights[0] = this->backup_weights[i]->remove_rows(this->removed_rows[0]);
         this->fmap[0]->biases[0] = this->backup_biases->remove_rows(this->removed_rows[0]);
         this->backup_output = this->output;
         this->backup_output_derivative = this->output_derivative;
@@ -330,12 +337,15 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
         this->outputlen = remaining;
         this->build_dinamic_data();
     }
-    if(colums_to_remove != NULL)
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
     {
-        Matrix *backup = this->fmap[0]->weights[0];
-        this->fmap[0]->weights[0] = backup->remove_colums(colums_to_remove[0]);
-        if(dropout_happened)
-            delete backup;
+        if(colums_to_remove[this->gets_input_from_[i]].get_row() == this->fmap[i]->weights[0]->get_col())
+        {
+            Matrix *backup = this->fmap[i]->weights[0];
+            this->fmap[i]->weights[0] = backup->remove_colums(colums_to_remove[this->gets_input_from_[i]]);
+            if(dropout_happened)
+                delete backup;
+        }
     }
     return this->removed_rows[0];
 }
@@ -344,7 +354,9 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
 {
     if(this->dropout_happened == false and removed_colums == NULL)
         return;
-    int backup_col = this->backup_weights->get_col();
+    int backup_col[this->gets_input_from_.size()];
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
+        backup_col[i] = this->backup_weights[i]->get_col();
     int r = 0, c = 0;
     for(int i = 0; i < this->backup_outputlen; i++)
     {
@@ -352,20 +364,27 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
         {
             this->backup_biases->data[i][0] = this->fmap[0]->biases[0]->data[r][0];
         }
-        for(int j = 0; j < backup_col; j++)
+        for(int mapindex = 0; mapindex < this->gets_input_from_.size(); mapindex++)
         {
-            if(this->removed_rows->data[i][0] != 1 and (removed_colums == NULL or removed_colums->data[j][0] != 1))
+            for(int j = 0; j < backup_col[mapindex]; j++)
             {
-                this->backup_weights->data[i][j] = this->fmap[0]->weights[0]->data[r][c];
-                c++;
+                if(this->removed_rows->data[i][0] != 1 and (removed_colums == NULL or
+                                                            (removed_colums[this->gets_input_from_[mapindex]].get_row() == this->fmap[mapindex]->weights[0]->get_col())))
+                if(removed_colums[this->gets_input_from_[mapindex]].data[j][0] != 1)
+                {
+                    this->backup_weights[mapindex]->data[i][j] = this->fmap[mapindex]->weights[0]->data[r][c];
+                    c++;
+                }
             }
+            c = 0;
         }
         if(this->removed_rows->data[i][0] != 1)
             r++;
-        c = 0;
+        //c = 0;
     }
     delete this->fmap[0]->weights[0];
-    this->fmap[0]->weights[0] = this->backup_weights;
+    for(int i = 0; i < this->gets_input_from_.size(); i++)
+        this->fmap[i]->weights[0] = this->backup_weights[i];
     if(dropout_happened)
     {
         delete this->fmap[0]->biases[0];

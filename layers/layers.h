@@ -116,7 +116,7 @@ class Layer{
 class FullyConnected : public Layer {
     friend class Softmax;
     Matrix ***activation_input, ***output, ***output_derivative, ***output_error, ***output_error_helper, ***layers_delta;
-    Matrix *removed_rows, *backup_weights, *backup_biases, ***backup_activation_input, ***backup_output, ***backup_output_derivative, ***backpup_output_error, ***backup_output_error_helper, ***backup_layers_delta;
+    Matrix *removed_rows, **backup_weights, *backup_biases, ***backup_activation_input, ***backup_output, ***backup_output_derivative, ***backpup_output_error, ***backup_output_error_helper, ***backup_layers_delta;
     int neuron_type, outputlen, backup_outputlen, my_index;
     Layer **network_layers;
     bool dropout_happened;
@@ -205,13 +205,13 @@ class InputLayer : public Layer {
 };
 
 class Flatten : public Layer{
-    Matrix ***output, ***layers_delta;
+    Matrix ***output, ***layers_delta, ***backup_layers_delta;
     //vector<Matrix***> inputs;
     vector<int> gets_input_from_, sends_output_to_;
     Layer **network_layers;
     Feature_map **fmap;
     short int layer_type;
-    int threadcount, outputlen, my_index, map_count;
+    int threadcount, outputlen, my_index, map_count, backup_map_count;
     virtual void destroy_dinamic_data();
     virtual void build_dinamic_data();
     public:
