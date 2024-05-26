@@ -297,14 +297,14 @@ void load_data(YAML::Node &config, int output_size, Data_Loader **m, Data_Loader
     for(int i = 0; i < traninig_data_len; i++)
     {
         m[i] = new Data_Loader(input_row, input_col, output_size, input_channel_count);
-        m[i]->load_MNIST(input, required_output);
-        //m[i]->load_CIFAR(input);
+        //m[i]->load_MNIST(input, required_output);
+        m[i]->load_CIFAR(input);
     }
     for(int i = 0; i < validation_data_len; i++)
     {
         validation[i] = new Data_Loader(input_row, input_col, 1, input_channel_count);
-        validation[i]->load_MNIST(validation_input_data, validation_output_data);
-        //validation[i]->load_CIFAR(validation_input_data);
+        //validation[i]->load_MNIST(validation_input_data, validation_output_data);
+        validation[i]->load_CIFAR(validation_input_data);
     }
     input.close();
     required_output.close();

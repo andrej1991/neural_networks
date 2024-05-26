@@ -37,8 +37,8 @@ class Pooling : public Layer {
     int get_mapdepth();
     int get_weights_row();
     int get_weights_col();
-    Matrix drop_out_some_neurons(double probability = 0, Matrix *colums_to_remove = NULL){};
-    void restore_neurons(Matrix *removed_colums = NULL){};
+    void drop_out_some_neurons(double probability = 0, Matrix **colums_to_remove = NULL){};
+    void restore_neurons(Matrix **removed_colums = NULL){};
     void store(std::ofstream &params);
     void load(std::ifstream &params);
     virtual void set_threadcount(int threadcnt);

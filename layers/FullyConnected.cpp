@@ -29,6 +29,7 @@ FullyConnected::FullyConnected(int row, Layer **layers, vector<int> input_from, 
         this->fmap[i]->initialize_biases();
     }
     this->dropout_happened = false;
+    this->colums_removed = false;
     this->removed_rows = NULL;
     this->backup_outputlen = row;
     this->threadcount = 1;
@@ -274,7 +275,7 @@ int FullyConnected::get_weights_col()
     return this->fmap[0]->get_col();
 }
 
-Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_to_remove)
+void FullyConnected::drop_out_some_neurons(double probability, Matrix **colums_to_remove)
 {
     if(this->removed_rows == NULL)
     {
@@ -285,10 +286,10 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
         this->backup_weights = new Matrix* [this->gets_input_from_.size()];
     }
     this->removed_rows->zero();
-    if(probability == 0 and colums_to_remove == NULL)
+    /*if(probability == 0 and colums_to_remove == NULL)
     {
         return this->removed_rows[0];
-    }
+    }*/
     std::random_device rand;
     std::uniform_real_distribution<double> distribution(0.0,1.0);
     int remaining, dropped_out = 0;
@@ -314,8 +315,11 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     else
     {
         this->dropout_happened = false;
-        if(colums_to_remove == NULL)
-            return this->removed_rows[0];
+        /*if(colums_to_remove == NULL)
+        {
+            colums_to_remove[this->my_index] = this->removed_rows[0];
+            return;
+        }*/
     }
     remaining = this->outputlen - dropped_out;
     for(int i = 0; i < this->gets_input_from_.size(); i++)
@@ -330,8 +334,8 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
         this->backup_output_derivative = this->output_derivative;
         this->backpup_output_error = this->output_error;
         this->backup_activation_input = this->activation_input;
-        if(probability == 0)
-            throw exception();
+        //if(probability == 0)
+        //    throw exception();
         this->backup_output_error_helper = this->output_error_helper;
         this->backup_layers_delta = this->layers_delta;
         this->outputlen = remaining;
@@ -339,20 +343,22 @@ Matrix FullyConnected::drop_out_some_neurons(double probability, Matrix *colums_
     }
     for(int i = 0; i < this->gets_input_from_.size(); i++)
     {
-        if(colums_to_remove[this->gets_input_from_[i]].get_row() == this->fmap[i]->weights[0]->get_col())
+        if(colums_to_remove[this->gets_input_from_[i]] != NULL)
         {
             Matrix *backup = this->fmap[i]->weights[0];
-            this->fmap[i]->weights[0] = backup->remove_colums(colums_to_remove[this->gets_input_from_[i]]);
+            this->fmap[i]->weights[0] = backup->remove_colums(colums_to_remove[this->gets_input_from_[i]][0]);
             if(dropout_happened)
                 delete backup;
+            this->colums_removed = true;
         }
     }
-    return this->removed_rows[0];
+    colums_to_remove[this->my_index] = this->removed_rows;
+    return;
 }
 
-void FullyConnected::restore_neurons(Matrix *removed_colums)
+void FullyConnected::restore_neurons(Matrix **removed_colums)
 {
-    if(this->dropout_happened == false and removed_colums == NULL)
+    if(this->dropout_happened == false and this->colums_removed == false)
         return;
     int backup_col[this->gets_input_from_.size()];
     for(int i = 0; i < this->gets_input_from_.size(); i++)
@@ -368,9 +374,9 @@ void FullyConnected::restore_neurons(Matrix *removed_colums)
         {
             for(int j = 0; j < backup_col[mapindex]; j++)
             {
-                if(this->removed_rows->data[i][0] != 1 and (removed_colums == NULL or
-                                                            (removed_colums[this->gets_input_from_[mapindex]].get_row() == this->fmap[mapindex]->weights[0]->get_col())))
-                if(removed_colums[this->gets_input_from_[mapindex]].data[j][0] != 1)
+                if((this->removed_rows->data[i][0] != 1) and
+                   ((removed_colums[this->gets_input_from_[mapindex]] == NULL) or
+                    ((removed_colums[this->gets_input_from_[mapindex]] != NULL) and (removed_colums[this->gets_input_from_[mapindex]]->data[j][0] != 1))))
                 {
                     this->backup_weights[mapindex]->data[i][j] = this->fmap[mapindex]->weights[0]->data[r][c];
                     c++;

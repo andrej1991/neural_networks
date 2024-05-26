@@ -144,9 +144,10 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
     double previoius_learning_cost = 0;
     double lr, reg;
     Matrix helper(this->neunet.layers[this->neunet.layers_num - 1]->get_output_row(), 1);
-    Matrix __dropout_neurons[this->neunet.layers_num];
-    __dropout_neurons[0] = Matrix(training_data[0][0].input_vector_row, training_data[0][0].input_vector_col);
-    Matrix *dropout_neurons = &__dropout_neurons[1];
+    Matrix* __dropout_neurons[this->neunet.layers_num + 1];
+    for(int i = 0; i <= this->neunet.layers_num; i++)
+        __dropout_neurons[i] = NULL;
+    Matrix **dropout_neurons = &__dropout_neurons[1];
     chrono::time_point<chrono::system_clock> start, end_training;
     chrono::duration<double> epoch_duration, overall_duration;
     Layers_features **nabla, ***deltanabla, **helper_1, **helper_2;
@@ -228,7 +229,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
             if(this->dropout_probability != 0)
             {
                 int dropout_index = 0;
-                while(this->neunet.layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->neunet.layers[dropout_index]->get_layer_type() != SOFTMAX)
+                /*while(this->neunet.layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->neunet.layers[dropout_index]->get_layer_type() != SOFTMAX)
                 {
                     dropout_index++;
                 }
@@ -238,7 +239,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
                 {
                     if(this->neunet.layers[dropout_index]->get_layer_type() != FLATTEN)
                     {
-                        dropout_neurons[dropout_index] = this->neunet.layers[dropout_index]->drop_out_some_neurons(dropout_probability, dropout_neurons);
+                        this->neunet.layers[dropout_index]->drop_out_some_neurons(dropout_probability, dropout_neurons);
                     }
                 }
                 if(this->neunet.layers[this->neunet.layers_num - 1]->get_layer_type() != FLATTEN)
@@ -249,7 +250,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
                 {
                     if(this->neunet.layers[layerindex]->get_layer_type() == FLATTEN)
                     {
-                        dropout_neurons[layerindex] = this->neunet.layers[layerindex]->drop_out_some_neurons(dropout_probability, dropout_neurons);
+                        this->neunet.layers[layerindex]->drop_out_some_neurons(dropout_probability, dropout_neurons);
                     }
                     if(this->neunet.layers[layerindex]->get_layer_type() == FULLY_CONNECTED or this->neunet.layers[layerindex]->get_layer_type() == SOFTMAX or this->neunet.layers[layerindex]->get_layer_type() == FLATTEN)
                     {
@@ -307,9 +308,9 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
                 /*while(this->neunet.layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->neunet.layers[dropout_index]->get_layer_type() != SOFTMAX and this->neunet.layers[layerindex]->get_layer_type() != FLATTEN)
                 {
                     dropout_index++;
-                }*/
+                }
                 this->neunet.layers[dropout_index]->restore_neurons(NULL);
-                dropout_index++;
+                dropout_index++;*/
                 for(dropout_index; dropout_index <= this->neunet.layers_num - 1; dropout_index++)
                 {
                     this->neunet.layers[dropout_index]->restore_neurons(dropout_neurons);
