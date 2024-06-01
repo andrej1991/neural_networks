@@ -66,17 +66,6 @@ Network::Network(char *data)
                 output_connections.push_back(string(conn));
                 delete conn;
             }
-            /*cout << i  << endl;
-            cout << f_layer_type << endl;
-            cout << f_neuron_type << endl;
-            cout << f_neuron_count << endl;
-            //cout << output_connections << endl;
-            cout << string(name) << endl;
-            cout << f_col << endl;
-            cout <<  f_mapcount << endl;
-            cout << f_vertical_stride << endl;
-            cout << f_horizontal_stride << endl;*/
-            ///TODO: rewrite the loading and saving accordingly
             dsc[i] = new LayerDescriptor(f_layer_type, f_neuron_type, f_neuron_count, output_connections, string(name), f_col, f_mapcount, f_vertical_stride, f_horizontal_stride);
             delete name;
             output_connections.clear();
@@ -165,58 +154,33 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
-                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new FullyConnected(layerdesc[i]->neuron_count, this->layers, inputs,
                                                      layerdesc[i]->neuron_type, i);
-                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case SOFTMAX:
-                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers, inputs, i);
-                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case FLATTEN:
-                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
-                //this->layers[i] = new Flatten(this->collect_inputs(i, inputs), this->layers, i, inputs, layerdesc[i+1]->row);
                 this->layers[i] = new Flatten(this->layers, i, inputs, layerdesc[i+1]->row);
-                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case CONVOLUTIONAL:
-                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
-                ///Convolutional(int input_row, int input_col, int input_channel_count, int kern_row, int kern_col, int map_count, int neuron_type, int next_layers_type, Padding &p, int stride=1)
                 this->layers[i] = new Convolutional(this->layers, inputs, layerdesc[i]->row, layerdesc[i]->col,
                                                     layerdesc[i]->mapcount, layerdesc[i]->neuron_type, i, p, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
-                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             case MAX_POOLING:
-                //cout << "creating layer: " << layerdesc[i]->get_name() << endl;
                 this->layers[i] = new Pooling(this->layers, inputs, layerdesc[i]->row, layerdesc[i]->col, MAX_POOLING, i);
-                //cout << "layer: " << layerdesc[i]->get_name() << " created" << endl;
                 break;
             default:
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
         }
         this->layers[i]->create_connections(inputs, get_output_connections(layerdesc, layer_name_to_index, this->layers_num, i));
-        //this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
     }
     this->deltas[this->layers_num - 1] = new Matrix*;
-    /*for(int i = 0; i < layers_num; i++)
-    {
-        cout << this->layerdsc[i]->get_name() << endl;
-        for(int j : this->layers[i]->sends_output_to())
-        {
-            cout << "  " << j << endl;
-        }
-    }*/
 }
 
 void Network::store(char *filename)
 {
-    ///(int layer_type, int neuron_type, int neuron_count, int col = 1, int mapcount = 1, int stride = 1)
-    ///int layers_num, LayerDescriptor **layerdesc, int input_row, int input_col, int input_channel_count, int costfunction_type,  bool dropout
-    //int dummy1;
-    //double dummy2;
     int _size, vec_size;
     const char *str;
     ofstream network_params (filename, ios::out | ios::binary);
@@ -226,8 +190,6 @@ void Network::store(char *filename)
         network_params.write(reinterpret_cast<char *>(&(this->input_row)), sizeof(int));
         network_params.write(reinterpret_cast<char *>(&(this->input_col )), sizeof(int));
         network_params.write(reinterpret_cast<char *>(&(this->input_channel_count)), sizeof(int));
-        //network_params.write(reinterpret_cast<char *>(&(dummy1)), sizeof(int));
-        //network_params.write(reinterpret_cast<char *>(&(dummy2)), sizeof(double));
         for(int i=0; i<this->layers_num; i++)
         {
             _size = this->layerdsc[i]->name.size();
@@ -267,7 +229,7 @@ void Network::store(char *filename)
 vector<Matrix***> Network::collect_inputs(int current_index, vector<int> inputs)
 {
     vector<Matrix***> ret;
-    Matrix ***retmatrix;// = new Matrix** [this->threadcount];
+    Matrix ***retmatrix;
     for(int i : inputs)
     {
         retmatrix = new Matrix** [this->threadcount];
@@ -296,16 +258,6 @@ Matrix Network::get_output(Matrix **input, int threadindex)
     ///TODO modify this function to work with multiple input features...
     this->feedforward(input, threadindex);
     Matrix ret = *(this->layers[this->layers_num - 1]->get_output(threadindex)[0]);
-    /*print_mtx(input[0][0]);
-    print_mtx(layers[-1]->get_output(threadindex)[0][0]);
-    int layerindex = 4;
-    for(int i = 0; i < layers[layerindex]->get_mapcount(); i++)
-    {
-        //print_mtx(layers[layerindex]->get_feature_maps()[i]->weights[0][0]);
-        print_mtx(layers[layerindex]->get_output(threadindex)[i][0]);
-        cout << i << endl;
-    }
-    print_mtx(ret);*/
     return ret;
 }
 
@@ -332,29 +284,11 @@ void Network::set_threadcount(int threadcnt)
 {
     if(this->threadcount != threadcnt)
     {
-        /*map<std::string, int> layer_name_to_index;
-        vector<int> inputs;
-        for(int i = 0; i < this->layers_num; i++)
-        {
-            layer_name_to_index[this->layerdsc[i]->get_name()] = i;
-        }*/
         this->layers[-1]->set_threadcount(threadcnt);
         for(int i = 0; i < this->layers_num; i++)
         {
             this->layers[i]->set_threadcount(threadcnt);
         }
-        /*for(int i = 0; i < this->layers_num; i++)
-        {
-            inputs.clear();
-            if(i == 0)
-            {
-                inputs.push_back(-1);
-            } else
-            {
-                inputs = get_inputs(this->layerdsc, layers_num, this->layerdsc[i]->get_name(), layer_name_to_index);
-            }
-            this->layers[i]->set_layers_inputs(this->collect_inputs(i, inputs));
-        }*/
         this->threadcount = threadcnt;
     }
     cout << "threadcounts set\n";

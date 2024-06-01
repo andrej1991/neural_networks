@@ -46,20 +46,10 @@ void InputLayer::update_weights_and_biasses(double learning_rate, double regular
 
 void InputLayer::set_input(Matrix **input, int threadindex)
 {
-    //if(this->next_layers_type == FULLY_CONNECTED)
-    //{
-        for (int i = 0; i < this->input_channel_count; i++)
-        {
-            this->outputs[threadindex][i][0] = input[i][0];
-        }
-    /*}
-    else if(this->next_layers_type == CONVOLUTIONAL)
+    for (int i = 0; i < this->input_channel_count; i++)
     {
-        for(int l = 0; l < this->input_channel_count; l++)
-        {
-            this->outputs[threadindex][l][0] = input[l][0] * (1.0/256);
-        }
-    }*/
+        this->outputs[threadindex][i][0] = input[i][0];
+    }
 }
 
 inline int InputLayer::get_threadcount()

@@ -23,7 +23,6 @@ Pooling::Pooling(Layer **network_layers, vector<int> input_from, int row, int co
         output_col++;
     this->threadcount = 1;
     this->build_outputs_and_errors();
-    //throw runtime_error("Backpropagation is not working yet\n");
 }
 
 Pooling::~Pooling()
@@ -87,8 +86,6 @@ void Pooling::build_outputs_and_errors()
 inline void Pooling::max_pooling(Matrix **inpput, int threadindex)
 {
     int in_row = this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[0][0].get_row();
-    //int in_row = this->inputs[0][threadindex][0][0].get_row();
-    //int in_col = this->inputs[0][threadindex][0][0].get_col();
     int in_col = this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[0][0].get_col();
     int input_r_index, input_c_index, max_r_index, max_c_index;
     double max;
@@ -102,16 +99,13 @@ inline void Pooling::max_pooling(Matrix **inpput, int threadindex)
             {
                 max_r_index = input_r_index;
                 max_c_index = input_c_index;
-                //max = this->inputs[0][threadindex][mapindex]->data[max_r_index][max_c_index];
                 max = this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[mapindex]->data[max_r_index][max_c_index];
                 for(int map_r_index = 0; map_r_index < this->map_row and (input_r_index + map_r_index) < in_row; map_r_index++)
                 {
                     for(int map_c_index = 0; map_c_index < this->map_col and (input_c_index + map_c_index) < in_col; map_c_index++)
                     {
-                        //if(max < this->inputs[0][threadindex][mapindex]->data[input_r_index + map_r_index][input_c_index + map_c_index])
                         if(max < this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[mapindex]->data[input_r_index + map_r_index][input_c_index + map_c_index])
                         {
-                            //max = this->inputs[0][threadindex][mapindex]->data[input_r_index + map_r_index][input_c_index + map_c_index];
                             max = this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[mapindex]->data[input_r_index + map_r_index][input_c_index + map_c_index];
                             max_r_index = input_r_index + map_r_index;
                             max_c_index = input_c_index + map_c_index;
@@ -131,9 +125,7 @@ inline void Pooling::max_pooling(Matrix **inpput, int threadindex)
 
 inline Matrix** Pooling::backpropagate(Matrix **inpput, Layer *next_layer, Feature_map **nabla, Matrix ***delta, int threadindex)
 {
-    //int in_row = this->inputs[0][threadindex][0][0].get_row();
     int in_row = this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[0][0].get_row();
-    //int in_col = inputs[0][threadindex][0][0].get_col();
     int in_col = this->network_layers[this->gets_input_from_[0]]->get_output(threadindex)[0][0].get_col();
     int delta_r_index, delta_c_index;
     delta_c_index = delta_r_index = 0;
@@ -329,11 +321,3 @@ void Pooling::load(std::ifstream &params)
     ;
 }
 
-/*void Pooling::set_layers_inputs(vector<Matrix***> inputs_)
-{
-    this->inputs.clear();
-    for(Matrix ***inp : inputs_)
-    {
-        this->inputs.push_back(inp);
-    }
-}*/

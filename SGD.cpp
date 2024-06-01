@@ -229,12 +229,6 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
             if(this->dropout_probability != 0)
             {
                 int dropout_index = 0;
-                /*while(this->neunet.layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->neunet.layers[dropout_index]->get_layer_type() != SOFTMAX)
-                {
-                    dropout_index++;
-                }
-                //dropout_neurons[dropout_index] = this->neunet.layers[dropout_index]->drop_out_some_neurons(dropout_probability, NULL);
-                //dropout_index++;*/
                 for(dropout_index; dropout_index < this->neunet.layers_num - 1; dropout_index++)
                 {
                     if(this->neunet.layers[dropout_index]->get_layer_type() != FLATTEN)
@@ -305,17 +299,10 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
             if(this->dropout_probability != 0)
             {
                 int dropout_index = 0;
-                /*while(this->neunet.layers[dropout_index]->get_layer_type() != FULLY_CONNECTED and this->neunet.layers[dropout_index]->get_layer_type() != SOFTMAX and this->neunet.layers[layerindex]->get_layer_type() != FLATTEN)
-                {
-                    dropout_index++;
-                }
-                this->neunet.layers[dropout_index]->restore_neurons(NULL);
-                dropout_index++;*/
                 for(dropout_index; dropout_index <= this->neunet.layers_num - 1; dropout_index++)
                 {
                     this->neunet.layers[dropout_index]->restore_neurons(dropout_neurons);
                 }
-                //this->neunet.layers[this->neunet.layers_num - 1]->restore_neurons(dropout_neurons);
             }
         }
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++)
@@ -330,7 +317,6 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
             cout << "  \033[4;31mavarage cost: " << execution_accuracy.total_cost / trainingdata_len << "\033[0m" << endl;
             if(change_learning_cost > 0)
             {
-                //"\033[1;31mbold red text\033[0m\n";
                 if((abs(execution_accuracy.total_cost) - abs(previoius_learning_cost)) > 0)
                     learnig_cost_counter++;
                 if(learnig_cost_counter == change_learning_cost)
@@ -384,10 +370,6 @@ void StochasticGradientDescent::stochastic_gradient_descent(Data_Loader **traini
 void StochasticGradientDescent::momentum_gradient_descent(Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, int change_learning_cost,
                                             double regularization_rate, Data_Loader **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    /*if(this->dropout_probability != 0.0)
-    {
-        throw invalid_argument("Known limitation that momentum_gradient_descent is not working with dropout.");
-    }*/
     this->gradient_descent_variant(MOMENTUM, training_data, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate,
                                  0, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
@@ -406,10 +388,6 @@ void StochasticGradientDescent::nesterov_accelerated_gradient(Data_Loader **trai
 void StochasticGradientDescent::rmsprop(Data_Loader **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, int change_learning_cost,
                                             double regularization_rate, double denominator, Data_Loader **test_data, int minibatch_count, int test_data_len, int trainingdata_len)
 {
-    /*if(this->dropout_probability != 0.0)
-    {
-        throw invalid_argument("Known limitation that rmsprop is not working with dropout.");
-    }*/
     this->gradient_descent_variant(RMSPROP, training_data, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate,
                                  denominator, momentum, test_data, minibatch_count, test_data_len, trainingdata_len);
 }
@@ -487,7 +465,6 @@ Accuracy StochasticGradientDescent::check_accuracy(Data_Loader **test_data, int 
     }
     end_testing = chrono::system_clock::now();
     test_duration = end_testing - start;
-    //"\033[1;31mbold red text\033[0m\n";
     cout << "\033[1;31mset " << epoch << ": " << learning_accuracy << " out of: " << test_data_len << "\033[0m" << endl;
     cout << "  The avarange confidence is: " << (avarange_confidence/learning_accuracy) * 100.0 << "%" << endl;
     cout << "  The avarange confidence over false clasifications is: " << (avarange_false_confidence/(test_data_len - learning_accuracy)) * 100.0 << "%" << endl;
@@ -512,7 +489,6 @@ StochasticGradientDescentMultiThread::~StochasticGradientDescentMultiThread()
 void StochasticGradientDescentMultiThread::stochastic(Data_Loader **minibatches, int minibatch_len, Layers_features **nabla, Layers_features ***deltanabla,
                                            double learning_rate, double regularization_rate)
 {
-    //cout << "stochastic is being called\n";
     for(int training_data_index = 0; training_data_index < minibatch_len; training_data_index++)
     {
         this->job[training_data_index]->costfunction_type = this->costfunction_type;
@@ -600,7 +576,6 @@ void StochasticGradientDescentMultiThread::gradient_descent_variant(int variant,
                                                          double regularization_rate, double denominator, double momentum, Data_Loader **test_data, int minibatch_count,
                                                          int test_data_len,  int trainingdata_len)
 {
-    //cout << "multithreaded SGD variant is being called\n";
     this->job = new Job* [minibatch_len];
     for(int i = 0; i < minibatch_len; i++)
         this->job[i] = new Job(i, &(this->neunet));

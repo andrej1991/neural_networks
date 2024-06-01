@@ -99,7 +99,6 @@ Matrix Matrix::operator* (const Matrix& other)
                 for(int i = 0; i < col; i++)
                 {
                     c += data[k][i] * other.data[i][l];
-                    //c += data[k][i] * 1;
                 }
                 mtx.data[k][l] = c;
                 c = 0;
@@ -254,7 +253,6 @@ Matrix Matrix::multiply_with_transpose(Matrix &mtx)
                 for(int i = 0; i < this->col; i++)
                 {
                     c += this->data[k][i] * mtx.data[l][i];
-                    //c += data[k][i] * 1;
                 }
                 ret.data[k][l] = c;
                 c = 0;
@@ -465,9 +463,6 @@ Matrix Matrix::dilate(int vertical_stride, int horizontal_stride)
 
 void Matrix::zero()
 {
-    /*for(int i = 0; i < this->row; i++)
-        for(int j = 0; j < this->col; j++)
-            this->data[i][j] = 0;*/
     memset((void*) this->dv, 0, sizeof(double)*row*col);
 }
 

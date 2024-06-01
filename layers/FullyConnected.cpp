@@ -92,14 +92,6 @@ void FullyConnected::build_dinamic_data()
     }
 }
 
-/*void FullyConnected::set_layers_inputs(vector<Matrix***> inputs_)
-{
-    this->inputs.clear();
-    for(Matrix ***inp : inputs_)
-    {
-        this->inputs.push_back(inp);
-    }
-}*/
 
 void FullyConnected::layers_output(Matrix **input, int threadindex)
 {
@@ -184,7 +176,6 @@ void FullyConnected::set_input(Matrix **input, int threadindex)
 Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***deltas, int threadindex)
 {
     this->derivate_layers_output(NULL, threadindex);
-    ///TODO think through this function from mathematical perspective!!!
     Feature_map** next_layers_fmaps;
     int next_layers_fmapcount, indexOfMyInput, j, l;
     vector<int> next_layers_inputs;
@@ -202,11 +193,9 @@ Matrix** FullyConnected::backpropagate(Matrix **input, Layer *next_layer, Featur
         get_fcc_delta(next_layers_fmaps[j][0].weights[0][0], deltas[i][0][0], this->output_derivative[threadindex][0][0], this->layers_delta[threadindex][0][0]);
     }
     nabla[0][0].biases[0][0] = this->layers_delta[threadindex][0][0];
-    //nabla[0][0].weights[0][0] = this->layers_delta[threadindex][0][0] * input[0][0].transpose();
     l = 0;
     for(int k : this->gets_input_from_)
     {
-        ///TODO nabla has to be planned
         nabla[l++][0].weights[0][0] = this->layers_delta[threadindex][0][0].multiply_with_transpose(this->network_layers[k]->get_output(threadindex)[0][0]);
     }
     deltas[this->my_index] = this->layers_delta[threadindex];
@@ -286,10 +275,6 @@ void FullyConnected::drop_out_some_neurons(double probability, Matrix **colums_t
         this->backup_weights = new Matrix* [this->gets_input_from_.size()];
     }
     this->removed_rows->zero();
-    /*if(probability == 0 and colums_to_remove == NULL)
-    {
-        return this->removed_rows[0];
-    }*/
     std::random_device rand;
     std::uniform_real_distribution<double> distribution(0.0,1.0);
     int remaining, dropped_out = 0;
@@ -315,11 +300,6 @@ void FullyConnected::drop_out_some_neurons(double probability, Matrix **colums_t
     else
     {
         this->dropout_happened = false;
-        /*if(colums_to_remove == NULL)
-        {
-            colums_to_remove[this->my_index] = this->removed_rows[0];
-            return;
-        }*/
     }
     remaining = this->outputlen - dropped_out;
     for(int i = 0; i < this->gets_input_from_.size(); i++)
@@ -334,8 +314,6 @@ void FullyConnected::drop_out_some_neurons(double probability, Matrix **colums_t
         this->backup_output_derivative = this->output_derivative;
         this->backpup_output_error = this->output_error;
         this->backup_activation_input = this->activation_input;
-        //if(probability == 0)
-        //    throw exception();
         this->backup_output_error_helper = this->output_error_helper;
         this->backup_layers_delta = this->layers_delta;
         this->outputlen = remaining;
@@ -386,7 +364,6 @@ void FullyConnected::restore_neurons(Matrix **removed_colums)
         }
         if(this->removed_rows->data[i][0] != 1)
             r++;
-        //c = 0;
     }
     delete this->fmap[0]->weights[0];
     for(int i = 0; i < this->gets_input_from_.size(); i++)
@@ -449,7 +426,6 @@ void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Mat
     }
     else
     {
-        //Matrix ret(nextLW.col, delta.col);
         double c = 0;
         for(int k = 0; k < ret.row; k++)
         {
@@ -464,7 +440,6 @@ void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Mat
                 c = 0;
             }
         }
-        //return ret;
     }
 }
 
@@ -476,7 +451,6 @@ void weighted_output(Matrix &w, Matrix &input, Matrix &b, Matrix &mtx)
     }
     else
     {
-        //Matrix mtx(w.row, input.col);
         double c = 0;
         for(int k = 0; k < w.row; k++)
         {
@@ -485,12 +459,10 @@ void weighted_output(Matrix &w, Matrix &input, Matrix &b, Matrix &mtx)
                 for(int i = 0; i < w.col; i++)
                 {
                     c += w.data[k][i] * input.data[i][l];
-                    //c += data[k][i] * 1;
                 }
                 mtx.data[k][l] += c+b.data[k][l];
                 c = 0;
             }
         }
-        //return mtx;
     }
 }
