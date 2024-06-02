@@ -52,7 +52,7 @@ void Data_Loader::load_CIFAR(std::ifstream &input)
         input.read(temp_data, read_len);
         for(int i = 0; i < read_len; i++)
         {
-            this->input[k]->dv[i] = (double)temp_data[i]/255;
+            this->input[k]->dv[i] = (double)temp_data[i]/255.0;
         }
     }
 }

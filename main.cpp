@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
         cout << command << endl;
         system(command.c_str());
     }
-    learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
+    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
 
     //learning2.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
     //Accuracy A = learning.check_accuracy(validation, 100, 0, 1, regularization_rate);
     //cout << "cost: " << A.total_cost << " correct answers: " << A.correct_answers << endl;
 
-    //learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
+    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
     //A = learning.check_accuracy(m, 50000, 0, 1, regularization_rate);
     //cout << "cost: " << A.total_cost << " correct answers: " << A.correct_answers << endl;
 

@@ -248,7 +248,6 @@ void Network::feedforward(Matrix **input, int threadindex)
     this->layers[-1]->set_input(input, threadindex);
     for(int i = 0; i < this->layers_num; i++)
     {
-        //this->layers[i]->layers_output(this->layers[i - 1]->get_output(threadindex), threadindex);
         this->layers[i]->layers_output(NULL, threadindex);
     }
 }

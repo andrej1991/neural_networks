@@ -20,7 +20,6 @@ class conv_backprop_helper{
     Matrix ****padded_delta, **helper, *dilated, **kernel;
     conv_backprop_helper(int threadcnt, int row, int col);
     ~conv_backprop_helper();
-    //void set_padded_delta_1d(Matrix **delta, int next_layers_neuroncount, int top, int right, int bottom, int left, int threadcnt);
     void set_padded_delta_2d(Matrix ***delta, std::vector<int> sends_output, Layer **network_layers, int threadcnt);
     void delete_padded_delta(int threadindx);
     void zero(int threadid);
