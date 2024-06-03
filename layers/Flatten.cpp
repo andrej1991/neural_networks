@@ -7,10 +7,12 @@ Flatten::Flatten(Layer **layers, int index, vector<int> input_from, int mapcount
     this->network_layers = layers;
     this->threadcount = 1;
     this->outputlen = 0;
+    this->mapdepth = 0;
     this->fmap = NULL;
     for(int i : input_from)
     {
         this->outputlen += this->network_layers[i]->get_output_len();
+        this->mapdepth += this->network_layers[i]->get_mapcount();
     }
     this->build_dinamic_data();
 }
@@ -55,6 +57,7 @@ Matrix** Flatten::backpropagate(Matrix **input, Layer *next_layer, Feature_map *
 
 void Flatten::layers_output(Matrix **input, int threadindex)
 {
+    int outputindex = 0;
     for(int i : this->gets_input_from_)
     {
         int map_count_ = this->network_layers[i]->get_mapcount();
@@ -62,7 +65,8 @@ void Flatten::layers_output(Matrix **input, int threadindex)
         int output_size_in_bytes = output_size * sizeof(double);
         for(int map_index = 0; map_index < map_count_; map_index++)
         {
-            memcpy(&(this->output[threadindex][0]->dv[map_index*output_size]), this->network_layers[i]->get_output(threadindex)[map_index]->dv, output_size_in_bytes);
+            memcpy(&(this->output[threadindex][0]->dv[outputindex]), this->network_layers[i]->get_output(threadindex)[map_index]->dv, output_size_in_bytes);
+            outputindex += output_size;
         }
     }
 }
@@ -100,7 +104,7 @@ inline Feature_map** Flatten::get_feature_maps()
         this->fmap = new Feature_map* [this->map_count];
         for(int i = 0; i < this->map_count; i++)
         {
-            this->fmap[i] = new Feature_map(this->get_weights_row(), this->get_weights_col(), this->network_layers[this->gets_input_from_[0]]->get_mapcount());
+            this->fmap[i] = new Feature_map(this->get_weights_row(), this->get_weights_col(), this->mapdepth);
         }
     }
     int input_from_me = 0;
@@ -152,7 +156,7 @@ int Flatten::get_mapcount()
 
 int Flatten::get_mapdepth()
 {
-    return this->fmap[0]->get_mapdepth();
+    return this->mapdepth;
 }
 
 int Flatten::get_weights_row()

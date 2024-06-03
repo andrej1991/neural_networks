@@ -278,7 +278,7 @@ void Convolutional::build_outputs_and_errors()
 
 inline int Convolutional::get_chanel_index(int i)
 {
-    return 0;
+    return i;
 }
 
 Matrix** Convolutional::backpropagate(Matrix **input, Layer *next_layer, Feature_map** nabla, Matrix ***delta, int threadindex)

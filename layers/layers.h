@@ -206,7 +206,7 @@ class Flatten : public Layer{
     Layer **network_layers;
     Feature_map **fmap;
     short int layer_type;
-    int threadcount, outputlen, my_index, map_count, backup_map_count;
+    int threadcount, outputlen, my_index, map_count, backup_map_count, mapdepth;
     virtual void destroy_dinamic_data();
     virtual void build_dinamic_data();
     public:
