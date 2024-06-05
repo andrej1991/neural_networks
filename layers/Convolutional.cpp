@@ -88,9 +88,9 @@ void conv_backprop_helper::set_padded_delta_2d(Matrix ***delta, std::vector<int>
         padded_delta[threadcnt] = new Matrix** [this->outputcount];
         for(int i = 0; i < this->outputcount; i++)
         {
-                int next_layers_fmapcount = network_layers[sends_output[i]]->get_mapcount();
-                padded_delta[threadcnt][i] = new Matrix* [next_layers_fmapcount];
-                this->layer_count[threadcnt][i] = next_layers_fmapcount;
+            int next_layers_fmapcount = network_layers[sends_output[i]]->get_mapcount();
+            padded_delta[threadcnt][i] = new Matrix* [next_layers_fmapcount];
+            this->layer_count[threadcnt][i] = next_layers_fmapcount;
             if(network_layers[sends_output[i]]->get_layer_type() != POOLING)
             {
                 Feature_map** next_layers_fmaps = network_layers[sends_output[i]]->get_feature_maps();

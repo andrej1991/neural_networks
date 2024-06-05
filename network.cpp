@@ -135,6 +135,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
     map<std::string, int> layer_name_to_index;
     vector<int> prev_outputlens;
     vector<int> inputs;
+    vector<int> outputs;
     layer_name_to_index[string("InputLayer")] = -1;
     for(int i = 0; i < layers_num; i++)
     {
@@ -150,7 +151,9 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
         this->layerdsc[i] = new LayerDescriptor(layerdesc[i]->layer_type, layerdesc[i]->neuron_type, layerdesc[i]->neuron_count, layerdesc[i]->input_connections, layerdesc[i]->name,
                                                 layerdesc[i]->col, layerdesc[i]->mapcount, layerdesc[i]->vertical_stride, layerdesc[i]->horizontal_stride);
         inputs.clear();
+        outputs.clear();
         inputs = get_inputs(layerdesc[i], layer_name_to_index);
+        outputs = get_output_connections(layerdesc, layer_name_to_index, this->layers_num, i);
         switch(layerdesc[i]->layer_type)
         {
             case FULLY_CONNECTED:
@@ -161,7 +164,7 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 this->layers[i] = new Softmax(layerdesc[i]->neuron_count, this->layers, inputs, i);
                 break;
             case FLATTEN:
-                this->layers[i] = new Flatten(this->layers, i, inputs, layerdesc[i+1]->row);
+                this->layers[i] = new Flatten(this->layers, i, inputs, layerdesc[outputs[0]]->row);
                 break;
             case CONVOLUTIONAL:
                 this->layers[i] = new Convolutional(this->layers, inputs, layerdesc[i]->row, layerdesc[i]->col,
@@ -174,8 +177,9 @@ void Network::construct_layers(LayerDescriptor **layerdesc)
                 cerr << "Unknown layer type: " << layerdesc[i]->layer_type << "\n";
                 throw std::exception();
         }
-        this->layers[i]->create_connections(inputs, get_output_connections(layerdesc, layer_name_to_index, this->layers_num, i));
+        this->layers[i]->create_connections(inputs, outputs);
     }
+
     this->deltas[this->layers_num - 1] = new Matrix*;
 }
 

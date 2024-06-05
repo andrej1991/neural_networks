@@ -434,7 +434,6 @@ void get_fcc_delta(Matrix &nextLW, Matrix &delta, Matrix &output_derivative, Mat
                 for(int i = 0; i < delta.row; i++)
                 {
                     c += nextLW.data[i][k] * delta.data[i][l];
-                    //c += data[k][i] * 1;
                 }
                 ret.data[k][l] += c * output_derivative.data[k][l];
                 c = 0;

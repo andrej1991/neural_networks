@@ -9,10 +9,15 @@ Flatten::Flatten(Layer **layers, int index, vector<int> input_from, int mapcount
     this->outputlen = 0;
     this->mapdepth = 0;
     this->fmap = NULL;
+    ///In the future there is a chance that multiple input will be allowed with the same size
     for(int i : input_from)
     {
         this->outputlen += this->network_layers[i]->get_output_len();
         this->mapdepth += this->network_layers[i]->get_mapcount();
+    }
+    if(input_from.size() > 1)
+    {
+        throw runtime_error("Too many inputs for Flatten layer\n");
     }
     this->build_dinamic_data();
 }
@@ -98,6 +103,9 @@ inline Matrix** Flatten::get_output(int threadindex)
 
 inline Feature_map** Flatten::get_feature_maps()
 {
+    int debug1 = this->my_index;
+    int debug3 = this->sends_output_to_[0];
+    int degug2 = this->network_layers[this->sends_output_to_[0]]->get_output_len();
     if(this->fmap == NULL)
     {
         this->map_count = this->network_layers[this->sends_output_to_[0]]->get_output_len();
