@@ -296,7 +296,7 @@ void StochasticGradientDescent::gradient_descent_variant(int variant, Data_Loade
     }
     for(int i = 0; i < this->neunet.layers_num; i++){
         delete nabla[i];
-        //delete[] deltanabla[i];
+        delete deltanabla[i];
         delete helper_1[i];
         delete helper_2[i];
     }

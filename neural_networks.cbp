@@ -45,7 +45,6 @@
 		<Linker>
 			<Add option="-m64" />
 			<Add option="-lyaml-cpp" />
-			<Add option="-lSDL2" />
 			<Add library="pthread" />
 		</Linker>
 		<Unit filename="SGD.cpp" />
@@ -105,12 +104,6 @@
 		<Unit filename="neurons/neuron.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="snake/game.cpp" />
-		<Unit filename="snake/game.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="snake/objects.cpp" />
-		<Unit filename="snake/reinforce.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
