@@ -174,10 +174,10 @@ void select_unblocked_path(Game &g, Matrix &ret, int *prefered)
     Colider c = g.snake->get_colider()[0];
     for(int i = 0; i < 3; i++)
     {
-        if(i > 0)
+        /*if(i > 0)
         {
             cout << "colission on the previous choice:  " << i-1 << endl;
-        }
+        }*/
         g.snake->shadow_move(c.xpos, c.ypos, prefered[i]);
         if(!(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission(c.xpos, c.ypos)))
         {
@@ -250,12 +250,12 @@ bool snake_is_totally_wrong(Matrix *action, Matrix *required_action)
 
 void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate, int input_row, int input_col, double momentum, double denominator, int input_channels)
 {
-    bool enableg = true;
+    bool enableg = false;
     bool gameover = false;
     bool debugprint = false;
     SDL_Event event;
     int debugx, debugy;
-    int games = 0;
+    //int games = 0;
     double avarange_score, szoras = 0;
     int median_score;
     SDL_Surface *window_surface = SDL_CreateRGBSurface(0, input_col, input_row, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
@@ -267,7 +267,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
     MNIST_data *d, *train_incaseof_fail;
     Matrix action;
     std::vector<MNIST_data*> training;
-    std::vector<MNIST_data*> training_incaseof_fail;
+    //std::vector<MNIST_data*> training_incaseof_fail;
     std::vector<int> score_list;
     int direction, highscore = 0, last5steps = 5;
     double temp;
@@ -305,9 +305,15 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 cout << "szórás: " << szoras << endl;
                 cout << g.score << endl;
             }
-            if(event.type == SDL_MOUSEBUTTONUP)
+            if((event.type == SDL_MOUSEBUTTONUP) && (event.button.button == SDL_BUTTON_LEFT))
             {
+
                 debugprint = !debugprint;
+            }
+            if((event.type == SDL_MOUSEBUTTONUP) && (event.button.button == SDL_BUTTON_RIGHT))
+            {
+                cout << "killed by mouse\n";
+                gameover = true;
             }
         }
         d = new MNIST_data(input_row, input_col, 4, input_channels);
@@ -325,7 +331,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             action = net.get_output(d[0].input);
             d[0].required_output = action;
             train_incaseof_fail[0].required_output = get_correct_way(g);
-            training_incaseof_fail.push_back(train_incaseof_fail);
+            //training_incaseof_fail.push_back(train_incaseof_fail);
             g.snake->handle_event(action);
             debugx = g.snake->get_colider()[0].xpos;
             debugy = g.snake->get_colider()[0].ypos;
@@ -334,7 +340,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             {
                 cout << "=======\n";
                 print_action(action);
-                print_action(training_incaseof_fail[training.size()-1]->required_output);
+                print_action(train_incaseof_fail[0].required_output);
                 cout << "x: " << debugx << "   y: " << debugy << endl;
                 cout << "foodx: " << g.food->c.xpos << "   foody: " << g.food->c.ypos << endl;
             }
@@ -358,17 +364,18 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 if(training.size() > 5)
                     last5steps = 5;
                 else last5steps = training.size();
-                for(int i = 0; i < 8; i++)
+                for(int i = last5steps - 1; i > 0; i --)
                 {
-                    for(int j = last5steps; j > 0 ; j--)
-                        learn.rmsprop(&training[training.size()-j], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                    learn.rmsprop(&training[training.size() - i], 8 - i, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                    //learn.momentum_gradient_descent(&training[training.size() - i], 8 - i, 1, learning_rate, momentum, false, regularization_rate, NULL, 1, 0, 1);
                 }
+
                 do
                 {
                     delete training[training.size()-1];
                     training.pop_back();
-                    delete training_incaseof_fail[training_incaseof_fail.size()-1];
-                    training_incaseof_fail.pop_back();
+                    //delete training_incaseof_fail[training_incaseof_fail.size()-1];
+                    //training_incaseof_fail.pop_back();
                 }while(training.size() > 0);
             }
             else
@@ -388,7 +395,8 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                         cout << "the value of K: " << k << endl;
                     }
                     learn.rmsprop(&train_incaseof_fail, k, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
-                    if(training.size() > sqrt(input_col*input_col + input_row*input_row)*2 && k > 1)
+                    //learn.momentum_gradient_descent(&train_incaseof_fail, k, 1, learning_rate, momentum, false, regularization_rate, NULL, 1, 0, 1);
+                    if(training.size() > (input_col+input_col + input_row+input_row)*2 && k > 1)
                     {
                         cout << "intentionally killed\n";
                         gameover = true;
@@ -405,11 +413,12 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             }
             score_list.push_back(g.score);
             g.score = 0;
-            learn.rmsprop(&training_incaseof_fail[training.size()-1], 5, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+            learn.rmsprop(&train_incaseof_fail, 5, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+            //learn.momentum_gradient_descent(&train_incaseof_fail, 5, 1, learning_rate, momentum, false, regularization_rate, NULL, 1, 0, 1);
             do
             {
-                delete training_incaseof_fail[training_incaseof_fail.size()-1];
-                training_incaseof_fail.pop_back();
+                //delete training_incaseof_fail[training_incaseof_fail.size()-1];
+                //training_incaseof_fail.pop_back();
                 delete training[training.size()-1];
                 training.pop_back();
             }while(training.size() > 0);
