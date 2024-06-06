@@ -1,5 +1,6 @@
 #include "layers.h"
 #include <math.h>
+#include <limits>
 
 
 Softmax::Softmax(int row, Layer **layers, vector<int> input_from, int my_index): FullyConnected(row, layers, input_from, -1, my_index){
@@ -40,6 +41,10 @@ void Softmax::layers_output(Matrix **input, int threadindex){
     }
     for(int i = 0; i < this->outputlen; i++){
         this->output[threadindex][0]->data[i][0] = output_helper.data[i][0] / nominator;
+        if(nominator == std::numeric_limits<double>::infinity())
+        {
+            this->output[threadindex][0]->data[i][0] = 0;
+        }
     }
 }
 

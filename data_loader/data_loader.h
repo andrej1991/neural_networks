@@ -14,6 +14,7 @@ class Data_Loader{
     void load_MNIST(std::ifstream &input, std::ifstream &required_output);
     void load_CIFAR(std::ifstream &input);
     void load_bmp(const char *path);
+    void load_sdl_pixels(SDL_Surface *window_surface);
 
 };
 
