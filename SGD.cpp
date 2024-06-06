@@ -60,6 +60,7 @@ void StochasticGradientDescent::momentum_based(Data_Loader **minibatches, int mi
         for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++){
             *nabla[layer_index] += *deltanabla[0][layer_index];
         }
+
     }
     for(int layer_index = 0; layer_index < this->neunet.layers_num; layer_index++){
         nabla_momentum[layer_index][0] = (nabla_momentum[layer_index][0] * momentum) + (nabla[layer_index][0]*(1 - momentum));
