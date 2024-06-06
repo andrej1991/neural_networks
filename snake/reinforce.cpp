@@ -1,6 +1,7 @@
 #include "game.h"
 #include "../additional.h"
 #include <unistd.h>
+#include <math.h>
 
 
 void print_action(Matrix &action)
@@ -34,13 +35,13 @@ bool food_is_infront(Game &g)
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos < food_colider.ypos && g.snake->get_direction().direction == DOWN)
         {
-            cout << "front1\n";
+            //cout << "front1\n";
             return true;
         }
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos > food_colider.ypos && g.snake->get_direction().direction == UP)
         {
-            cout << "front2\n";
+            //cout << "front2\n";
             return true;
         }
     }
@@ -48,12 +49,12 @@ bool food_is_infront(Game &g)
     {
         if(snake_colider.xpos < food_colider.xpos && g.snake->get_direction().direction == RIGHT)
         {
-            cout << "front3\n";
+            //cout << "front3\n";
             return true;
         }
         if(snake_colider.xpos > food_colider.xpos && g.snake->get_direction().direction == LEFT)
         {
-            cout << "front4\n";
+            //cout << "front4\n";
             return true;
         }
     }
@@ -70,13 +71,13 @@ bool food_is_behind(Game &g)
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos < food_colider.ypos && g.snake->get_direction().direction == UP)
         {
-            cout << "behind1\n";
+            //cout << "behind1\n";
             return true;
         }
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos > food_colider.ypos && g.snake->get_direction().direction == DOWN)
         {
-            cout << "behind2\n";
+            //cout << "behind2\n";
             return true;
         }
     }
@@ -84,12 +85,12 @@ bool food_is_behind(Game &g)
     {
         if(snake_colider.xpos < food_colider.xpos && g.snake->get_direction().direction == LEFT)
         {
-            cout << "behind3\n";
+            //cout << "behind3\n";
             return true;
         }
         if(snake_colider.xpos > food_colider.xpos && g.snake->get_direction().direction == RIGHT)
         {
-            cout << "behind4\n";
+            //cout << "behind4\n";
             return true;
         }
     }
@@ -106,7 +107,7 @@ bool food_is_intheleft(Game &g)
     {
         if(snake_colider.xpos >= food_colider.xpos)
         {
-            cout << "left\n";
+            //cout << "left\n";
             return true;
         }
     }
@@ -123,7 +124,7 @@ bool food_is_intheright(Game &g)
     {
         if(snake_colider.xpos <= food_colider.xpos)
         {
-            cout << "right\n";
+            //cout << "right\n";
             return true;
         }
     }
@@ -141,7 +142,7 @@ bool food_is_above(Game &g)
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos >= food_colider.ypos)
         {
-            cout << "abowe\n";
+            //cout << "abowe\n";
             return true;
         }
     }
@@ -159,58 +160,109 @@ bool food_is_below(Game &g)
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos <= food_colider.ypos)
         {
-            cout << "below\n";
+            //cout << "below\n";
             return true;
         }
     }
     return false;
 }
 
+void select_unblocked_path(Game &g, Matrix &ret, int *prefered)
+{
+    Direction d(g.snake->get_direction().direction);
+    Colider c = g.snake->get_colider()[0];
+    for(int i = 0; i < 3; i++)
+    {
+        if(i > 0)
+        {
+            cout << "colission on the previous choice:  " << i-1 << endl;
+        }
+        g.snake->shadow_move(c.xpos, c.ypos, prefered[i]);
+        if(!(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission(c.xpos, c.ypos)))
+        {
+            ret.data[prefered[i]][0] = 1;
+            return;
+        }
+    }
+    cout << "totally fucked up\n";
+}
+
 Matrix get_correct_way(Game &g)
 {
     Matrix ret(4, 1);
+    Direction d(g.snake->get_direction().direction);
+    Colider c = g.snake->get_colider()[0];
     if(food_is_infront(g))
     {
-        ret.data[g.snake->get_direction().direction][0] = 1;
+        int req[3] = {g.snake->get_direction().direction, (g.snake->get_direction()+1), (g.snake->get_direction()-1)};
+        select_unblocked_path(g, ret, req);
         return ret;
+        /*ret.data[g.snake->get_direction().direction][0] = 1;
+        return ret;*/
     }
     if(food_is_behind(g))
     {
-        Direction d(g.snake->get_direction().direction);
-        d = d+1;
-        Colider c = g.snake->get_colider()[0];
+        /*d = d+1;
         g.snake->shadow_move(c.xpos, c.ypos, d.direction);
-        if(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission())
+        if(!(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission(c.xpos, c.ypos)))
         {
-            ret.data[g.snake->get_direction()-1][0] = 1;
+            ret.data[g.snake->get_direction()+1][0] = 1;
         }
         else
         {
-            ret.data[d.direction][0] = 1;
-        }
+            d = g.snake->get_direction().direction;
+            d = d-1;
+            g.snake->shadow_move(c.xpos, c.ypos, d.direction);
+            if(!(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission(c.xpos, c.ypos)))
+            {
+                ret.data[g.snake->get_direction()-1][0] = 1;
+            }
+        }*/
+        int req[3] = {(g.snake->get_direction()+1), (g.snake->get_direction()-1), g.snake->get_direction().direction};
+        select_unblocked_path(g, ret, req);
         return ret;
     }
     if(food_is_intheleft(g))
     {
-        ret.data[LEFT][0] = 1;
+        int req[3] = {LEFT, g.snake->get_direction().direction, RIGHT};
+        select_unblocked_path(g, ret, req);
         return ret;
     }
     if(food_is_intheright(g))
     {
-        ret.data[RIGHT][0] = 1;
+        int req[3] = {RIGHT, g.snake->get_direction().direction, LEFT};
+        select_unblocked_path(g, ret, req);
         return ret;
     }
     if(food_is_above(g))
     {
-        ret.data[UP][0] = 1;
+        int req[3] = {UP, g.snake->get_direction().direction, DOWN};
+        select_unblocked_path(g, ret, req);
         return ret;
     }
     if(food_is_below(g))
     {
-        ret.data[DOWN][0] = 1;
+        int req[3] = {DOWN, g.snake->get_direction().direction, UP};
+        select_unblocked_path(g, ret, req);
         return ret;
     }
-    //return ret;
+}
+
+bool snake_is_totally_wrong(Matrix *action, Matrix *required_action)
+{
+    bool ret = false;
+    for(int i = 0; i < action->get_row(); i++)
+    {
+        if(required_action->data[i][0] != 1)
+        {
+            if(action->data[i][0] >= (1 - 1E-5))
+            {
+                //cout << "IIIIIIIIIIIIIII " << i << endl;
+                ret = true;
+            }
+        }
+    }
+    return ret;
 }
 
 void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate, int input_row, int input_col, double momentum, double denominator)
@@ -264,7 +316,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             debugx = g.snake->get_colider()[0].xpos;
             debugy = g.snake->get_colider()[0].ypos;
             training.push_back(d);
-
+//print_action(training_incaseof_fail[training.size()-1]->required_output);
             /*print_action(action);
             print_action(training_incaseof_fail[training.size()-1]->required_output);
             cout << "x: " << debugx << "   y: " << debugy << endl;
@@ -307,7 +359,23 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             else
             {
                 if(!gameover)
-                    learn.rmsprop(&train_incaseof_fail, 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                {
+                    double k = 1;
+                    if(snake_is_totally_wrong(&action, &(train_incaseof_fail->required_output)))
+                    {
+                        //cout << "totally wrong\n";
+                        k = 3;
+                    }
+                    for(int i = 0; i < k; i++)
+                    {
+                        learn.rmsprop(&train_incaseof_fail, 1, 1, k*learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                    }
+                    if(training.size() > sqrt(input_col*input_col + input_row*input_row)*10 && k == 3)
+                    {
+                        cout << "intentionally killed\n";
+                        gameover = true;
+                    }
+                }
             }
         }
         else

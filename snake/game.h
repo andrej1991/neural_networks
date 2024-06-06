@@ -63,7 +63,7 @@ class Snake
     bool enable_growth;
     bool detect_colission(Wall **w, int wallcount, int x=-1, int y=-1);
     bool detect_colission(Food *f);
-    bool detect_self_colission();
+    bool detect_self_colission(int x=-1, int y=-1);
     Snake(SDL_Renderer* r, int x, int y, int w, int h);
     ~Snake();
     bool handle_event(Matrix &action);
