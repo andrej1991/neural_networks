@@ -345,7 +345,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 if(training.size() > 5)
                     last5steps = 5;
                 else last5steps = training.size();
-                for(int i = 0; i < 3; i++)
+                for(int i = 0; i < 8; i++)
                 {
                     for(int i = last5steps; i > 0 ; i--)
                         learn.rmsprop(&training[training.size()-i], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
@@ -363,14 +363,16 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                     double k = 1;
                     if(snake_is_totally_wrong(&action, &(train_incaseof_fail->required_output)))
                     {
-                        //cout << "totally wrong\n";
-                        k = 3;
+                        if(training.size() > input_col)
+                            k = 100;
+                        else
+                            k = 10;
                     }
-                    for(int i = 0; i < k; i++)
-                    {
-                        learn.rmsprop(&train_incaseof_fail, 1, 1, k*learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
-                    }
-                    if(training.size() > sqrt(input_col*input_col + input_row*input_row)*10 && k == 3)
+                    //for(int i = 0; i < k; i++)
+                    //{
+                        learn.rmsprop(&train_incaseof_fail, k, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                    //}
+                    if(training.size() > sqrt(input_col*input_col + input_row*input_row)*10 && k > 1)
                     {
                         cout << "intentionally killed\n";
                         gameover = true;
@@ -390,8 +392,8 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 cout << "highest score: " << highscore << endl;
             }
             g.score = 0;
-            for(int i = 0; i < 3; i++)
-                learn.rmsprop(&training_incaseof_fail[training.size()-1], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+            //for(int i = 0; i < 3; i++)
+                learn.rmsprop(&training_incaseof_fail[training.size()-1], 5, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
             do
             {
                 training_incaseof_fail.pop_back();
