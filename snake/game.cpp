@@ -36,12 +36,18 @@ Game::Game(int h, int w): window_h(h), window_w(w), window(NULL), bckgrnd_render
         }
     }
     walls = new Wall* [wallcount];
-    walls[0] = new Wall(bckgrnd_renderer, 0, 0, window_h, window_w/30);
-    walls[1] = new Wall(bckgrnd_renderer, window_w/30, 0, window_h/30, window_w - window_w/15);
-    walls[2] = new Wall(bckgrnd_renderer, window_w - window_w/30, 0, window_h, window_w/30);
-    walls[3] = new Wall(bckgrnd_renderer, window_w/30, window_h - window_h/30, window_h/30, window_w - window_w/15);
-    snake = new Snake(bckgrnd_renderer, window_w/30 + 5, window_h/2, SNAKE_W, SNAKE_H);
+    walls[0] = new Wall(bckgrnd_renderer, 0, 0, window_h, SNAKE_W-1);
+    walls[1] = new Wall(bckgrnd_renderer, SNAKE_W - 1, 0, SNAKE_H - 1, window_w - 2*(SNAKE_W-1));
+    walls[2] = new Wall(bckgrnd_renderer, window_w - SNAKE_W + 1, 0, window_h, SNAKE_W - 1);
+    walls[3] = new Wall(bckgrnd_renderer, SNAKE_W - 1, window_h - SNAKE_H + 1, SNAKE_W - 1, window_w - 2*(SNAKE_W-1));
+    snake = create_snake();
     food = new Food(bckgrnd_renderer, SNAKE_W, SNAKE_H);
+}
+
+Snake* Game::create_snake()
+{
+    Snake *s = new Snake(bckgrnd_renderer, 2*SNAKE_W, window_h/2 - (window_h/2)%SNAKE_H, SNAKE_W, SNAKE_H);
+    return s;
 }
 
 Game::~Game()
@@ -99,7 +105,7 @@ void Game::drop_food()
     food->set_coordinates(food_x, food_y);
 }
 
-/*void Game::play()
+void Game::play()
 {
     SDL_Event event;
     bool gameover = false;
@@ -125,5 +131,12 @@ void Game::drop_food()
             }
         }
         this->draw(gameover);
+        if(gameover)
+        {
+            delete snake;
+            snake = create_snake();
+        }
+        gameover = false;
     }
-*/
+    return;
+}

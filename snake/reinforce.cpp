@@ -2,8 +2,6 @@
 #include "../additional.h"
 #include <unistd.h>
 
-#define input_col 50
-#define input_row 50
 
 void print_action(Matrix &action)
 {
@@ -36,13 +34,13 @@ bool food_is_infront(Game &g)
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos < food_colider.ypos && g.snake->get_direction().direction == DOWN)
         {
-            //cout << "front1\n";
+            cout << "front1\n";
             return true;
         }
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos > food_colider.ypos && g.snake->get_direction().direction == UP)
         {
-            //cout << "front2\n";
+            cout << "front2\n";
             return true;
         }
     }
@@ -50,12 +48,12 @@ bool food_is_infront(Game &g)
     {
         if(snake_colider.xpos < food_colider.xpos && g.snake->get_direction().direction == RIGHT)
         {
-            //cout << "front3\n";
+            cout << "front3\n";
             return true;
         }
         if(snake_colider.xpos > food_colider.xpos && g.snake->get_direction().direction == LEFT)
         {
-            //cout << "front4\n";
+            cout << "front4\n";
             return true;
         }
     }
@@ -72,13 +70,13 @@ bool food_is_behind(Game &g)
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos < food_colider.ypos && g.snake->get_direction().direction == UP)
         {
-            //cout << "behind1\n";
+            cout << "behind1\n";
             return true;
         }
         /**the top left corner is the 0,0*/
         if(snake_colider.ypos > food_colider.ypos && g.snake->get_direction().direction == DOWN)
         {
-            //cout << "behind2\n";
+            cout << "behind2\n";
             return true;
         }
     }
@@ -86,12 +84,12 @@ bool food_is_behind(Game &g)
     {
         if(snake_colider.xpos < food_colider.xpos && g.snake->get_direction().direction == LEFT)
         {
-            //cout << "behind3\n";
+            cout << "behind3\n";
             return true;
         }
         if(snake_colider.xpos > food_colider.xpos && g.snake->get_direction().direction == RIGHT)
         {
-            //cout << "behind4\n";
+            cout << "behind4\n";
             return true;
         }
     }
@@ -106,9 +104,9 @@ bool food_is_intheleft(Game &g)
     food_colider = g.food->get_colider();
     if(direction == UP || direction == DOWN)
     {
-        if(snake_colider.xpos > food_colider.xpos)
+        if(snake_colider.xpos >= food_colider.xpos)
         {
-            //cout << "left\n";
+            cout << "left\n";
             return true;
         }
     }
@@ -123,9 +121,9 @@ bool food_is_intheright(Game &g)
     food_colider = g.food->get_colider();
     if(direction == UP || direction == DOWN)
     {
-        if(snake_colider.xpos < food_colider.xpos)
+        if(snake_colider.xpos <= food_colider.xpos)
         {
-            //cout << "right\n";
+            cout << "right\n";
             return true;
         }
     }
@@ -141,9 +139,9 @@ bool food_is_above(Game &g)
     if(direction == LEFT || direction == RIGHT)
     {
         /**the top left corner is the 0,0*/
-        if(snake_colider.ypos > food_colider.ypos)
+        if(snake_colider.ypos >= food_colider.ypos)
         {
-            //cout << "abowe\n";
+            cout << "abowe\n";
             return true;
         }
     }
@@ -159,9 +157,9 @@ bool food_is_below(Game &g)
     if(direction == LEFT || direction == RIGHT)
     {
         /**the top left corner is the 0,0*/
-        if(snake_colider.ypos < food_colider.ypos)
+        if(snake_colider.ypos <= food_colider.ypos)
         {
-            //cout << "below\n";
+            cout << "below\n";
             return true;
         }
     }
@@ -182,7 +180,7 @@ Matrix get_correct_way(Game &g)
         d = d+1;
         Colider c = g.snake->get_colider()[0];
         g.snake->shadow_move(c.xpos, c.ypos, d.direction);
-        if(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos))
+        if(g.snake->detect_colission(g.walls, g.get_wallcount(), c.xpos, c.ypos) || g.snake->detect_self_colission())
         {
             ret.data[g.snake->get_direction()-1][0] = 1;
         }
@@ -215,14 +213,18 @@ Matrix get_correct_way(Game &g)
     //return ret;
 }
 
-void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate)
+void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate, int input_row, int input_col, double momentum, double denominator)
 {
+    bool enableg = true;
     SDL_Event event;
     int debugx, debugy;
     SDL_Surface *window_surface = SDL_CreateRGBSurface(0, input_col, input_row, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
     bool gameover = false;
     Game g(input_row, input_col);
     g.drop_food();
+    g.snake->enable_growth = enableg;
+    //g.play();
+    //return;
     MNIST_data *d, *train_incaseof_fail;
     Matrix action;
     std::vector<MNIST_data*> training;
@@ -238,6 +240,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             if(event.type == SDL_QUIT)
             {
                 g.quit = true;
+                cout << g.score << endl;
             }
         }
         d = new MNIST_data(input_row, input_col, 4, 3);
@@ -254,7 +257,6 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             train_incaseof_fail[0].load_bmp(inp);
             inp.close();
             action = net.get_output(d[0].input);
-            //print_action(action);
             d[0].required_output = action;
             train_incaseof_fail[0].required_output = get_correct_way(g);
             training_incaseof_fail.push_back(train_incaseof_fail);
@@ -262,6 +264,13 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             debugx = g.snake->get_colider()[0].xpos;
             debugy = g.snake->get_colider()[0].ypos;
             training.push_back(d);
+
+            /*print_action(action);
+            print_action(training_incaseof_fail[training.size()-1]->required_output);
+            cout << "x: " << debugx << "   y: " << debugy << endl;
+            cout << "foodx: " << g.food->c.xpos << "   foody: " << g.food->c.ypos << endl;
+            cout << "=======\n";*/
+
             gameover = g.snake->detect_colission(g.walls, g.wallcount);
             gameover |= g.snake->detect_self_colission();
             if(g.snake->detect_colission(g.food))
@@ -281,13 +290,14 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 }
                 /*(MNIST_data **training_data, int epochs, int minibatch_len, double learning_rate, double momentum, bool monitor_learning_cost = false,
                    double regularization_rate = 0, MNIST_data **test_data = NULL, int minibatch_count = 500, int test_data_len = 10000,  int trainingdata_len = 50000);*/
-                for(MNIST_data* training_data : training)
-                    learn.nesterov_accelerated_gradient(&training_data, 1, 1, learning_rate, 0.9, false, regularization_rate, NULL, 1, 0, 1);
                 if(training.size() > 5)
                     last5steps = 5;
                 else last5steps = training.size();
                 for(int i = 0; i < 3; i++)
-                    learn.nesterov_accelerated_gradient(&training[training.size()-last5steps], 1, 1, learning_rate, 0.9, false, regularization_rate, NULL, 1, 0, 1);
+                {
+                    for(int i = last5steps; i > 0 ; i--)
+                        learn.rmsprop(&training[training.size()-i], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
+                }
                 do
                 {
                     training.pop_back();
@@ -297,35 +307,31 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
             else
             {
                 if(!gameover)
-                    learn.nesterov_accelerated_gradient(&train_incaseof_fail, 1, 1, learning_rate, 0.9, false, regularization_rate, NULL, 1, 0, 1);
+                    learn.rmsprop(&train_incaseof_fail, 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
             }
         }
         else
         {
-            print_action(action);
+            /*print_action(action);
             print_action(training_incaseof_fail[training.size()-1]->required_output);
             cout << "x: " << debugx << "   y: " << debugy << endl;
-            cout << "=======\n";
+            cout << "=======\n";*/
             if(g.score >= highscore)
             {
                 highscore = g.score;
                 cout << "highest score: " << highscore << endl;
             }
             g.score = 0;
-            /*for(int i=0; i<training_incaseof_fail.size(); i++)
-            {
-                print_action(training_incaseof_fail[i]->required_output);
-            }*/
             for(int i = 0; i < 3; i++)
-                learn.nesterov_accelerated_gradient(&training_incaseof_fail[training.size()-1], 1, 1, learning_rate, 0.9, false, regularization_rate, NULL, 1, 0, 1);
-            for(MNIST_data* training_data : training_incaseof_fail)
-                    learn.nesterov_accelerated_gradient(&training_data, 1, 1, learning_rate, 0.9, false, regularization_rate, NULL, 1, 0, 1);
+                learn.rmsprop(&training_incaseof_fail[training.size()-1], 1, 1, learning_rate, momentum, false, regularization_rate, denominator, NULL, 1, 0, 1);
             do
             {
                 training_incaseof_fail.pop_back();
                 training.pop_back();
             }while(training.size() > 0);
-            //training.resize(0);
+            delete g.snake;
+            g.snake = g.create_snake();
+            g.snake->enable_growth = enableg;
             gameover = false;
         }
         g.draw(gameover);

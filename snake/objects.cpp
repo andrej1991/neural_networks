@@ -61,6 +61,8 @@ Snake::Snake(SDL_Renderer* r, int x, int y, int w, int h): renderer(r), ypos(y),
     speed_y = h;
     coliders = new Colider[length];
     put(x, y);
+    grow = false;
+    enable_growth = false;
 }
 
 void Snake::put(int x_pos, int y_pos)
@@ -78,7 +80,7 @@ void Snake::put(int x_pos, int y_pos)
 
 Snake::~Snake()
 {
-    ;
+    delete coliders;
 }
 
 bool Snake::detect_colission(Wall **w, int wallcount, int x, int y)
@@ -99,11 +101,29 @@ bool Snake::detect_colission(Wall **w, int wallcount, int x, int y)
 
 bool Snake::detect_colission(Food *f)
 {
-    return colission_detection(xpos, ypos, rect.w, rect.h, f->get_colider());
+    if(colission_detection(xpos, ypos, rect.w, rect.h, f->get_colider()))
+    {
+        if(this->enable_growth)
+        {
+            this->grow = true;
+        }
+        return true;
+    }
+    return false;
 }
 
 bool Snake::detect_self_colission()
 {
+    if(length > 4)
+    {
+        for(int i = 4; i < length; i++)
+        {
+            if(colission_detection(xpos, ypos, rect.w, rect.h, coliders[i]))
+            {
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -128,6 +148,16 @@ void Snake::shadow_move(int &x, int &y, int dir)
 
 void Snake::move()
 {
+    if(grow)
+    {
+        Colider *old_coliders = coliders;
+        coliders = new Colider[length+1];
+        for(int i = 0; i < length; i++)
+        {
+            coliders[i] = old_coliders[i];
+        }
+        coliders[length] = old_coliders[length - 1];
+    }
     shadow_move(xpos, ypos, direction.direction);
     for(int i=length-1; i>0; i--)
     {
@@ -136,6 +166,11 @@ void Snake::move()
     }
     coliders[0].xpos = xpos;
     coliders[0].ypos = ypos;
+    if(grow)
+    {
+        length += 1;
+        grow = false;
+    }
 }
 
 
@@ -172,6 +207,41 @@ bool Snake::handle_event(Matrix &action)
     }
     move();
     return true;
+}
+
+void Snake::handle_event(SDL_Event &event)
+{
+    if(event.type == SDL_KEYDOWN)
+    {
+        switch(event.key.keysym.sym)
+        {
+            case SDLK_UP:
+                if(direction.direction != DOWN)
+                {
+                    direction.direction = UP;
+                }
+                break;
+            case SDLK_DOWN:
+                if(direction.direction != UP)
+                {
+                    direction.direction = DOWN;
+                }
+                break;
+            case SDLK_LEFT:
+                if(direction.direction != RIGHT)
+                {
+                    direction.direction = LEFT;
+                }
+                break;
+            case SDLK_RIGHT:
+                if(direction.direction != LEFT)
+                {
+                    direction.direction = RIGHT;
+                }
+                break;
+        }
+        this->move();
+    }
 }
 
 void Snake::draw(char *img)
