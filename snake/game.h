@@ -98,7 +98,7 @@ class Game
     int get_wallcount() {return this->wallcount;};
     Snake* create_snake();
     friend void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate,
-                                         int input_row, int input_col, double momentum, double denominator);
+                                         int input_row, int input_col, double momentum, double denominator, int input_channels);
 };
 
 
