@@ -188,7 +188,7 @@ void Snake::move()
 
 bool Snake::handle_event(Matrix &action)
 {
-    int dir = getmax(action.data, 4);
+    int dir = argmax(action.data, 4);
     switch(dir)
     {
         case LEFT:

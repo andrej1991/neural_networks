@@ -12,6 +12,7 @@
 #include <random>
 #include <iosfwd>
 #include "SGD.h"
+#include "snake/game.h"
 
 
 #include <thread>
@@ -311,33 +312,23 @@ int main(int argc, char *argv[]){
     load_data(config, output_size, m, validation);
 
 
-    Network n1(layer_count, layers, input_row, input_col, input_channel_count);
+    //Network n1(layer_count, layers, input_row, input_col, input_channel_count);
+    Network n1("../data/reinforcement_snake.bin");
 
 
-    //StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
-    StochasticGradientDescentMultiThread learning(n1, costfunction_type, dropout_probability, thread_count);
+    StochasticGradientDescent learning(n1, costfunction_type, dropout_probability);
 
-    learning.monitor_training_duration = true;
+    learning.monitor_training_duration = false;
     if(cpulimit > 0){
         pid_t pid = getpid();
         string command = "cpulimit -p " + to_string(pid) + " -l " + to_string(cpulimit) + " &";
         cout << command << endl;
         system(command.c_str());
     }
-    //learning.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
 
+    reinforcement_snake(n1, learning, learning_rate, regularization_rate, input_row, input_col, momentum, denominator, input_channel_count);
 
-    //learning2.stochastic_gradient_descent(m, epochs, minibatch_len, learning_rate, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    //learning.momentum_gradient_descent(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-
-    //learning.nesterov_accelerated_gradient(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, validation, minibatch_count, validation_data_len, traninig_data_len);
-    //cout << "RMSprop\n";
-    //Accuracy A = learning.check_accuracy(validation, 100, 0, 1, regularization_rate);
-    //cout << "cost: " << A.total_cost << " correct answers: " << A.correct_answers << endl;
-
-    learning.rmsprop(m, epochs, minibatch_len, learning_rate, momentum, change_learning_cost, regularization_rate, denominator, validation, minibatch_count, validation_data_len, traninig_data_len);
-    //A = learning.check_accuracy(m, 50000, 0, 1, regularization_rate);
-    //cout << "cost: " << A.total_cost << " correct answers: " << A.correct_answers << endl;
+    n1.store("../data/reinforcement_snake.bin");
 
     return 0;
 }

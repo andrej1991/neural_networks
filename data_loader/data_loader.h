@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include "../matrix/matrix.h"
+#include <SDL2/SDL.h>
 
 class Data_Loader{
     public:

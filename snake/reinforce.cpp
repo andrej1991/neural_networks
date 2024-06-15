@@ -7,7 +7,7 @@
 
 void print_action(Matrix &action)
 {
-    int dir = getmax(action.data, 4);
+    int dir = argmax(action.data, 4);
     switch(dir)
     {
         case LEFT:
@@ -264,9 +264,9 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
     g.snake->enable_growth = enableg;
     //g.play();
     //return;
-    MNIST_data *d, *train_incaseof_fail;
+    Data_Loader *d, *train_incaseof_fail;
     Matrix action;
-    std::vector<MNIST_data*> training;
+    std::vector<Data_Loader*> training;
     //std::vector<MNIST_data*> training_incaseof_fail;
     std::vector<int> score_list;
     int direction, highscore = 0, last5steps = 5;
@@ -316,8 +316,8 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 gameover = true;
             }
         }
-        d = new MNIST_data(input_row, input_col, 4, input_channels);
-        train_incaseof_fail = new MNIST_data(input_row, input_col, 4, input_channels);
+        d = new Data_Loader(input_row, input_col, 4, input_channels);
+        train_incaseof_fail = new Data_Loader(input_row, input_col, 4, input_channels);
         if(!gameover)
         {
             SDL_RenderReadPixels(g.bckgrnd_renderer, NULL, window_surface->format->format, window_surface->pixels, window_surface->pitch);
@@ -352,7 +352,7 @@ void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double 
                 g.drop_food();
                 for(int i=0; i<training.size(); i++)
                 {
-                    direction = getmax(training[i]->required_output.data, 4);
+                    direction = argmax(training[i]->required_output.data, 4);
                     for(int j=0; j<training[i]->required_output.get_row(); j++)
                     {
                         training[i]->required_output.data[j][0] = 0;
