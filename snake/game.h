@@ -13,6 +13,14 @@ struct Colider
     int xpos, ypos, width, height;
 };
 
+class Direction
+{
+    public:
+    int direction;
+    Direction(int d);
+    int operator +(int i);
+    int operator -(int i);
+};
 
 class Wall
 {
@@ -47,20 +55,21 @@ class Snake
     SDL_Renderer* renderer;
     SDL_Rect rect;
     Colider *coliders;
-    int length, xpos, ypos, direction, speed_x, speed_y;
+    int length, xpos, ypos, speed_x, speed_y;
+    Direction direction;
     public:
-    bool detect_colission(Wall **w, int wallcount);
+    bool detect_colission(Wall **w, int wallcount, int x=-1, int y=-1);
     bool detect_colission(Food *f);
     bool detect_self_colission();
     Snake(SDL_Renderer* r, int x, int y, int w, int h);
     ~Snake();
     bool handle_event(Matrix &action);
     void move();
-    void shadow_move(int &x, int &y);
+    void shadow_move(int &x, int &y, int dir);
     void draw(char *img);
     void put(int x_pos, int y_pos);
     inline Colider* get_colider() {return coliders;};
-    inline int get_direction() {return direction;};
+    inline Direction get_direction() {return direction;};
     friend class Game;
 };
 
@@ -82,6 +91,7 @@ class Game
     //void play();
     void draw(bool gameover);
     void drop_food();
+    int get_wallcount() {return this->wallcount;};
     friend void reinforcement_snake(Network &net, StochasticGradientDescent &learn, double learning_rate, double regularization_rate);
 };
 
