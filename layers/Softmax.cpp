@@ -41,8 +41,7 @@ void Softmax::layers_output(Matrix **input, int threadindex){
     }
     for(int i = 0; i < this->outputlen; i++){
         this->output[threadindex][0]->data[i][0] = output_helper.data[i][0] / nominator;
-        if(nominator == std::numeric_limits<double>::infinity())
-        {
+        if(nominator == std::numeric_limits<double>::infinity()){
             this->output[threadindex][0]->data[i][0] = 0;
         }
     }

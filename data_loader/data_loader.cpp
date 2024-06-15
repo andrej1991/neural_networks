@@ -91,17 +91,14 @@ void Data_Loader::load_bmp(const char *path){
     }
 }
 
-void Data_Loader::load_sdl_pixels(SDL_Surface *window_surface)
-{
+void Data_Loader::load_sdl_pixels(SDL_Surface *window_surface){
     /*char temp_inp[4 * this->input_vector_row * this->input_vector_col];
     in.seekg(0x7a);
     in.read(temp_inp, this->input_vector_row * this->input_vector_col * 4);*/
     unsigned char* pixels = (unsigned char*)window_surface -> pixels;
     unsigned char tmp;
-    for(int i = 0; i < this->input_vector_row; i++)
-    {
-        for(int j = 0; j < this->input_vector_col; j++)
-        {
+    for(int i = 0; i < this->input_vector_row; i++){
+        for(int j = 0; j < this->input_vector_col; j++){
             tmp = pixels[4 * (i * window_surface -> w + j)];
             this->input[0]->data[i][j] = tmp;
             tmp = pixels[4 * (i * window_surface -> w + j) + 1];
