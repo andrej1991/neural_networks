@@ -1,13 +1,10 @@
 #include "additional.h"
 
-int argmax(double **d, int len)
-{
+int argmax(double **d, int len){
     double Max = d[0][0];
     int index = 0;
-    for(int i = 0; i < len; i++)
-    {
-        if(Max < d[i][0])
-        {
+    for(int i = 0; i < len; i++){
+        if(Max < d[i][0]){
             Max = d[i][0];
             index = i;
         }
@@ -15,13 +12,12 @@ int argmax(double **d, int len)
     return index;
 }
 
-int partition( int *a, int l, int r) {
+int partition( int *a, int l, int r){
     int pivot, i, j, t;
     pivot = a[l];
     i = l; j = r+1;
 
-    while( 1)
-    {
+    while( 1){
         do ++i;
         while( a[i] <= pivot && i <= r )
             ;
@@ -35,12 +31,10 @@ int partition( int *a, int l, int r) {
     return j;
 }
 
-void quickSort( int *a, int l, int r)
-{
+void quickSort( int *a, int l, int r){
     int j;
 
-    if( l < r )
-    {
+    if( l < r ){
     // divide and conquer
         j = partition( a, l, r);
         quickSort( a, l, j-1);

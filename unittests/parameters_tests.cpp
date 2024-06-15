@@ -11,8 +11,7 @@ the network is inicialized by test_network_no_strides_in_conv_layer.bin before t
 
 using namespace std;
 
-int test_params(char *training_input, char *required_training_output, char *ref)
-{
+int test_params(char *training_input, char *required_training_output, char *ref){
     int input_row, input_col, output_size, epochs, minibatch_len, minibatch_count, validation_data_len, traninig_data_len;
     double learning_rate, regularization_rate;
     learning_rate = 0.003;
@@ -38,12 +37,10 @@ int test_params(char *training_input, char *required_training_output, char *ref)
     reference.seekg(192);
     out.seekg(192);
     double helper1, helper2;
-    while(reference.good())
-    {
+    while(reference.good()){
         reference.read(reinterpret_cast<char *>(&(helper1)), sizeof(double));
         out.read(reinterpret_cast<char *>(&(helper2)), sizeof(double));
-        if ( abs(helper1 - helper2) > 1E-10)
-        {
+        if ( abs(helper1 - helper2) > 1E-10){
             cerr << "reference " << helper1 << endl;
             cerr << "actual " << helper2 << endl;
             return -1;
@@ -56,16 +53,14 @@ int test_params(char *training_input, char *required_training_output, char *ref)
     return ret;
 }
 
-TEST(FullNetworkLearningParameterTest, test_matrix_parameters_for_single_fixed_input_learning)
-{
+TEST(FullNetworkLearningParameterTest, test_matrix_parameters_for_single_fixed_input_learning){
     ASSERT_EQ(0, test_params("./data/test_data/input_for_8.dat", "./data/test_data/required_output_for_8.dat", "./data/verification_results/test_network_output_8.bin"));
     ASSERT_EQ(0, test_params("./data/test_data/input_for_0.dat", "./data/test_data/required_output_for_0.dat", "./data/verification_results/test_network_output_0.bin"));
     ASSERT_EQ(0, test_params("./data/test_data/input_for_1.dat", "./data/test_data/required_output_for_1.dat", "./data/verification_results/test_network_output_1.bin"));
 }
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv){
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
